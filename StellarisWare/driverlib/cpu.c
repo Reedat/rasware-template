@@ -5,23 +5,23 @@
 //
 // Copyright (c) 2006-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -33,7 +33,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -47,7 +47,7 @@
 //
 //*****************************************************************************
 #if defined(codered) || defined(gcc) || defined(sourcerygxx)
-unsigned long __attribute__((naked))
+unsigned long //__attribute__((naked))
 CPUcpsid(void)
 {
     unsigned long ulRet;
@@ -55,10 +55,12 @@ CPUcpsid(void)
     //
     // Read PRIMASK and disable interrupts.
     //
-    __asm("    mrs     r0, PRIMASK\n"
-          "    cpsid   i\n"
-          "    bx      lr\n"
-          : "=r" (ulRet));
+    // __asm("    mrs     r0, PRIMASK\n"
+    //       "    cpsid   i\n"
+    //       "    bx      lr\n"
+    //       : "=r" (ulRet));
+
+    return DisableCritical();
 
     //
     // The return is handled in the inline assembly, but the compiler will
@@ -66,7 +68,7 @@ CPUcpsid(void)
     // that this does not result in any code being produced because of the
     // naked attribute).
     //
-    return(ulRet);
+    // return(ulRet);
 }
 #endif
 #if defined(ewarm)
@@ -129,7 +131,7 @@ CPUcpsid(void)
 //
 //*****************************************************************************
 #if defined(codered) || defined(gcc) || defined(sourcerygxx)
-unsigned long __attribute__((naked))
+unsigned long //__attribute__((naked))
 CPUprimask(void)
 {
     unsigned long ulRet;
@@ -137,9 +139,11 @@ CPUprimask(void)
     //
     // Read PRIMASK and disable interrupts.
     //
-    __asm("    mrs     r0, PRIMASK\n"
-          "    bx      lr\n"
-          : "=r" (ulRet));
+    // __asm("    mrs     r0, PRIMASK\n"
+    //       "    bx      lr\n"
+    //       : "=r" (ulRet));
+
+    return EndCritical();
 
     //
     // The return is handled in the inline assembly, but the compiler will
@@ -147,7 +151,7 @@ CPUprimask(void)
     // that this does not result in any code being produced because of the
     // naked attribute).
     //
-    return(ulRet);
+    // return(ulRet);
 }
 #endif
 #if defined(ewarm)
@@ -207,18 +211,20 @@ CPUprimask(void)
 //
 //*****************************************************************************
 #if defined(codered) || defined(gcc) || defined(sourcerygxx)
-unsigned long __attribute__((naked))
+unsigned long //__attribute__((naked))
 CPUcpsie(void)
 {
     unsigned long ulRet;
 
-    //
-    // Read PRIMASK and enable interrupts.
-    //
-    __asm("    mrs     r0, PRIMASK\n"
-          "    cpsie   i\n"
-          "    bx      lr\n"
-          : "=r" (ulRet));
+    // //
+    // // Read PRIMASK and enable interrupts.
+    // //
+    // __asm("    mrs     r0, PRIMASK\n"
+    //       "    cpsie   i\n"
+    //       "    bx      lr\n"
+    //       : "=r" (ulRet));
+
+    return EnableInterrupts();
 
     //
     // The return is handled in the inline assembly, but the compiler will
@@ -226,7 +232,7 @@ CPUcpsie(void)
     // that this does not result in any code being produced because of the
     // naked attribute).
     //
-    return(ulRet);
+    // return(ulRet);
 }
 #endif
 #if defined(ewarm)
@@ -385,7 +391,7 @@ CPUbasepriSet(unsigned long ulNewBasepri)
 //
 //*****************************************************************************
 #if defined(codered) || defined(gcc) || defined(sourcerygxx)
-unsigned long __attribute__((naked))
+unsigned long //__attribute__((naked))
 CPUbasepriGet(void)
 {
     unsigned long ulRet;
@@ -393,9 +399,11 @@ CPUbasepriGet(void)
     //
     // Read BASEPRI
     //
-    __asm("    mrs     r0, BASEPRI\n"
-          "    bx      lr\n"
-          : "=r" (ulRet));
+    // __asm("    mrs     r0, BASEPRI\n"
+    //       "    bx      lr\n"
+    //       : "=r" (ulRet));
+
+    return EndCritical();
 
     //
     // The return is handled in the inline assembly, but the compiler will
@@ -403,7 +411,7 @@ CPUbasepriGet(void)
     // that this does not result in any code being produced because of the
     // naked attribute).
     //
-    return(ulRet);
+    // return(ulRet);
 }
 #endif
 #if defined(ewarm)

@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // motor - Software PWM drivers for the TLE5205-2
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -21,7 +21,7 @@
 //
 //*****************************************************************************
 
-#include "pwm.h"
+#include "raslib/inc/pwm.h"
 
 
 // Definition of struct Motor
@@ -49,17 +49,17 @@ static int tleMotorCount = 0;
 
 
 // This function sets a motor speed
-static void SetTLEMotor(tTLEMotor *mtr, float input) { 
+static void SetTLEMotor(tTLEMotor *mtr, float input) {
     // Check the input range
     if (input > 1 || input < -1)
         return;
-    
+
     // invert if set
     if (mtr->invert)
         input *= -1;
 
     // Operate the motor controller
-    // Motor controller operation is specific 
+    // Motor controller operation is specific
     // to the TLE5205-2
     if (mtr->brake) {
         if (input < 0) {
@@ -97,18 +97,18 @@ static void SetTLEMotor(tTLEMotor *mtr, float input) {
 tTLEMotor *_InitializeTLEMotor(tPin a, tPin b, tBoolean brake, tBoolean invert) {
     // Grab the next motor
     tTLEMotor *mtr = &tleMotorBuffer[tleMotorCount++];
-    
+
     // Setup the initial data
     mtr->brake = brake;
     mtr->invert = invert;
-    
+
     // Initialize pwm on both pins
     mtr->pwm0 = InitializePWM(a, 1600.0f);
     mtr->pwm1 = InitializePWM(b, 1600.0f);
 
     // Set parent methods
     mtr->SetMotor = SetTLEMotor;
-    
+
     // Return the new motor
     return mtr;
 }

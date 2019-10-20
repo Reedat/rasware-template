@@ -2,14 +2,14 @@
 //*****************************************************************************
 //
 // spi - Serial Peripheral Interface driver
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
 // Written by:
@@ -25,9 +25,9 @@
 #ifndef _R_SPI_H_
 #define _R_SPI_H_
 
-#include "common.h"
-#include "gpio.h"
-#include "time.h"
+#include "raslib/inc/common.h"
+#include "raslib/inc/gpio.h"
+#include "raslib/inc/time.h"
 #include <stdint.h>
 
 #ifdef __cplusplus

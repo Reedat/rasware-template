@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // servomotor - RC PWM based motor driver
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -21,7 +21,7 @@
 //
 //*****************************************************************************
 
-#include "pwm.h"
+#include "raslib/inc/pwm.h"
 
 // Definition of struct ServoMotor
 typedef struct ServoMotor {
@@ -44,7 +44,7 @@ static int servoMotorCount = 0;
 
 // Servo output is 50hz with 3% to 12% duty cycle, centered at 7.5%
 // This function sets a motor value, with -1 being 3% and 1 being 12%
-static void SetServoMotor(tServoMotor *mtr, float value) { 
+static void SetServoMotor(tServoMotor *mtr, float value) {
     // Bind to the valid range of inputs
     if (value > 1 || value < -1)
         return;
@@ -52,7 +52,7 @@ static void SetServoMotor(tServoMotor *mtr, float value) {
     // invert if set
     if (mtr->invert)
         value *= -1;
-    
+
     // Set pwm to proper value
     SetPWM(mtr->pwm, 0.075f + (value * 0.045f), 0.0f);
 }
@@ -70,7 +70,7 @@ tServoMotor *_InitializeServoMotor(tPin pin, tBoolean invert) {
     mtr->pwm = InitializePWM(pin, 50.0f);
     // Set it to the center point
     SetServoMotor(mtr, 0);
-    
+
     // Set parent methods
     mtr->SetMotor = SetServoMotor;
 

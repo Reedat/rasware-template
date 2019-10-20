@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // i2c - Inter-Intergrated Circuit driver
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -21,7 +21,7 @@
 //
 //*****************************************************************************
 
-#include "i2c.h"
+#include "raslib/inc/i2c.h"
 
 #include <StellarisWare/inc/hw_memmap.h>
 #include <StellarisWare/inc/hw_ints.h>
@@ -34,24 +34,24 @@
 // Definition of struct I2C
 // Defined to tI2C in i2c.h
 struct I2C {
-    // Constant StellarisWare values 
+    // Constant StellarisWare values
     // specific to each module
     const unsigned long BASE;
     const unsigned long PERIPH;
     const unsigned long INT;
-    
+
     // Sending and recieving data
     unsigned char *data;
     unsigned int len;
-    
+
     // Pins in use
     tPin sda;
     tPin scl;
-    
+
     // Callback data
     tCallback callback;
     void *cbdata;
-    
+
     // State machine
     volatile enum {
         DONE,
@@ -59,14 +59,14 @@ struct I2C {
         RECEIVING,
         TIMEOUT
     } state;
-    
+
     // Information for requests
     struct {
         // Receiving data
         unsigned char addr;
         unsigned char *data;
         unsigned int len;
-        
+
         // Callback data
         tCallback callback;
         void *cbdata;
@@ -92,23 +92,23 @@ static int i2cCount = 0;
 static void InitializeI2CModule(tI2C *i2c) {
     // Reset the state machine
     i2c->state = DONE;
-    
+
     // Enable the peripheral
     SysCtlPeripheralEnable(i2c->PERIPH);
-    
+
     // Setup the pins as specified
     GPIOPinTypeI2C(PORT_VAL(i2c->sda), PIN_VAL(i2c->sda));
     GPIOPinTypeI2CSCL(PORT_VAL(i2c->scl), PIN_VAL(i2c->scl));
-    
+
     // Setup the clock and timeout value
     I2CMasterInitExpClk(i2c->BASE, SysCtlClockGet(), false);
     I2CMasterTimeoutSet(i2c->BASE, (I2C_TIMEOUT / 10) >> 4);
-    
+
     // Enable the I2C module
     I2CMasterEnable(i2c->BASE);
-    
+
     // Enable both timeout and normal I2C interrupts
-    I2CMasterIntEnableEx(i2c->BASE, I2C_MASTER_INT_TIMEOUT | 
+    I2CMasterIntEnableEx(i2c->BASE, I2C_MASTER_INT_TIMEOUT |
                                     I2C_MASTER_INT_DATA);
 	IntEnable(i2c->INT);
 }
@@ -118,23 +118,23 @@ static void InitializeI2CModule(tI2C *i2c) {
 tI2C *InitializeI2C(tPin sda, tPin scl) {
     // Grab the next module
     tI2C *i2c = &i2cBuffer[i2cCount++];
-    
+
     // Setup the pins
     i2c->sda = sda;
     i2c->scl = scl;
-    
+
     // Initialize the underlying module
     InitializeI2CModule(i2c);
-    
+
     // Return the initialized module
     return i2c;
 }
 
 
-// This function returns true if the 
+// This function returns true if the
 // previous transaction was successful
 tBoolean I2CSuccess(tI2C *i2c) {
-    return (i2c->state != TIMEOUT && 
+    return (i2c->state != TIMEOUT &&
             I2CMasterErr(i2c->BASE) == I2C_MASTER_ERR_NONE);
 }
 
@@ -143,7 +143,7 @@ tBoolean I2CSuccess(tI2C *i2c) {
 // Depending on the state of the state machine,
 // executes the next action.
 #define I2C_HANDLER(MOD)                                                \
-void I2C##MOD##Handler(void) {                                          \
+void i2c##MOD##_handler(void) {                                         \
     tI2C *i2c = &i2cBuffer[MOD];                                        \
     unsigned long status = I2CMasterIntStatusEx(I2C##MOD##_MASTER_BASE, \
                                                 false);                 \
@@ -213,9 +213,9 @@ I2C_HANDLER(5);
 
 
 // This function sends data to an I2C address.
-// A callback can be passed and will be called when 
+// A callback can be passed and will be called when
 // all of the data in the passed array is sent.
-void I2CBackgroundSend(tI2C *i2c, unsigned char addr, 
+void I2CBackgroundSend(tI2C *i2c, unsigned char addr,
                                   const unsigned char *data, unsigned int len,
                                   tCallback callback, void *cbdata) {
     // Make sure data is actually being sent
@@ -223,37 +223,37 @@ void I2CBackgroundSend(tI2C *i2c, unsigned char addr,
         callback(cbdata);
         return;
     }
-    
+
     // Reset the module in erronous condition
     if (i2c->state == TIMEOUT) {
         SysCtlPeripheralReset(i2c->PERIPH);
         InitializeI2CModule(i2c);
     }
-    
+
     // We loop here while the bus is busy
     // correct sending behaviour should be implemented
     // at a higher level
     while (i2c->state != DONE);
     i2c->state = SENDING;
-    
+
     // Assign the address
     I2CMasterSlaveAddrSet(i2c->BASE, addr, false);
-    
+
     // Initialize callback information
     i2c->callback = callback ? callback : Dummy;
     i2c->cbdata = cbdata;
-    
+
     // Start sending data
     I2CMasterDataPut(i2c->BASE, *data);
     i2c->data = (unsigned char *)(data + 1);
     i2c->len = len - 1;
-    
+
     // Either send a single command or start sending multiple
     if (len == 1)
         I2CMasterControl(i2c->BASE, I2C_MASTER_CMD_SINGLE_SEND);
     else
         I2CMasterControl(i2c->BASE, I2C_MASTER_CMD_BURST_SEND_START);
-    
+
     // The finite state machine implemented in the interrupt
     // handler will take over from here
 }
@@ -262,7 +262,7 @@ void I2CBackgroundSend(tI2C *i2c, unsigned char addr,
 // This function sends data to an I2C addresss
 // Takes a pointer to an array to send from
 // Returns true if successful
-tBoolean I2CSend(tI2C *i2c, unsigned char addr, 
+tBoolean I2CSend(tI2C *i2c, unsigned char addr,
                             const unsigned char *data, unsigned int len) {
     I2CBackgroundSend(i2c, addr, data, len, 0, 0);
     while (i2c->state != DONE);
@@ -271,9 +271,9 @@ tBoolean I2CSend(tI2C *i2c, unsigned char addr,
 
 
 // This function receives data from an I2C address.
-// A callback can be passed and will be called when 
+// A callback can be passed and will be called when
 // all of the data is loaded into the passed array.
-void I2CBackgroundReceive(tI2C *i2c, unsigned char addr, 
+void I2CBackgroundReceive(tI2C *i2c, unsigned char addr,
                                      unsigned char *data, unsigned int len,
                                      tCallback callback, void *cbdata) {
     // Make sure data is actually being retrieved
@@ -281,36 +281,36 @@ void I2CBackgroundReceive(tI2C *i2c, unsigned char addr,
         callback(cbdata);
         return;
     }
-    
+
     // Reset the module in erronous condition
     if (i2c->state == TIMEOUT) {
         SysCtlPeripheralReset(i2c->PERIPH);
         InitializeI2CModule(i2c);
     }
-    
+
     // We loop here while the bus is busy
     // correct recieving behaviour should be implemented
     // at a higher level
     while (i2c->state != DONE);
     i2c->state = RECEIVING;
-    
+
     // Assign the address
     I2CMasterSlaveAddrSet(i2c->BASE, addr, true);
-    
+
     // Initialize callback information
     i2c->callback = callback ? callback : Dummy;
     i2c->cbdata = cbdata;
-    
+
     // Setup receiving data
     i2c->data = data;
     i2c->len = len;
-    
+
     // Either read single byte of data or multiple
     if (len == 1)
         I2CMasterControl(i2c->BASE, I2C_MASTER_CMD_SINGLE_RECEIVE);
     else
         I2CMasterControl(i2c->BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
-    
+
     // The finite state machine implemented in the interrupt
     // handler will take over from here
 }
@@ -319,7 +319,7 @@ void I2CBackgroundReceive(tI2C *i2c, unsigned char addr,
 // This function sends data to an I2C addresss
 // Takes a pointer to an array to receive to
 // Returns true if successful
-tBoolean I2CReceive(tI2C *i2c, unsigned char addr, 
+tBoolean I2CReceive(tI2C *i2c, unsigned char addr,
                                unsigned char* data, unsigned int len) {
     I2CBackgroundReceive(i2c, addr, data, len, 0, 0);
     while (i2c->state != DONE);
@@ -335,12 +335,12 @@ static void I2CRequestHandler(tI2C *i2c) {
                               i2c->request.data, i2c->request.len,
                               i2c->request.callback, i2c->request.cbdata);
 }
-    
+
 
 // This function requests data from an I2C address.
-// A callback can be passed and will be called when 
+// A callback can be passed and will be called when
 // all of the data is loaded into the passed array.
-void I2CBackgroundRequest(tI2C *i2c, unsigned char addr, 
+void I2CBackgroundRequest(tI2C *i2c, unsigned char addr,
                                      const unsigned char *sendData, unsigned int sendLen,
                                      unsigned char *recData, unsigned int recLen,
                                      tCallback callback, void *cbdata) {
@@ -365,11 +365,11 @@ void I2CBackgroundRequest(tI2C *i2c, unsigned char addr,
 
 // This function requests data from an I2C address.
 // Takes two pointers to arrays. The first is the data to send
-// and the second is to hold the data recieved. 
+// and the second is to hold the data recieved.
 // This is the same as two sequential send and recieve calls
 // but takes place in the internal state machine.
 // Returns true if successful
-tBoolean I2CRequest(tI2C *i2c, unsigned char addr, 
+tBoolean I2CRequest(tI2C *i2c, unsigned char addr,
                                const unsigned char *sendData, unsigned int sendLen,
                                unsigned char *recData, unsigned int recLen) {
     I2CBackgroundRequest(i2c, addr, sendData, sendLen, recData, recLen, 0, 0);

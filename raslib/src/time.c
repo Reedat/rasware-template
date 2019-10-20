@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // time - Real Time based functions
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -21,7 +21,7 @@
 //
 //*****************************************************************************
 
-#include "time.h"
+#include "raslib/inc/time.h"
 
 #include <StellarisWare/inc/hw_memmap.h>
 #include <StellarisWare/inc/hw_ints.h>
@@ -43,14 +43,14 @@ static tTime sysTickTiming;
 typedef struct Task {
     // Task identifier
     int id;
-    
+
     // Target time value
     tTime target;
-    
-    // If repeating, then repeatTime 
+
+    // If repeating, then repeatTime
     // holds the period
     tTime repeatTime;
-    
+
     // Callback data
     void *data;
     tCallback callback;
@@ -79,7 +79,7 @@ void InitializeSystemTime(void) {
 
     // Reset global clock
     systemTiming = 0;
-  
+
     // Reset queue and thread all tasks in the buffer together
     unusedQueue = &taskBuffer[0];
 
@@ -90,25 +90,25 @@ void InitializeSystemTime(void) {
 
     // Reset the pending queue as well
     pendingQueue = 0;
-  
 
-    // Find the system clock divided by 1s, which results in 
+
+    // Find the system clock divided by 1s, which results in
     // 1 US for the timer
     ticksInUS = SysCtlClockGet() / US(1);
 
     // Find the time it SysTick takes in US
     sysTickTiming = SYSTICK_PERIOD / ticksInUS;
 
-  
+
     // Enable the task handling timer
     SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER5);
-  
+
     // We use Timer 5 as a one shot to trigger pending tasks
     TimerConfigure(WTIMER5_BASE, TIMER_CFG_ONE_SHOT);
-  
+
     // Only enable the timer interrupt when it is needed
     TimerIntDisable(WTIMER5_BASE, TIMER_TIMA_TIMEOUT);
-    
+
     // Enable the interrupt
     IntEnable(INT_WTIMER5A);
 
@@ -127,12 +127,12 @@ void InitializeSystemTime(void) {
 // Outputs system time in microseconds
 tTime GetTimeUS(void) {
     tTime timing, systick;
-    
+
     do {
         timing = systemTiming;
         systick = (SYSTICK_PERIOD - SysTickValueGet()) / ticksInUS;
     } while (timing != systemTiming);
-    
+
     return timing + systick;
 }
 
@@ -142,7 +142,7 @@ float GetTime(void) {
 
 
 // Simple SysTick handler just updates the time
-void SysTickHandler(void) {
+void systick_handler(void) {
     systemTiming += sysTickTiming;
 }
 
@@ -150,17 +150,17 @@ void SysTickHandler(void) {
 // Called internally to register a task
 static void RegisterTask(tTask *task) {
     tTask **p;
-    
+
     // Disable any incoming tasks temporarily
     TimerIntDisable(WTIMER5_BASE, TIMER_TIMA_TIMEOUT);
-    
-    // Iterate through the queue until we find a 
+
+    // Iterate through the queue until we find a
     // later task or hit the end
     for (p = &pendingQueue; *p; p = &(*p)->next) {
         if ((*p)->target > task->target)
             break;
     }
-    
+
     // Insert the task into the queue
     task->next = *p;
     *p = task;
@@ -169,13 +169,13 @@ static void RegisterTask(tTask *task) {
 // Setup timer to trigger an interrupt for the next task
 static void SetNextTaskInt(tTime time) {
     tTime until;
-  
+
     // Check to make sure there even is a task
     if (!pendingQueue)
         return;
 
     until = pendingQueue->target;
-    
+
     // If its past the target already we should fire immediately
     if (time > until) {
         // Put a single cycle because why not
@@ -192,10 +192,10 @@ static void SetNextTaskInt(tTime time) {
 //        else
 //            until *= ticksInUS;
     }
-    
+
     // Load the timer
     TimerLoadSet64(WTIMER5_BASE, until);
-      
+
     // Enable the interrupt and timer
     // interrupt might have been disabled to prevent race conditions
     // and timer is disabled after one_shot
@@ -205,10 +205,10 @@ static void SetNextTaskInt(tTime time) {
 
 
 // Handler used to manage waiting tasks
-void WTimer5Handler(void) {
+void timer5a_64_handler(void) {
     // Get the current time with US precision
     tTime time = GetTimeUS();
-    
+
     TimerIntClear(WTIMER5_BASE, TIMER_TIMA_TIMEOUT);
 
     // Handling any waiting tasks
@@ -218,7 +218,7 @@ void WTimer5Handler(void) {
         pendingQueue = task->next;
 
         task->callback(task->data);
-        
+
         if (task->repeatTime) {
             // Reregister the function if it wants to repeat
             task->target += task->repeatTime;
@@ -230,7 +230,7 @@ void WTimer5Handler(void) {
             unusedQueue = task;
         }
     }
-    
+
     // Setup the next task
     SetNextTaskInt(time);
 }
@@ -240,7 +240,7 @@ void WTimer5Handler(void) {
 // The return value can be used to stop the call with CallStop
 int CallInUS(tCallback callback, void *data, tTime us) {
     tTask *task;
-    
+
     // Check if any tasks are available
     if (!unusedQueue)
         return 0;
@@ -251,18 +251,18 @@ int CallInUS(tCallback callback, void *data, tTime us) {
 
     // Claim the next task id
     task->id = nextID++;
-    
+
     // Setup the tasks info
     task->target = GetTimeUS() + us;
     // Zero repeatTime indicates it should run once
     task->repeatTime = 0;
     task->callback = callback;
     task->data = data;
-      
+
     // Register it to be called
     RegisterTask(task);
     SetNextTaskInt(GetTimeUS());
-    
+
     // Return the id we are using
     return task->id;
 }
@@ -287,17 +287,17 @@ int CallEveryUS(tCallback callback, void *data, tTime us) {
 
     // Claim the next task id
     task->id = nextID++;
-    
+
     // Setup the task info
     task->target = GetTimeUS() + us;
     task->repeatTime = us;
     task->callback = callback;
     task->data = data;
-      
+
     // Register it to be called
     RegisterTask(task);
     SetNextTaskInt(GetTimeUS());
-    
+
     // Return the id we are using
     return task->id;
 }
@@ -313,18 +313,18 @@ void CallStop(int id) {
 
     // We have to just iterate all tasks to find it
     for (p = &pendingQueue; *p; p = &(*p)->next) {
-        
+
         if ((*p)->id == id) {
             // Remove it from the queue and throw it back in the unused pile
             tTask *task = *p;
             *p = task->next;
-            
+
             task->next = unusedQueue;
             unusedQueue = task;
         }
     }
 }
-    
+
 
 // Busy waits for given milliseconds
 static void WaitHandler(int *flag) {
@@ -336,7 +336,7 @@ void WaitUS(tTime us) {
     CallInUS(WaitHandler, (void*)&waitFlag, us);
     while(!waitFlag);
 }
-  
+
 void Wait(float s) {
     WaitUS(US(s));
 }

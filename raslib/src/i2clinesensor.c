@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // linesensor - I2C based line sensor
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -23,8 +23,8 @@
 
 #include <math.h>
 
-#include "time.h"
-#include "i2c.h"
+#include "raslib/inc/time.h"
+#include "raslib/inc/i2c.h"
 
 
 #define ADS7830 0x48
@@ -39,22 +39,22 @@ typedef struct I2CLineSensor {
     void (*BackgroundRead)(struct I2CLineSensor *ls, tCallback callback, void *data);
     void (*ReadContinuouslyUS)(struct I2CLineSensor *ls, tTime us);
     void (*ReadContinuously)(struct I2CLineSensor *ls, float s);
-    
+
     // Internally used I2C module
     tI2C *i2c;
-    
-    // Full i2c address 
+
+    // Full i2c address
     unsigned int address;
-    
+
     // Array of values and index in current read
     unsigned char values[8];
     unsigned char index;
     unsigned char command;
-    
+
     // Callback data
     tCallback callback;
     void *data;
-    
+
     // Some state variables
     tBoolean in_callback : 1;
     tBoolean continous : 1;
@@ -78,14 +78,14 @@ static void I2CLineSensorHandler(tI2CLineSensor *ls) {
         ls->callback(ls->data);
         ls->in_callback = false;
         ls->pending = false;
-        
+
     } else {
         // Otherwise we move on to the next sensor
         unsigned char index = ls->index++;
-        
+
         // Setup the i2c command
         ls->command = 0x84 | (index << 4);
-        
+
         // Make the actual request
         I2CBackgroundRequest(ls->i2c, ls->address,
                              &ls->command, 1,
@@ -95,17 +95,17 @@ static void I2CLineSensorHandler(tI2CLineSensor *ls) {
 }
 
 // This function sets up a LineSensor to be run in the background
-// A callback can be passed, in which a call to LineSensorRead 
+// A callback can be passed, in which a call to LineSensorRead
 // will return with the newly obtained value immediately
 static void I2CLineSensorBackgroundRead(tI2CLineSensor *ls, tCallback callback, void *data) {
     // Store the callback information
     ls->callback = callback ? callback : Dummy;
     ls->data = data;
-    
+
     // Reset the index and flags
     ls->index = 0;
     ls->pending = true;
-    
+
     // Call the handler itself to start reading the values
     I2CLineSensorHandler(ls);
 }
@@ -119,27 +119,27 @@ static unsigned char I2CLineSensorRead(tI2CLineSensor *ls, float threshold) {
     unsigned char thresh;
     unsigned char output = 0x0;
     int i;
-    
+
     // Check if we need to read a value
     if (!ls->in_callback && !ls->continous) {
         // Just call LineSensorBackgroundRead and busy wait
         I2CLineSensorBackgroundRead(ls, 0, 0);
         while (ls->pending);
     }
-    
+
     // Check for any errors
     if (!I2CSuccess(ls->i2c))
         return 0xff;
-    
+
     // Stick to unsigned chars for efficiency
     thresh = (unsigned char)(0xff * threshold);
-    
+
     // Calculate the byte and return it
     for (i=0; i < 8; i++) {
         if (ls->values[i] > thresh)
             output |= (1 << i);
     }
-    
+
     return output;
 }
 
@@ -150,27 +150,27 @@ static unsigned char I2CLineSensorRead(tI2CLineSensor *ls, float threshold) {
 // then the function will busy wait for the results
 static tBoolean I2CLineSensorReadArray(tI2CLineSensor *ls, float *array) {
     int i;
-    
+
     // Check if we need to read a value
     if (!ls->in_callback && !ls->continous) {
         // Just call LineSensorBackgroundRead and busy wait
         I2CLineSensorBackgroundRead(ls, 0, 0);
         while (ls->pending);
     }
-    
+
     // Check for any errors
     if (!I2CSuccess(ls->i2c)) {
         for (i=0; i < 8; i++)
             array[i] = INFINITY;
-        
+
         return false;
     }
-    
+
     // Calculate the values
     for (i=0; i < 8; i++) {
         array[i] = (ls->values[i] / (float)(0x100));
     }
-    
+
     return true;
 }
 
@@ -192,7 +192,7 @@ static void ContinuousReadHandler(tI2CLineSensor *ls) {
 static void I2CLineSensorReadContinuouslyUS(tI2CLineSensor *ls, tTime us) {
     // Set the continous flag
     ls->continous = true;
-    
+
     // Check if there isn't enough time for the sensor to be read
     // NOTE: This is unknown at the time and may be calculatable
     // For now only a time of 0 will switch to the fast as possible solution
@@ -214,20 +214,20 @@ static void I2CLineSensorReadContinuously(tI2CLineSensor *ls, float s) {
 tI2CLineSensor *_InitializeI2CLineSensor(tI2C *i2c, unsigned int address) {
     // Grab the next line sensor
     tI2CLineSensor *ls = &lineSensorBuffer[lineSensorCount++];
-    
+
     // Keep track of the I2C module
     ls->i2c = i2c;
-    
+
     // Create the actual address
     ls->address = ADS7830 | (0x3 & address);
-    
-    // Set parent method/functions 
+
+    // Set parent method/functions
     ls->Read = I2CLineSensorRead;
     ls->ReadArray = I2CLineSensorReadArray;
     ls->BackgroundRead = I2CLineSensorBackgroundRead;
     ls->ReadContinuouslyUS = I2CLineSensorReadContinuouslyUS;
     ls->ReadContinuously = I2CLineSensorReadContinuously;
-    
+
     // Return the initialized line sensor
     return ls;
 }

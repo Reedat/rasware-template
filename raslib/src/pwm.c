@@ -21,7 +21,7 @@
 //
 //*****************************************************************************
 
-#include "pwm.h"
+#include "raslib/inc/pwm.h"
 
 #include <StellarisWare/inc/hw_ints.h>
 #include <StellarisWare/inc/hw_memmap.h>

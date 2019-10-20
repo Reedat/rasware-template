@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // sonar - Software Sonar driver
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -24,8 +24,8 @@
 #ifndef _R_SONAR_H_
 #define _R_SONAR_H_
 
-#include "gpio.h"
-#include "time.h"
+#include "raslib/inc/gpio.h"
+#include "raslib/inc/time.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +53,7 @@ tSonar *InitializeSonar(tPin trigger, tPin echo);
 /**
  * Returns the distance measured from the sonar
  * @param snr Pointer to an initialized tSonar, returned by InitializeSonar
- * @return The distance measured as a percentage of maximum range of the sonar. If no response is detected, a value of infinity is returned. 
+ * @return The distance measured as a percentage of maximum range of the sonar. If no response is detected, a value of infinity is returned.
  * Note: if the sonar is not continously reading, then the function will busy wait for the results
  */
 float SonarRead(tSonar *snr);

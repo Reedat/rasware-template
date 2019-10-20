@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // gpio - GPIO related funcions
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -24,14 +24,14 @@
 #ifndef _R_GPIO_H_
 #define _R_GPIO_H_
 
-#include "common.h"
+#include "raslib/inc/common.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-// Definition of tPin. Pins are named `PIN_XY' 
+// Definition of tPin. Pins are named `PIN_XY'
 // where X is the port letter and Y is the pin number
 typedef enum {
     PIN_A0, PIN_A1, PIN_A2, PIN_A3, PIN_A4, PIN_A5, PIN_A6, PIN_A7,
@@ -80,7 +80,7 @@ void SetPinZ(tPin pin);
 
 /**
  * Adds a weak pull up resistor to the pin
- * @param pin The pin getting a weak pull up resistor 
+ * @param pin The pin getting a weak pull up resistor
  */
 void PullUpPin(tPin pin);
 
@@ -100,11 +100,11 @@ void PullDownPin(tPin pin);
  */
 void CallOnPin(tCallback callback, void *data, tPin pin);
 
-// Register a callback to be called when the pin's value goes from low to high, 
+// Register a callback to be called when the pin's value goes from low to high,
 // the state of the pin can then be determined through the GetPin function.
 void CallOnPinRising(tCallback callback, void *data, tPin pin);
 
-// Register a callback to be called when the pin's value goes from high to low, 
+// Register a callback to be called when the pin's value goes from high to low,
 // the state of the pin can then be determined through the GetPin function.
 void CallOnPinFalling(tCallback callback, void *data, tPin pin);
 

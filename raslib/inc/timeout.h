@@ -24,8 +24,8 @@
 #ifndef _R_TIMEOUT_H_
 #define _R_TIMEOUT_H_
 
-#include "common.h"
-#include "time.h"
+#include "raslib/inc/common.h"
+#include "raslib/inc/time.h"
 
 #ifdef __cplusplus
 extern "C" {

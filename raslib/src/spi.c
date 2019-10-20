@@ -21,9 +21,9 @@
 //
 //*****************************************************************************
 
-#include "spi.h"
-#include "gpio.h"
-#include "time.h"
+#include "raslib/inc/spi.h"
+#include "raslib/inc/gpio.h"
+#include "raslib/inc/time.h"
 
 #include <stdint.h>
 #include <stddef.h>

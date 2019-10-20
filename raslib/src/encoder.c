@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // encoder.c - encoder driver
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -21,7 +21,7 @@
 //
 //*****************************************************************************
 
-#include "encoder.h"
+#include "raslib/inc/encoder.h"
 
 
 // Definition of tDecoderState
@@ -43,11 +43,11 @@ static const tDecoderState DecoderFSM[4] = {
 struct Encoder {
     // Pointer to what state the encoder is in
     tDecoderState *decoder;
-    
+
     // Data associated with what pins the encoder is plugged into
     tPin pinA;
     tPin pinB;
-    
+
     // Recorded number of encoder "ticks" thus far
     signed long ticks;
 
@@ -66,12 +66,12 @@ int encoderCount = 0;
 // Handler to respond to pin interrupts
 static void EncoderHandler(void *data) {
     tEncoder *enc = data;
-    
+
     // Determine actual value of pins
     // and normalize inputs for lookup in a table
     int input = (GetPin(enc->pinA) ? 0x1 : 0x0) |
                 (GetPin(enc->pinB) ? 0x2 : 0x0);
-    
+
     // Add the value in the FSM to the current tick count
     // (or substract if invert is set)
     if (enc->invert) {
@@ -89,7 +89,7 @@ static void EncoderHandler(void *data) {
 tEncoder *InitializeEncoder(tPin a, tPin b, tBoolean invert) {
     // Grab the next encoder
     tEncoder *enc = &encoderBuffer[encoderCount++];
-    
+
     // Setup the initial data
     enc->decoder = &DecoderFSM[0];
     enc->pinA = a;
@@ -100,7 +100,7 @@ tEncoder *InitializeEncoder(tPin a, tPin b, tBoolean invert) {
     // Register the interrupt handler on the pins
     CallOnPin(EncoderHandler, enc, a);
     CallOnPin(EncoderHandler, enc, b);
-    
+
     // Return the new encoder
     return enc;
 }

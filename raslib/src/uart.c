@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // uart - USB UART Communications
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -21,7 +21,7 @@
 //
 //*****************************************************************************
 
-#include "uart.h"
+#include "raslib/inc/uart.h"
 
 #include <stdarg.h>
 #include <math.h>
@@ -184,7 +184,7 @@ unsigned char whiteSpaceP ( const char toCheck ) {
 
 unsigned char matchCharP (const char toCheck, const char * possible, const int len) {
   int i;
-  for (i = 0; i < len; i++) 
+  for (i = 0; i < len; i++)
     if (toCheck == possible[i])
       return true;
   return false;
@@ -395,12 +395,12 @@ unsigned int fScanf(tUART * module, const char * formatString, ...) {
 // Busy-waits for input characters over UART and places them into the provided buffer
 int Gets(char *buffer, int count) {
     int i;
-    
+
     // Loop while there are more characters.
     for (i = 0; i < count; i++) {
         // Read the next character from the UART.
         buffer[i] = UARTCharGet(UART0_BASE);
-        
+
         // Handle new lines
         if (buffer[i] == '\r' || buffer[i] == '\0') {
             UARTCharPut(UART0_BASE, '\r');
@@ -408,11 +408,11 @@ int Gets(char *buffer, int count) {
             buffer[i] = 0;
             return i;
         }
-        
+
         // Echo to the user
         UARTCharPut(UART0_BASE, buffer[i]);
     }
-    
+
     return count;
 }
 
@@ -421,7 +421,7 @@ int Gets(char *buffer, int count) {
 // Outputs the characters of a null-terminated string over UART
 int fPuts(tUART * module, const char *buffer, int count) {
     int i;
-    
+
     // Loop while there are more characters to send.
     for (i = 0; i < count; i++) {
         // Handle new lines
@@ -430,10 +430,10 @@ int fPuts(tUART * module, const char *buffer, int count) {
         } else if (buffer[i] == '\0') {
             return i;
         }
-        
+
         UARTCharPut(module->base, buffer[i]);
     }
-    
+
     return count;
 }
 
@@ -450,7 +450,7 @@ int fKeyWasPressed(tUART * module) {
         return (UARTCharsAvail(module->base) > 0);
 }
 
-// Unfortunately varargs wreaks havoc on how floating point is passed. 
+// Unfortunately varargs wreaks havoc on how floating point is passed.
 // We get a 64bit double and have to decode it ourselves.
 #define va_d2f(args) DoubleFloat(&args.__ap)
 
@@ -473,17 +473,17 @@ static float DoubleFloat(void **args) {
         (*(unsigned int **)args) += 2;
     }
 
-    
+
     exp = (0x7ff & (a >> 20)) - 1023 + 127;
     if (exp > 0xff) exp = 0xff; // check range
     if (exp < 0x00) exp = 0x00;
-    
+
     num.i =  0x80000000 & a; // sign bit
     num.i |= 0x7f800000 & (exp << 23); // exponent
     num.i |= 0x007ffff8 & ((0xfffff & a) << 3); // high mantissa
     num.i |= 0x00000003 & (b >> 29); // low mantissa
 
-    
+
     return num.f;
 }
 
@@ -493,7 +493,7 @@ static tBoolean DoubleTest(int eh, ...) {
     va_start(args, eh);
     test = va_d2f(args);
     va_end(args);
-    
+
     return eh == (int)test;
 }
 
@@ -501,19 +501,19 @@ static tBoolean DoubleTest(int eh, ...) {
 /** Helper functions for printf **/
 static int GetInt(const char **buffer) {
     int res = 0;
-    
+
     while (**buffer >= '0' && **buffer <= '9') {
         res *= 10;
         res += **buffer - '0';
         (*buffer)++;
     }
-    
+
     return res;
 }
 
 static void Pad(tUART * module, char c, int n) {
     int i;
-    
+
     for (i = 0; i < n; i++) {
             fPutc(module, c);
     }
@@ -522,22 +522,22 @@ static void Pad(tUART * module, char c, int n) {
 /** String printing **/
 static int SizeString(const char *buffer, int count) {
     int i;
-    
+
     for (i = 0; i < count; i++) {
         if (buffer[i] == '\0')
             return i;
     }
-    
+
     return count;
 }
 
 static void PutString(tUART * module, const char *buffer, int left, int width, int prec) {
     int len;
-    
+
     if (prec < 0) prec = 0x7fffffff;
-    
+
     len = SizeString(buffer, prec);
-    
+
     if (len > width) {
             fPuts(module, buffer, prec);
     } else if (left) {
@@ -552,19 +552,19 @@ static void PutString(tUART * module, const char *buffer, int left, int width, i
 /** Integer printing **/
 static int SizeNum(int base, unsigned int n) {
     int i = 0;
-    
+
     while (n) {
         i++;
         n /= base;
     }
-    
+
     return i;
 }
 
 static void PutNum(tUART * module, const char *table, int base, int count, unsigned int n) {
     if (!n && count <= 0)
         return;
-    
+
     PutNum(module, table, base, count-1, n/base);
     fPutc(module, table[n%base]);
 }
@@ -577,10 +577,10 @@ static void PutBase(tUART * module, unsigned int n, const char *table, int base,
             fPutc(module, ' ');
         width--;
     }
-    
-    if (width < 1) 
+
+    if (width < 1)
         width = 1;
-    
+
     if (left) {
             PutNum(module, table, base, 1, n);
             Pad(module, ' ', width - SizeNum(base, n) - (n == 0));
@@ -602,13 +602,13 @@ static void PutSigned(tUART *module, signed int d, int left, int sign, int width
 static void PutNormalFloat(tUART * module, float f, int left, int sign, int width, int prec) {
     if (prec < 0)
         prec = 6;
-    
+
     if (f < 0) {
             fPutc(module, '-');
         width--;
         f = -f;
     }
-    
+
     if (isnan(f)) {
             PutString(module, "nan", left, width, 3);
     } else if (isinf(f)) {
@@ -622,10 +622,10 @@ static void PutNormalFloat(tUART * module, float f, int left, int sign, int widt
             height = width - (prec+1);
             width = 0;
         }
-        
-        PutBase(module, (int)f, lower, 10, left, 0, height);    
+
+        PutBase(module, (int)f, lower, 10, left, 0, height);
         fPutc(module, '.');
-        
+
         f = f - floorf(f);
         PutBase(module, (int)(f*powf(10, prec)), lower, 10, 0, 0, prec);
         Pad(module, ' ', width-prec);
@@ -635,13 +635,13 @@ static void PutNormalFloat(tUART * module, float f, int left, int sign, int widt
 static void PutScienceFloat(tUART * module, float f, const char *table, int left, int sign, int width, int prec) {
     if (prec < 0)
         prec = 6;
-    
+
     if (f < 0) {
             fPutc(module, '-');
         width--;
         f = -f;
     }
-    
+
     if (f == 0) {
             PutString(module, "0", left, width, 1);
     } else if (isnan(f)) {
@@ -650,7 +650,7 @@ static void PutScienceFloat(tUART * module, float f, const char *table, int left
             PutString(module, "inf", left, width, 3);
     } else {
         float exp = floorf(log10f(f));
-        
+
         int height;
         if (left) {
             height = 0;
@@ -659,36 +659,36 @@ static void PutScienceFloat(tUART * module, float f, const char *table, int left
             height = width - (prec + SizeNum(10, (int)exp) + 2);
             width = 0;
         }
-        
+
         PutBase(module, (int)f, lower, 10, left, 0, height);
         fPutc(module, '.');
-        
+
         f = f - floorf(f);
         PutBase(module, (int)(f*powf(10, prec)), lower, 10, 0, 0, prec);
-        
+
         fPutc(module, table[0xe]);
         PutBase(module, (int)exp, lower, 10, 1, 1, width);
     }
 }
 
-        
+
 // And finally printf itself
 void vPrintf(tUART * module, const char *buffer, va_list args) {
     int left, sign, width, prec;
-    
+
     // Start the varargs processing.
-    
+
     while (*buffer) {
         // Check for escape characters
 next:   if (*buffer == '%') {
             buffer++;
-    
+
             // Flags
-            left = 0; 
+            left = 0;
             sign = 0;
             width = -1;
             prec = -1;
-            
+
             while (true) {
                 switch (*buffer++) {
 // Flags
@@ -736,11 +736,11 @@ next:   if (*buffer == '%') {
             // Print out the next character
             if (*buffer == '\n')
                     fPutc(module, '\r');
-            
+
             fPutc(module, *buffer++);
         }
     }
-    
+
 }
 
 void Printf(const char *buffer, ...) {

@@ -1,19 +1,19 @@
 //*****************************************************************************
 //
 // adc - Analog to Digital converter drivers
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE AUTHORS OF THIS FILE
 // SHALL NOT, UNDER ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL,
 // OR CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of RASLib Rev0 of the RASWare2013 package.
 //
-// Written by: 
-// The student branch of the 
-// IEEE - Robotics and Automation Society 
+// Written by:
+// The student branch of the
+// IEEE - Robotics and Automation Society
 // at the University of Texas at Austin
 //
 // Website: ras.ece.utexas.edu
@@ -24,8 +24,8 @@
 #ifndef _R_ADC_H_
 #define _R_ADC_H_
 
-#include "gpio.h"
-#include "time.h"
+#include "raslib/inc/gpio.h"
+#include "raslib/inc/time.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,7 +65,7 @@ typedef struct ADC tADC;
 tADC *InitializeADC(tPin pin);
 
 /**
- * Returns the voltage on the pin provided to InitializeADC as a % of 3.3V. (%'s are always between 0.0 and 1.0) 
+ * Returns the voltage on the pin provided to InitializeADC as a % of 3.3V. (%'s are always between 0.0 and 1.0)
  * @param adc Pointer to an initialized tADC, returned by InitializeADC
  * @return Value measured as a percentage
  * Note: if the ADC is not continously reading, then the function will busy wait for the results
