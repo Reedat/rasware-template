@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2008-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,18 +32,19 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
 
+#include "driverlib/epi.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_epi.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/epi.h"
-#include "driverlib/interrupt.h"
 
 //*****************************************************************************
 //
@@ -74,23 +75,19 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIModeSet(unsigned long ulBase, unsigned long ulMode)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT((ulMode == EPI_MODE_GENERAL) ||
-           (ulMode == EPI_MODE_SDRAM) ||
-           (ulMode == EPI_MODE_HB8) ||
-           (ulMode == EPI_MODE_HB16) ||
-           (ulMode == EPI_MODE_DISABLE));
+void EPIModeSet(unsigned long ulBase, unsigned long ulMode) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT((ulMode == EPI_MODE_GENERAL) || (ulMode == EPI_MODE_SDRAM) ||
+         (ulMode == EPI_MODE_HB8) || (ulMode == EPI_MODE_HB16) ||
+         (ulMode == EPI_MODE_DISABLE));
 
-    //
-    // Write the mode word to the register.
-    //
-    HWREG(ulBase + EPI_O_CFG) = ulMode;
+  //
+  // Write the mode word to the register.
+  //
+  HWREG(ulBase + EPI_O_CFG) = ulMode;
 }
 
 //*****************************************************************************
@@ -120,18 +117,16 @@ EPIModeSet(unsigned long ulBase, unsigned long ulMode)
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIDividerSet(unsigned long ulBase, unsigned long ulDivider)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
+void EPIDividerSet(unsigned long ulBase, unsigned long ulDivider) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
 
-    //
-    // Write the divider value to the register.
-    //
-    HWREG(ulBase + EPI_O_BAUD) = ulDivider;
+  //
+  // Write the divider value to the register.
+  //
+  HWREG(ulBase + EPI_O_BAUD) = ulDivider;
 }
 
 //*****************************************************************************
@@ -171,26 +166,24 @@ EPIDividerSet(unsigned long ulBase, unsigned long ulDivider)
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIConfigSDRAMSet(unsigned long ulBase, unsigned long ulConfig,
-                  unsigned long ulRefresh)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulRefresh < 2048);
+void EPIConfigSDRAMSet(unsigned long ulBase, unsigned long ulConfig,
+                       unsigned long ulRefresh) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulRefresh < 2048);
 
-    //
-    // Fill in the refresh count field of the configuration word.
-    //
-    ulConfig &= ~EPI_SDRAMCFG_RFSH_M;
-    ulConfig |= ulRefresh << EPI_SDRAMCFG_RFSH_S;
+  //
+  // Fill in the refresh count field of the configuration word.
+  //
+  ulConfig &= ~EPI_SDRAMCFG_RFSH_M;
+  ulConfig |= ulRefresh << EPI_SDRAMCFG_RFSH_S;
 
-    //
-    // Write the SDRAM configuration register.
-    //
-    HWREG(ulBase + EPI_O_SDRAMCFG) = ulConfig;
+  //
+  // Write the SDRAM configuration register.
+  //
+  HWREG(ulBase + EPI_O_SDRAMCFG) = ulConfig;
 }
 
 //*****************************************************************************
@@ -249,34 +242,31 @@ EPIConfigSDRAMSet(unsigned long ulBase, unsigned long ulConfig,
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIConfigHB8Set(unsigned long ulBase, unsigned long ulConfig,
-                unsigned long ulMaxWait)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulMaxWait < 256);
+void EPIConfigHB8Set(unsigned long ulBase, unsigned long ulConfig,
+                     unsigned long ulMaxWait) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulMaxWait < 256);
 
-    //
-    // Determine the CS and word access modes.
-    //
-    HWREG(ulBase + EPI_O_HB8CFG2) = (((ulConfig & EPI_HB8_WORD_ACCESS) ?
-                                       EPI_HB8CFG2_WORD : 0) |
-                                     ((ulConfig & EPI_HB8_CSBAUD_DUAL) ?
-                                       EPI_HB8CFG2_CSBAUD : 0) |
-                                      ((ulConfig & EPI_HB8_CSCFG_MASK) << 15));
-    //
-    // Fill in the max wait field of the configuration word.
-    //
-    ulConfig &= ~EPI_HB8CFG_MAXWAIT_M;
-    ulConfig |= ulMaxWait << EPI_HB8CFG_MAXWAIT_S;
+  //
+  // Determine the CS and word access modes.
+  //
+  HWREG(ulBase + EPI_O_HB8CFG2) =
+      (((ulConfig & EPI_HB8_WORD_ACCESS) ? EPI_HB8CFG2_WORD : 0) |
+       ((ulConfig & EPI_HB8_CSBAUD_DUAL) ? EPI_HB8CFG2_CSBAUD : 0) |
+       ((ulConfig & EPI_HB8_CSCFG_MASK) << 15));
+  //
+  // Fill in the max wait field of the configuration word.
+  //
+  ulConfig &= ~EPI_HB8CFG_MAXWAIT_M;
+  ulConfig |= ulMaxWait << EPI_HB8CFG_MAXWAIT_S;
 
-    //
-    // Write the main HostBus8 configuration register.
-    //
-    HWREG(ulBase + EPI_O_HB8CFG)  = ulConfig;
+  //
+  // Write the main HostBus8 configuration register.
+  //
+  HWREG(ulBase + EPI_O_HB8CFG) = ulConfig;
 }
 
 //*****************************************************************************
@@ -338,35 +328,32 @@ EPIConfigHB8Set(unsigned long ulBase, unsigned long ulConfig,
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIConfigHB16Set(unsigned long ulBase, unsigned long ulConfig,
-                unsigned long ulMaxWait)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulMaxWait < 256);
+void EPIConfigHB16Set(unsigned long ulBase, unsigned long ulConfig,
+                      unsigned long ulMaxWait) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulMaxWait < 256);
 
-    //
-    // Determine the CS and word access modes.
-    //
-    HWREG(ulBase + EPI_O_HB16CFG2) = (((ulConfig & EPI_HB16_WORD_ACCESS) ?
-                                       EPI_HB16CFG2_WORD : 0) |
-                                     ((ulConfig & EPI_HB16_CSBAUD_DUAL) ?
-                                       EPI_HB16CFG2_CSBAUD : 0) |
-                                      ((ulConfig & EPI_HB16_CSCFG_MASK) << 15));
+  //
+  // Determine the CS and word access modes.
+  //
+  HWREG(ulBase + EPI_O_HB16CFG2) =
+      (((ulConfig & EPI_HB16_WORD_ACCESS) ? EPI_HB16CFG2_WORD : 0) |
+       ((ulConfig & EPI_HB16_CSBAUD_DUAL) ? EPI_HB16CFG2_CSBAUD : 0) |
+       ((ulConfig & EPI_HB16_CSCFG_MASK) << 15));
 
-    //
-    // Fill in the max wait field of the configuration word.
-    //
-    ulConfig &= ~EPI_HB16CFG_MAXWAIT_M;
-    ulConfig |= ulMaxWait << EPI_HB16CFG_MAXWAIT_S;
+  //
+  // Fill in the max wait field of the configuration word.
+  //
+  ulConfig &= ~EPI_HB16CFG_MAXWAIT_M;
+  ulConfig |= ulMaxWait << EPI_HB16CFG_MAXWAIT_S;
 
-    //
-    // Write the main HostBus16 configuration register.
-    //
-    HWREG(ulBase + EPI_O_HB16CFG)  = ulConfig;
+  //
+  // Write the main HostBus16 configuration register.
+  //
+  HWREG(ulBase + EPI_O_HB16CFG) = ulConfig;
 }
 
 //*****************************************************************************
@@ -426,39 +413,37 @@ EPIConfigHB16Set(unsigned long ulBase, unsigned long ulConfig,
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIConfigGPModeSet(unsigned long ulBase, unsigned long ulConfig,
-                   unsigned long ulFrameCount, unsigned long ulMaxWait)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulFrameCount < 16);
-    ASSERT(ulMaxWait < 256);
+void EPIConfigGPModeSet(unsigned long ulBase, unsigned long ulConfig,
+                        unsigned long ulFrameCount, unsigned long ulMaxWait) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulFrameCount < 16);
+  ASSERT(ulMaxWait < 256);
 
-    //
-    // Set the word access mode.
-    //
-    HWREG(ulBase + EPI_O_GPCFG2) = ((ulConfig & EPI_GPMODE_WORD_ACCESS) ?
-                                    EPI_GPCFG2_WORD : 0);
+  //
+  // Set the word access mode.
+  //
+  HWREG(ulBase + EPI_O_GPCFG2) =
+      ((ulConfig & EPI_GPMODE_WORD_ACCESS) ? EPI_GPCFG2_WORD : 0);
 
-    //
-    // Fill in the frame count field of the configuration word.
-    //
-    ulConfig &= ~EPI_GPCFG_FRMCNT_M;
-    ulConfig |= ulFrameCount << EPI_GPCFG_FRMCNT_S;
+  //
+  // Fill in the frame count field of the configuration word.
+  //
+  ulConfig &= ~EPI_GPCFG_FRMCNT_M;
+  ulConfig |= ulFrameCount << EPI_GPCFG_FRMCNT_S;
 
-    //
-    // Fill in the max wait field of the configuration word.
-    //
-    ulConfig &= ~EPI_GPCFG_MAXWAIT_M;
-    ulConfig |= ulMaxWait << EPI_GPCFG_MAXWAIT_S;
+  //
+  // Fill in the max wait field of the configuration word.
+  //
+  ulConfig &= ~EPI_GPCFG_MAXWAIT_M;
+  ulConfig |= ulMaxWait << EPI_GPCFG_MAXWAIT_S;
 
-    //
-    // Write the non-moded configuration register.
-    //
-    HWREG(ulBase + EPI_O_GPCFG) = ulConfig;
+  //
+  // Write the non-moded configuration register.
+  //
+  HWREG(ulBase + EPI_O_GPCFG) = ulConfig;
 }
 
 //*****************************************************************************
@@ -490,19 +475,17 @@ EPIConfigGPModeSet(unsigned long ulBase, unsigned long ulConfig,
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIAddressMapSet(unsigned long ulBase, unsigned long ulMap)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulMap < 0x100);
+void EPIAddressMapSet(unsigned long ulBase, unsigned long ulMap) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulMap < 0x100);
 
-    //
-    // Set the value of the address mapping register.
-    //
-    HWREG(ulBase + EPI_O_ADDRMAP) = ulMap;
+  //
+  // Set the value of the address mapping register.
+  //
+  HWREG(ulBase + EPI_O_ADDRMAP) = ulMap;
 }
 
 //*****************************************************************************
@@ -535,34 +518,33 @@ EPIAddressMapSet(unsigned long ulBase, unsigned long ulMap)
 //! \return None.
 //
 //*****************************************************************************
-void
-EPINonBlockingReadConfigure(unsigned long ulBase, unsigned long ulChannel,
-                            unsigned long ulDataSize, unsigned long ulAddress)
-{
-    unsigned long ulOffset;
+void EPINonBlockingReadConfigure(unsigned long ulBase, unsigned long ulChannel,
+                                 unsigned long ulDataSize,
+                                 unsigned long ulAddress) {
+  unsigned long ulOffset;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulChannel < 2);
-    ASSERT(ulDataSize < 4);
-    ASSERT(ulAddress < 0x20000000);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulChannel < 2);
+  ASSERT(ulDataSize < 4);
+  ASSERT(ulAddress < 0x20000000);
 
-    //
-    // Compute the offset needed to select the correct channel regs.
-    //
-    ulOffset = ulChannel * (EPI_O_RSIZE1 - EPI_O_RSIZE0);
+  //
+  // Compute the offset needed to select the correct channel regs.
+  //
+  ulOffset = ulChannel * (EPI_O_RSIZE1 - EPI_O_RSIZE0);
 
-    //
-    // Write the data size register for the channel.
-    //
-    HWREG(ulBase + EPI_O_RSIZE0 + ulOffset) = ulDataSize;
+  //
+  // Write the data size register for the channel.
+  //
+  HWREG(ulBase + EPI_O_RSIZE0 + ulOffset) = ulDataSize;
 
-    //
-    // Write the starting address register for the channel.
-    //
-    HWREG(ulBase + EPI_O_RADDR0 + ulOffset) = ulAddress;
+  //
+  // Write the starting address register for the channel.
+  //
+  HWREG(ulBase + EPI_O_RADDR0 + ulOffset) = ulAddress;
 }
 
 //*****************************************************************************
@@ -587,28 +569,26 @@ EPINonBlockingReadConfigure(unsigned long ulBase, unsigned long ulChannel,
 //! \return None.
 //
 //*****************************************************************************
-void
-EPINonBlockingReadStart(unsigned long ulBase, unsigned long ulChannel,
-                        unsigned long ulCount)
-{
-    unsigned long ulOffset;
+void EPINonBlockingReadStart(unsigned long ulBase, unsigned long ulChannel,
+                             unsigned long ulCount) {
+  unsigned long ulOffset;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulChannel < 2);
-    ASSERT(ulCount < 4096);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulChannel < 2);
+  ASSERT(ulCount < 4096);
 
-    //
-    // Compute the offset needed to select the correct channel regs.
-    //
-    ulOffset = ulChannel * (EPI_O_RPSTD1 - EPI_O_RPSTD0);
+  //
+  // Compute the offset needed to select the correct channel regs.
+  //
+  ulOffset = ulChannel * (EPI_O_RPSTD1 - EPI_O_RPSTD0);
 
-    //
-    // Write to the read count register.
-    //
-    HWREG(ulBase + EPI_O_RPSTD0 + ulOffset) = ulCount;
+  //
+  // Write to the read count register.
+  //
+  HWREG(ulBase + EPI_O_RPSTD0 + ulOffset) = ulCount;
 }
 
 //*****************************************************************************
@@ -624,26 +604,24 @@ EPINonBlockingReadStart(unsigned long ulBase, unsigned long ulChannel,
 //! \return None.
 //
 //*****************************************************************************
-void
-EPINonBlockingReadStop(unsigned long ulBase, unsigned long ulChannel)
-{
-    unsigned long ulOffset;
+void EPINonBlockingReadStop(unsigned long ulBase, unsigned long ulChannel) {
+  unsigned long ulOffset;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulChannel < 2);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulChannel < 2);
 
-    //
-    // Compute the offset needed to select the correct channel regs.
-    //
-    ulOffset = ulChannel * (EPI_O_RPSTD1 - EPI_O_RPSTD0);
+  //
+  // Compute the offset needed to select the correct channel regs.
+  //
+  ulOffset = ulChannel * (EPI_O_RPSTD1 - EPI_O_RPSTD0);
 
-    //
-    // Write a 0 to the read count register, which cancels the transaction.
-    //
-    HWREG(ulBase + EPI_O_RPSTD0 + ulOffset) = 0;
+  //
+  // Write a 0 to the read count register, which cancels the transaction.
+  //
+  HWREG(ulBase + EPI_O_RPSTD0 + ulOffset) = 0;
 }
 
 //*****************************************************************************
@@ -659,26 +637,25 @@ EPINonBlockingReadStop(unsigned long ulBase, unsigned long ulChannel)
 //! \return The number of items remaining in the non-blocking read transaction.
 //
 //*****************************************************************************
-unsigned long
-EPINonBlockingReadCount(unsigned long ulBase, unsigned long ulChannel)
-{
-    unsigned long ulOffset;
+unsigned long EPINonBlockingReadCount(unsigned long ulBase,
+                                      unsigned long ulChannel) {
+  unsigned long ulOffset;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulChannel < 2);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulChannel < 2);
 
-    //
-    // Compute the offset needed to select the correct channel regs.
-    //
-    ulOffset = ulChannel * (EPI_O_RPSTD1 - EPI_O_RPSTD0);
+  //
+  // Compute the offset needed to select the correct channel regs.
+  //
+  ulOffset = ulChannel * (EPI_O_RPSTD1 - EPI_O_RPSTD0);
 
-    //
-    // Read the count remaining and return the value to the caller.
-    //
-    return(HWREG(ulBase + EPI_O_RPSTD0 + ulOffset));
+  //
+  // Read the count remaining and return the value to the caller.
+  //
+  return (HWREG(ulBase + EPI_O_RPSTD0 + ulOffset));
 }
 
 //*****************************************************************************
@@ -695,18 +672,16 @@ EPINonBlockingReadCount(unsigned long ulBase, unsigned long ulChannel)
 //! \return The number of items available to read in the read FIFO.
 //
 //*****************************************************************************
-unsigned long
-EPINonBlockingReadAvail(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
+unsigned long EPINonBlockingReadAvail(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
 
-    //
-    // Read the FIFO count and return it to the caller.
-    //
-    return(HWREG(ulBase + EPI_O_RFIFOCNT));
+  //
+  // Read the FIFO count and return it to the caller.
+  //
+  return (HWREG(ulBase + EPI_O_RFIFOCNT));
 }
 
 //*****************************************************************************
@@ -727,41 +702,39 @@ EPINonBlockingReadAvail(unsigned long ulBase)
 //! \return The number of items read from the FIFO.
 //
 //*****************************************************************************
-unsigned long
-EPINonBlockingReadGet32(unsigned long ulBase, unsigned long ulCount,
-                        unsigned long *pulBuf)
-{
-    unsigned long ulCountRead = 0;
+unsigned long EPINonBlockingReadGet32(unsigned long ulBase,
+                                      unsigned long ulCount,
+                                      unsigned long *pulBuf) {
+  unsigned long ulCountRead = 0;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulCount < 4096);
+  ASSERT(pulBuf);
+
+  //
+  // Read from the FIFO while there are any items to read and
+  // the caller's specified count is not exceeded.
+  //
+  while (HWREG(ulBase + EPI_O_RFIFOCNT) && ulCount--) {
+    //
+    // Read from the FIFO and store in the caller supplied buffer.
+    //
+    *pulBuf = HWREG(ulBase + EPI_O_READFIFO);
 
     //
-    // Check the arguments.
+    // Update the caller's buffer pointer and the count of items read.
     //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulCount < 4096);
-    ASSERT(pulBuf);
+    pulBuf++;
+    ulCountRead++;
+  }
 
-    //
-    // Read from the FIFO while there are any items to read and
-    // the caller's specified count is not exceeded.
-    //
-    while(HWREG(ulBase + EPI_O_RFIFOCNT) && ulCount--)
-    {
-        //
-        // Read from the FIFO and store in the caller supplied buffer.
-        //
-        *pulBuf = HWREG(ulBase + EPI_O_READFIFO);
-
-        //
-        // Update the caller's buffer pointer and the count of items read.
-        //
-        pulBuf++;
-        ulCountRead++;
-    }
-
-    //
-    // Return the count of items read to the caller.
-    //
-    return(ulCountRead);
+  //
+  // Return the count of items read to the caller.
+  //
+  return (ulCountRead);
 }
 
 //*****************************************************************************
@@ -782,41 +755,39 @@ EPINonBlockingReadGet32(unsigned long ulBase, unsigned long ulCount,
 //! \return The number of items read from the FIFO.
 //
 //*****************************************************************************
-unsigned long
-EPINonBlockingReadGet16(unsigned long ulBase, unsigned long ulCount,
-                        unsigned short *pusBuf)
-{
-    unsigned long ulCountRead = 0;
+unsigned long EPINonBlockingReadGet16(unsigned long ulBase,
+                                      unsigned long ulCount,
+                                      unsigned short *pusBuf) {
+  unsigned long ulCountRead = 0;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulCount < 4096);
+  ASSERT(pusBuf);
+
+  //
+  // Read from the FIFO while there are any items to read, and
+  // the caller's specified count is not exceeded.
+  //
+  while (HWREG(ulBase + EPI_O_RFIFOCNT) && ulCount--) {
+    //
+    // Read from the FIFO and store in the caller-supplied buffer.
+    //
+    *pusBuf = (unsigned short)HWREG(ulBase + EPI_O_READFIFO);
 
     //
-    // Check the arguments.
+    // Update the caller's buffer pointer and the count of items read.
     //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulCount < 4096);
-    ASSERT(pusBuf);
+    pusBuf++;
+    ulCountRead++;
+  }
 
-    //
-    // Read from the FIFO while there are any items to read, and
-    // the caller's specified count is not exceeded.
-    //
-    while(HWREG(ulBase + EPI_O_RFIFOCNT) && ulCount--)
-    {
-        //
-        // Read from the FIFO and store in the caller-supplied buffer.
-        //
-        *pusBuf = (unsigned short)HWREG(ulBase + EPI_O_READFIFO);
-
-        //
-        // Update the caller's buffer pointer and the count of items read.
-        //
-        pusBuf++;
-        ulCountRead++;
-    }
-
-    //
-    // Return the count of items read to the caller.
-    //
-    return(ulCountRead);
+  //
+  // Return the count of items read to the caller.
+  //
+  return (ulCountRead);
 }
 
 //*****************************************************************************
@@ -837,41 +808,39 @@ EPINonBlockingReadGet16(unsigned long ulBase, unsigned long ulCount,
 //! \return The number of items read from the FIFO.
 //
 //*****************************************************************************
-unsigned long
-EPINonBlockingReadGet8(unsigned long ulBase, unsigned long ulCount,
-                       unsigned char *pucBuf)
-{
-    unsigned long ulCountRead = 0;
+unsigned long EPINonBlockingReadGet8(unsigned long ulBase,
+                                     unsigned long ulCount,
+                                     unsigned char *pucBuf) {
+  unsigned long ulCountRead = 0;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulCount < 4096);
+  ASSERT(pucBuf);
+
+  //
+  // Read from the FIFO while there are any items to read, and
+  // the caller's specified count is not exceeded.
+  //
+  while (HWREG(ulBase + EPI_O_RFIFOCNT) && ulCount--) {
+    //
+    // Read from the FIFO and store in the caller supplied buffer.
+    //
+    *pucBuf = (unsigned char)HWREG(ulBase + EPI_O_READFIFO);
 
     //
-    // Check the arguments.
+    // Update the caller's buffer pointer and the count of items read.
     //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulCount < 4096);
-    ASSERT(pucBuf);
+    pucBuf++;
+    ulCountRead++;
+  }
 
-    //
-    // Read from the FIFO while there are any items to read, and
-    // the caller's specified count is not exceeded.
-    //
-    while(HWREG(ulBase + EPI_O_RFIFOCNT) && ulCount--)
-    {
-        //
-        // Read from the FIFO and store in the caller supplied buffer.
-        //
-        *pucBuf = (unsigned char)HWREG(ulBase + EPI_O_READFIFO);
-
-        //
-        // Update the caller's buffer pointer and the count of items read.
-        //
-        pucBuf++;
-        ulCountRead++;
-    }
-
-    //
-    // Return the count of items read to the caller.
-    //
-    return(ulCountRead);
+  //
+  // Return the count of items read to the caller.
+  //
+  return (ulCountRead);
 }
 
 //*****************************************************************************
@@ -900,19 +869,17 @@ EPINonBlockingReadGet8(unsigned long ulBase, unsigned long ulCount,
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIFIFOConfig(unsigned long ulBase, unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulConfig == (ulConfig & 0x00030077));
+void EPIFIFOConfig(unsigned long ulBase, unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulConfig == (ulConfig & 0x00030077));
 
-    //
-    // Load the configuration into the FIFO config reg.
-    //
-    HWREG(ulBase + EPI_O_FIFOLVL) = ulConfig;
+  //
+  // Load the configuration into the FIFO config reg.
+  //
+  HWREG(ulBase + EPI_O_FIFOLVL) = ulConfig;
 }
 
 //*****************************************************************************
@@ -928,18 +895,16 @@ EPIFIFOConfig(unsigned long ulBase, unsigned long ulConfig)
 //! \return The number of empty slots in the transaction FIFO.
 //
 //*****************************************************************************
-unsigned long
-EPIWriteFIFOCountGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
+unsigned long EPIWriteFIFOCountGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
 
-    //
-    // Read the FIFO count and return it to the caller.
-    //
-    return(HWREG(ulBase + EPI_O_WFIFOCNT));
+  //
+  // Read the FIFO count and return it to the caller.
+  //
+  return (HWREG(ulBase + EPI_O_WFIFOCNT));
 }
 
 //*****************************************************************************
@@ -960,19 +925,17 @@ EPIWriteFIFOCountGet(unsigned long ulBase)
 //! \return Returns None.
 //
 //*****************************************************************************
-void
-EPIIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulIntFlags < 16);
+void EPIIntEnable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulIntFlags < 16);
 
-    //
-    // Write the interrupt flags mask to the mask register.
-    //
-    HWREG(ulBase + EPI_O_IM) |= ulIntFlags;
+  //
+  // Write the interrupt flags mask to the mask register.
+  //
+  HWREG(ulBase + EPI_O_IM) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -990,19 +953,17 @@ EPIIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return Returns None.
 //
 //*****************************************************************************
-void
-EPIIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulIntFlags < 16);
+void EPIIntDisable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulIntFlags < 16);
 
-    //
-    // Write the interrupt flags mask to the mask register.
-    //
-    HWREG(ulBase + EPI_O_IM) &= ~ulIntFlags;
+  //
+  // Write the interrupt flags mask to the mask register.
+  //
+  HWREG(ulBase + EPI_O_IM) &= ~ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1021,26 +982,21 @@ EPIIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
 //! or \b EPI_INT_ERR
 //
 //*****************************************************************************
-unsigned long
-EPIIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
+unsigned long EPIIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(ulBase + EPI_O_MIS));
-    }
-    else
-    {
-        return(HWREG(ulBase + EPI_O_RIS));
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(ulBase + EPI_O_MIS));
+  } else {
+    return (HWREG(ulBase + EPI_O_RIS));
+  }
 }
 
 //*****************************************************************************
@@ -1067,18 +1023,16 @@ EPIIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! \b EPI_INT_ERR_TIMEOUT.
 //
 //*****************************************************************************
-unsigned long
-EPIIntErrorStatus(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
+unsigned long EPIIntErrorStatus(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
 
-    //
-    // Read the error status and return to caller.
-    //
-    return(HWREG(ulBase + EPI_O_EISC));
+  //
+  // Read the error status and return to caller.
+  //
+  return (HWREG(ulBase + EPI_O_EISC));
 }
 
 //*****************************************************************************
@@ -1095,19 +1049,17 @@ EPIIntErrorStatus(unsigned long ulBase)
 //! \return Returns None.
 //
 //*****************************************************************************
-void
-EPIIntErrorClear(unsigned long ulBase, unsigned long ulErrFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(ulErrFlags < 16);
+void EPIIntErrorClear(unsigned long ulBase, unsigned long ulErrFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(ulErrFlags < 16);
 
-    //
-    // Write the error flags to the register to clear the pending errors.
-    //
-    HWREG(ulBase + EPI_O_EISC) = ulErrFlags;
+  //
+  // Write the error flags to the register to clear the pending errors.
+  //
+  HWREG(ulBase + EPI_O_EISC) = ulErrFlags;
 }
 
 //*****************************************************************************
@@ -1128,24 +1080,22 @@ EPIIntErrorClear(unsigned long ulBase, unsigned long ulErrFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
-    ASSERT(pfnHandler);
+void EPIIntRegister(unsigned long ulBase, void (*pfnHandler)(void)) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
+  ASSERT(pfnHandler);
 
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(INT_EPI0, pfnHandler);
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(INT_EPI0, pfnHandler);
 
-    //
-    // Enable the EPI interface interrupt.
-    //
-    IntEnable(INT_EPI0);
+  //
+  // Enable the EPI interface interrupt.
+  //
+  IntEnable(INT_EPI0);
 }
 
 //*****************************************************************************
@@ -1163,23 +1113,21 @@ EPIIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-EPIIntUnregister(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == EPI0_BASE);
+void EPIIntUnregister(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == EPI0_BASE);
 
-    //
-    // Disable the EPI interface interrupt.
-    //
-    IntDisable(INT_EPI0);
+  //
+  // Disable the EPI interface interrupt.
+  //
+  IntDisable(INT_EPI0);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_EPI0);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_EPI0);
 }
 
 //*****************************************************************************

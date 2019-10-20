@@ -5,23 +5,23 @@
 //
 // Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -33,7 +33,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -45,14 +45,15 @@
 //
 //*****************************************************************************
 
+#include "driverlib/peci.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_peci.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/peci.h"
 
 //*****************************************************************************
 //
@@ -62,13 +63,13 @@
 // specified to allow callers to achieve 1Mbps on a slow part.
 //
 //*****************************************************************************
-#define PECI_MAX_BAUD      4000000                      // Max baud rate
-#define PECI_MIN_BAUD      2000                         // Min baud rate
-#define PECI_MIN_RATIO     (CLASS_IS_BLIZZARD ? 10 : 1) // Min baud rate divider
-#define PECI_MAX_RATIO     65535                        // Max baud rate divider
-#define PECI_POLL_PRESCALE 4096                    // Polling timer prescaler
-#define PECI_MIN_POLL      2                       // Min polling interval (ms)
-#define PECI_MAX_POLL      1000                    // Max polling interval (ms)
+#define PECI_MAX_BAUD 4000000                        // Max baud rate
+#define PECI_MIN_BAUD 2000                           // Min baud rate
+#define PECI_MIN_RATIO (CLASS_IS_BLIZZARD ? 10 : 1)  // Min baud rate divider
+#define PECI_MAX_RATIO 65535                         // Max baud rate divider
+#define PECI_POLL_PRESCALE 4096                      // Polling timer prescaler
+#define PECI_MIN_POLL 2     // Min polling interval (ms)
+#define PECI_MAX_POLL 1000  // Max polling interval (ms)
 
 //*****************************************************************************
 //
@@ -84,13 +85,9 @@
 //
 //*****************************************************************************
 #ifdef DEBUG
-static tBoolean
-PECIDomainValid(unsigned long ulDomain)
-{
-    return((ulDomain == PECI_DOMAIN_M0D0) ||
-           (ulDomain == PECI_DOMAIN_M0D1) ||
-           (ulDomain == PECI_DOMAIN_M1D0) ||
-           (ulDomain == PECI_DOMAIN_M1D1));
+static tBoolean PECIDomainValid(unsigned long ulDomain) {
+  return ((ulDomain == PECI_DOMAIN_M0D0) || (ulDomain == PECI_DOMAIN_M0D1) ||
+          (ulDomain == PECI_DOMAIN_M1D0) || (ulDomain == PECI_DOMAIN_M1D1));
 }
 #endif
 
@@ -142,54 +139,54 @@ PECIDomainValid(unsigned long ulDomain)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIConfigSet(unsigned long ulBase, unsigned long ulPECIClk,
-              unsigned long ulBaud, unsigned long ulPoll,
-              unsigned long ulOffset, unsigned long ulRetry)
-{
-    unsigned long ulTemp, ulDiv;
+void PECIConfigSet(unsigned long ulBase, unsigned long ulPECIClk,
+                   unsigned long ulBaud, unsigned long ulPoll,
+                   unsigned long ulOffset, unsigned long ulRetry) {
+  unsigned long ulTemp, ulDiv;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(ulPECIClk != 0);
-    ASSERT((ulBaud != 0) && (ulBaud <= PECI_MAX_BAUD) &&
-           (ulBaud >= PECI_MIN_BAUD) &&
-           ((ulBaud * 4 * PECI_MIN_RATIO) < ulPECIClk));
-    ASSERT((ulPoll == 0) ||
-           ((ulPoll >= PECI_MIN_POLL) && (ulPoll <= PECI_MAX_POLL)));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(ulPECIClk != 0);
+  ASSERT((ulBaud != 0) && (ulBaud <= PECI_MAX_BAUD) &&
+         (ulBaud >= PECI_MIN_BAUD) &&
+         ((ulBaud * 4 * PECI_MIN_RATIO) < ulPECIClk));
+  ASSERT((ulPoll == 0) ||
+         ((ulPoll >= PECI_MIN_POLL) && (ulPoll <= PECI_MAX_POLL)));
 
-    //
-    // Generate value for the PECI Control Register.
-    //
-    ulTemp = ((ulOffset << PECI_CTL_OFFSET_S) & PECI_CTL_OFFSET_M);
-    ulTemp |= ((ulRetry << PECI_CTL_CRETRY_S) & PECI_CTL_CRETRY_M);
-    HWREG(ulBase + PECI_O_CTL) = ulTemp;
+  //
+  // Generate value for the PECI Control Register.
+  //
+  ulTemp = ((ulOffset << PECI_CTL_OFFSET_S) & PECI_CTL_OFFSET_M);
+  ulTemp |= ((ulRetry << PECI_CTL_CRETRY_S) & PECI_CTL_CRETRY_M);
+  HWREG(ulBase + PECI_O_CTL) = ulTemp;
 
-    //
-    // Compute the divisor for the PECI baud rate clock.
-    // Round up, to ensure programmed baud rate is <= specified rate.
-    // Ensure that proper ratio is maintained for clock:baud.
-    //
-    ulDiv = (ulPECIClk + (4 * ulBaud) - 1) / (4 * ulBaud);
-    ulDiv = (ulDiv < PECI_MIN_RATIO) ? PECI_MIN_RATIO : ulDiv;
-    ulDiv = (ulDiv > PECI_MAX_RATIO) ? PECI_MAX_RATIO : ulDiv;
-    ulTemp = ((ulDiv << PECI_DIV_BAUD_S) & PECI_DIV_BAUD_M);
+  //
+  // Compute the divisor for the PECI baud rate clock.
+  // Round up, to ensure programmed baud rate is <= specified rate.
+  // Ensure that proper ratio is maintained for clock:baud.
+  //
+  ulDiv = (ulPECIClk + (4 * ulBaud) - 1) / (4 * ulBaud);
+  ulDiv = (ulDiv < PECI_MIN_RATIO) ? PECI_MIN_RATIO : ulDiv;
+  ulDiv = (ulDiv > PECI_MAX_RATIO) ? PECI_MAX_RATIO : ulDiv;
+  ulTemp = ((ulDiv << PECI_DIV_BAUD_S) & PECI_DIV_BAUD_M);
 
-    //
-    // Compute the divisor for the PECI polling rate.
-    // Round up, to ensure programmed polling rate is >= specified rate.
-    // Note that the order of calculation is important here since ulPECIClk is
-    // in the 10s of MHz range and ulPoll can be several thousand for slow
-    // polling rates.  If we change the order, the calculation can overflow
-    // resulting in incorrect polling rates.
-    //
-    ulDiv = ((ulPoll == 0) ? 0 : ((((ulPECIClk / 1000) * ulPoll) +
-                                   (PECI_POLL_PRESCALE - 1)) /
-                                  PECI_POLL_PRESCALE));
-    ulTemp |= ((ulDiv << PECI_DIV_POLL_S) & PECI_DIV_POLL_M);;
-    HWREG(ulBase + PECI_O_DIV) = ulTemp;
+  //
+  // Compute the divisor for the PECI polling rate.
+  // Round up, to ensure programmed polling rate is >= specified rate.
+  // Note that the order of calculation is important here since ulPECIClk is
+  // in the 10s of MHz range and ulPoll can be several thousand for slow
+  // polling rates.  If we change the order, the calculation can overflow
+  // resulting in incorrect polling rates.
+  //
+  ulDiv = ((ulPoll == 0)
+               ? 0
+               : ((((ulPECIClk / 1000) * ulPoll) + (PECI_POLL_PRESCALE - 1)) /
+                  PECI_POLL_PRESCALE));
+  ulTemp |= ((ulDiv << PECI_DIV_POLL_S) & PECI_DIV_POLL_M);
+  ;
+  HWREG(ulBase + PECI_O_DIV) = ulTemp;
 }
 
 //*****************************************************************************
@@ -221,43 +218,41 @@ PECIConfigSet(unsigned long ulBase, unsigned long ulPECIClk,
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIConfigGet(unsigned long ulBase, unsigned long ulPECIClk,
-              unsigned long *pulBaud, unsigned long *pulPoll,
-              unsigned long *pulOffset, unsigned long *pulRetry)
-{
-    unsigned long ulTemp;
+void PECIConfigGet(unsigned long ulBase, unsigned long ulPECIClk,
+                   unsigned long *pulBaud, unsigned long *pulPoll,
+                   unsigned long *pulOffset, unsigned long *pulRetry) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(ulPECIClk != 0);
-    ASSERT(pulBaud != 0);
-    ASSERT(pulPoll != 0);
-    ASSERT(pulOffset != 0);
-    ASSERT(pulRetry != 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(ulPECIClk != 0);
+  ASSERT(pulBaud != 0);
+  ASSERT(pulPoll != 0);
+  ASSERT(pulOffset != 0);
+  ASSERT(pulRetry != 0);
 
-    //
-    // Retrieve the Offset and Retry values
-    //
-    ulTemp = HWREG(ulBase + PECI_O_CTL);
-    *pulOffset = ((ulTemp & PECI_CTL_OFFSET_M) >> PECI_CTL_OFFSET_S);
-    *pulRetry = ((ulTemp & PECI_CTL_CRETRY_M) >> PECI_CTL_CRETRY_S);
+  //
+  // Retrieve the Offset and Retry values
+  //
+  ulTemp = HWREG(ulBase + PECI_O_CTL);
+  *pulOffset = ((ulTemp & PECI_CTL_OFFSET_M) >> PECI_CTL_OFFSET_S);
+  *pulRetry = ((ulTemp & PECI_CTL_CRETRY_M) >> PECI_CTL_CRETRY_S);
 
-    //
-    // Calculate the baud rate.
-    //
-    ulTemp = HWREG(ulBase + PECI_O_DIV);
-    *pulBaud = (ulPECIClk / (4 * ((ulTemp & PECI_DIV_BAUD_M) >>
-                                  PECI_DIV_BAUD_S)));
+  //
+  // Calculate the baud rate.
+  //
+  ulTemp = HWREG(ulBase + PECI_O_DIV);
+  *pulBaud =
+      (ulPECIClk / (4 * ((ulTemp & PECI_DIV_BAUD_M) >> PECI_DIV_BAUD_S)));
 
-    //
-    // Compute the divisor for the PECI polling rate.
-    // Round up, to ensure programmed polling rate is >= specified rate.
-    //
-    *pulPoll = ((((ulTemp & PECI_DIV_POLL_M) >> PECI_DIV_POLL_S) * 1000) /
-                (ulPECIClk / PECI_POLL_PRESCALE));
+  //
+  // Compute the divisor for the PECI polling rate.
+  // Round up, to ensure programmed polling rate is >= specified rate.
+  //
+  *pulPoll = ((((ulTemp & PECI_DIV_POLL_M) >> PECI_DIV_POLL_S) * 1000) /
+              (ulPECIClk / PECI_POLL_PRESCALE));
 }
 
 //*****************************************************************************
@@ -272,18 +267,16 @@ PECIConfigGet(unsigned long ulBase, unsigned long ulPECIClk,
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIBypassEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+void PECIBypassEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // Enable bypass.
-    //
-    HWREG(ulBase + PECI_O_CTL) |= PECI_CTL_BYERR;
+  //
+  // Enable bypass.
+  //
+  HWREG(ulBase + PECI_O_CTL) |= PECI_CTL_BYERR;
 }
 
 //*****************************************************************************
@@ -299,18 +292,16 @@ PECIBypassEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIBypassDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+void PECIBypassDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // Disable bypass.
-    //
-    HWREG(ulBase + PECI_O_CTL) &= ~PECI_CTL_BYERR;
+  //
+  // Disable bypass.
+  //
+  HWREG(ulBase + PECI_O_CTL) &= ~PECI_CTL_BYERR;
 }
 
 //*****************************************************************************
@@ -335,26 +326,24 @@ PECIBypassDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIDomainConfigSet(unsigned long ulBase, unsigned long ulDomain,
-                    unsigned long ulHigh, unsigned long ulLow)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(PECIDomainValid(ulDomain));
-    ASSERT(ulHigh <= 0xFFFF);
-    ASSERT(ulLow <= 0xFFFF);
-    ASSERT(ulHigh > ulLow);
+void PECIDomainConfigSet(unsigned long ulBase, unsigned long ulDomain,
+                         unsigned long ulHigh, unsigned long ulLow) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(PECIDomainValid(ulDomain));
+  ASSERT(ulHigh <= 0xFFFF);
+  ASSERT(ulLow <= 0xFFFF);
+  ASSERT(ulHigh > ulLow);
 
-    //
-    // Set the HTHRESH and LTHRESH fields in the domain control/status
-    // register.
-    //
-    HWREG(ulBase + PECI_O_M0D0C + (ulDomain * 4)) =
-        (((ulHigh << PECI_M0D0C_HITHR_S) & PECI_M0D0C_HITHR_M) |
-         ((ulLow << PECI_M0D0C_LOTHR_S) & PECI_M0D0C_LOTHR_M));
+  //
+  // Set the HTHRESH and LTHRESH fields in the domain control/status
+  // register.
+  //
+  HWREG(ulBase + PECI_O_M0D0C + (ulDomain * 4)) =
+      (((ulHigh << PECI_M0D0C_HITHR_S) & PECI_M0D0C_HITHR_M) |
+       ((ulLow << PECI_M0D0C_LOTHR_S) & PECI_M0D0C_LOTHR_M));
 }
 
 //*****************************************************************************
@@ -379,27 +368,25 @@ PECIDomainConfigSet(unsigned long ulBase, unsigned long ulDomain,
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIDomainConfigGet(unsigned long ulBase, unsigned long ulDomain,
-                    unsigned long *pulHigh, unsigned long *pulLow)
-{
-    unsigned long ulTemp;
+void PECIDomainConfigGet(unsigned long ulBase, unsigned long ulDomain,
+                         unsigned long *pulHigh, unsigned long *pulLow) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(PECIDomainValid(ulDomain));
-    ASSERT(pulHigh != 0);
-    ASSERT(pulLow != 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(PECIDomainValid(ulDomain));
+  ASSERT(pulHigh != 0);
+  ASSERT(pulLow != 0);
 
-    //
-    // Get the HTHRESH and LTHRESH fields in the domain control/status
-    // register.
-    //
-    ulTemp = HWREG(ulBase + PECI_O_M0D0C + (ulDomain * 4));
-    *pulHigh = ((ulTemp && PECI_M0D0C_HITHR_M) >> PECI_M0D0C_HITHR_S);
-    *pulLow = ((ulTemp && PECI_M0D0C_LOTHR_M) >> PECI_M0D0C_LOTHR_S);
+  //
+  // Get the HTHRESH and LTHRESH fields in the domain control/status
+  // register.
+  //
+  ulTemp = HWREG(ulBase + PECI_O_M0D0C + (ulDomain * 4));
+  *pulHigh = ((ulTemp && PECI_M0D0C_HITHR_M) >> PECI_M0D0C_HITHR_S);
+  *pulLow = ((ulTemp && PECI_M0D0C_LOTHR_M) >> PECI_M0D0C_LOTHR_S);
 }
 
 //*****************************************************************************
@@ -419,19 +406,17 @@ PECIDomainConfigGet(unsigned long ulBase, unsigned long ulDomain,
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIDomainEnable(unsigned long ulBase, unsigned long ulDomain)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(PECIDomainValid(ulDomain));
+void PECIDomainEnable(unsigned long ulBase, unsigned long ulDomain) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(PECIDomainValid(ulDomain));
 
-    //
-    // Enable the specified domain.
-    //
-    HWREG(ulBase + PECI_O_CTL) |= (1 << ulDomain);
+  //
+  // Enable the specified domain.
+  //
+  HWREG(ulBase + PECI_O_CTL) |= (1 << ulDomain);
 }
 
 //*****************************************************************************
@@ -450,19 +435,17 @@ PECIDomainEnable(unsigned long ulBase, unsigned long ulDomain)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIDomainDisable(unsigned long ulBase, unsigned long ulDomain)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(PECIDomainValid(ulDomain));
+void PECIDomainDisable(unsigned long ulBase, unsigned long ulDomain) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(PECIDomainValid(ulDomain));
 
-    //
-    // Disable the specified domain.
-    //
-    HWREG(ulBase + PECI_O_CTL) &= ~(1 << ulDomain);
+  //
+  // Disable the specified domain.
+  //
+  HWREG(ulBase + PECI_O_CTL) &= ~(1 << ulDomain);
 }
 
 //*****************************************************************************
@@ -482,20 +465,17 @@ PECIDomainDisable(unsigned long ulBase, unsigned long ulDomain)
 //! \return None.
 //
 //*****************************************************************************
-unsigned long
-PECIDomainValueGet(unsigned long ulBase, unsigned long ulDomain)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(PECIDomainValid(ulDomain));
+unsigned long PECIDomainValueGet(unsigned long ulBase, unsigned long ulDomain) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(PECIDomainValid(ulDomain));
 
-    //
-    // Return the most recently polled temperature value
-    //
-    return(((HWREG(ulBase + PECI_O_M0D0 + (ulDomain * 4)) &
-             PECI_M0D0_VALUE_M)));
+  //
+  // Return the most recently polled temperature value
+  //
+  return (((HWREG(ulBase + PECI_O_M0D0 + (ulDomain * 4)) & PECI_M0D0_VALUE_M)));
 }
 
 //*****************************************************************************
@@ -515,20 +495,20 @@ PECIDomainValueGet(unsigned long ulBase, unsigned long ulDomain)
 //! \return None.
 //
 //*****************************************************************************
-unsigned long
-PECIDomainMaxReadGet(unsigned long ulBase, unsigned long ulDomain)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(PECIDomainValid(ulDomain));
+unsigned long PECIDomainMaxReadGet(unsigned long ulBase,
+                                   unsigned long ulDomain) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(PECIDomainValid(ulDomain));
 
-    //
-    // Return the most recently polled temperature value
-    //
-    return(((HWREG(ulBase + PECI_O_M0D0 + (ulDomain * 4)) &
-             PECI_M0D0_MAXREAD_M) >> PECI_M0D0_MAXREAD_S));
+  //
+  // Return the most recently polled temperature value
+  //
+  return (
+      ((HWREG(ulBase + PECI_O_M0D0 + (ulDomain * 4)) & PECI_M0D0_MAXREAD_M) >>
+       PECI_M0D0_MAXREAD_S));
 }
 
 //*****************************************************************************
@@ -548,19 +528,17 @@ PECIDomainMaxReadGet(unsigned long ulBase, unsigned long ulDomain)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIDomainValueClear(unsigned long ulBase, unsigned long ulDomain)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(PECIDomainValid(ulDomain));
+void PECIDomainValueClear(unsigned long ulBase, unsigned long ulDomain) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(PECIDomainValid(ulDomain));
 
-    //
-    // Clear the temperature value.
-    //
-    HWREG(ulBase + PECI_O_M0D0 + (ulDomain * 4) ) &= ~PECI_M0D0_VALUE_M;
+  //
+  // Clear the temperature value.
+  //
+  HWREG(ulBase + PECI_O_M0D0 + (ulDomain * 4)) &= ~PECI_M0D0_VALUE_M;
 }
 
 //*****************************************************************************
@@ -580,19 +558,17 @@ PECIDomainValueClear(unsigned long ulBase, unsigned long ulDomain)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIDomainMaxReadClear(unsigned long ulBase, unsigned long ulDomain)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(PECIDomainValid(ulDomain));
+void PECIDomainMaxReadClear(unsigned long ulBase, unsigned long ulDomain) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(PECIDomainValid(ulDomain));
 
-    //
-    // Clear the maximum/error value.
-    //
-    HWREG(ulBase + PECI_O_M0D0 + (ulDomain * 4) ) &= ~PECI_M0D0_MAXREAD_M;
+  //
+  // Clear the maximum/error value.
+  //
+  HWREG(ulBase + PECI_O_M0D0 + (ulDomain * 4)) &= ~PECI_M0D0_MAXREAD_M;
 }
 
 //*****************************************************************************
@@ -615,24 +591,22 @@ PECIDomainMaxReadClear(unsigned long ulBase, unsigned long ulDomain)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
-    ASSERT(pfnHandler != 0);
+void PECIIntRegister(unsigned long ulBase, void (*pfnHandler)(void)) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
+  ASSERT(pfnHandler != 0);
 
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(INT_PECI0, pfnHandler);
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(INT_PECI0, pfnHandler);
 
-    //
-    // Enable the PECI interrupt.
-    //
-    IntEnable(INT_PECI0);
+  //
+  // Enable the PECI interrupt.
+  //
+  IntEnable(INT_PECI0);
 }
 
 //*****************************************************************************
@@ -651,23 +625,21 @@ PECIIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIIntUnregister(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+void PECIIntUnregister(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // Disable the PECI interrupt.
-    //
-    IntDisable(INT_PECI0);
+  //
+  // Disable the PECI interrupt.
+  //
+  IntDisable(INT_PECI0);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_PECI0);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_PECI0);
 }
 
 //*****************************************************************************
@@ -697,37 +669,35 @@ PECIIntUnregister(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIIntEnable(unsigned long ulBase, unsigned long ulIntFlags,
-              unsigned long ulIntMode)
-{
-    unsigned long ulTemp;
+void PECIIntEnable(unsigned long ulBase, unsigned long ulIntFlags,
+                   unsigned long ulIntMode) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // Get the current mask value.
-    //
-    ulTemp = HWREG(ulBase + PECI_O_IM);
+  //
+  // Get the current mask value.
+  //
+  ulTemp = HWREG(ulBase + PECI_O_IM);
 
-    //
-    // Clear the bit/bit-fields that are configured, based on the value
-    // in the flags parameter.
-    //
-    ulTemp &= ~ulIntFlags;
+  //
+  // Clear the bit/bit-fields that are configured, based on the value
+  // in the flags parameter.
+  //
+  ulTemp &= ~ulIntFlags;
 
-    //
-    // Set/Enable the bit/bit-fields based on the value in the flags and mode
-    // parameter.  The flags parameter alters the bits in the lower half
-    // of the mask, while the mode alters the bit fields in the upper
-    // half of the mask.
-    //
-    ulTemp |= (0x0000FFFF & ulIntFlags);
-    ulTemp |= (0xFFFF0000 & ulIntMode);
-    HWREG(ulBase + PECI_O_IM) = ulTemp;
+  //
+  // Set/Enable the bit/bit-fields based on the value in the flags and mode
+  // parameter.  The flags parameter alters the bits in the lower half
+  // of the mask, while the mode alters the bit fields in the upper
+  // half of the mask.
+  //
+  ulTemp |= (0x0000FFFF & ulIntFlags);
+  ulTemp |= (0xFFFF0000 & ulIntMode);
+  HWREG(ulBase + PECI_O_IM) = ulTemp;
 }
 
 //*****************************************************************************
@@ -748,18 +718,16 @@ PECIIntEnable(unsigned long ulBase, unsigned long ulIntFlags,
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+void PECIIntDisable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // Disable the specified interrupts.
-    //
-    HWREG(ulBase + PECI_O_IM) &= ~ulIntFlags;
+  //
+  // Disable the specified interrupts.
+  //
+  HWREG(ulBase + PECI_O_IM) &= ~ulIntFlags;
 }
 
 //*****************************************************************************
@@ -785,26 +753,21 @@ PECIIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \b PECI_M1D0, or \b PECI_M1D1.
 //
 //*****************************************************************************
-unsigned long
-PECIIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+unsigned long PECIIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(ulBase + PECI_O_MIS));
-    }
-    else
-    {
-        return(HWREG(ulBase + PECI_O_RIS));
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(ulBase + PECI_O_MIS));
+  } else {
+    return (HWREG(ulBase + PECI_O_RIS));
+  }
 }
 
 //*****************************************************************************
@@ -833,18 +796,16 @@ PECIIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIIntClear(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+void PECIIntClear(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // Clear the requested interrupt sources.
-    //
-    HWREG(ulBase + PECI_O_IC) = ulIntFlags;
+  //
+  // Clear the requested interrupt sources.
+  //
+  HWREG(ulBase + PECI_O_IC) = ulIntFlags;
 }
 
 //*****************************************************************************
@@ -861,40 +822,35 @@ PECIIntClear(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-PECIAdvCmdSend(unsigned long ulBase, unsigned char ucCmd,
-               unsigned char ucHidRe, unsigned char ucDomain,
-               unsigned char ucProcAdd, unsigned long ulArg,
-               unsigned char ucSize, unsigned long ulData0,
-               unsigned long ulData1)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+void PECIAdvCmdSend(unsigned long ulBase, unsigned char ucCmd,
+                    unsigned char ucHidRe, unsigned char ucDomain,
+                    unsigned char ucProcAdd, unsigned long ulArg,
+                    unsigned char ucSize, unsigned long ulData0,
+                    unsigned long ulData1) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // Wait for the interface to be idle.
-    //
-    while(HWREG(ulBase + PECI_O_ACCODE) == 0xFFFFFFFF)
-    {
-    }
+  //
+  // Wait for the interface to be idle.
+  //
+  while (HWREG(ulBase + PECI_O_ACCODE) == 0xFFFFFFFF) {
+  }
 
-    //
-    // Fill in the registers for the advanced command.
-    //
-    HWREG(ulBase + PECI_O_ACARG) = ulArg;
-    HWREG(ulBase + PECI_O_ACRDWR0) = ulData0;
-    HWREG(ulBase + PECI_O_ACRDWR1) = ulData1;
-    HWREG(ulBase + PECI_O_ACADDR) = (ucHidRe << 24) |
-                                    (ucSize  << 16) |
-                                    (ucDomain << 8) |
-                                    (ucProcAdd << 0);
+  //
+  // Fill in the registers for the advanced command.
+  //
+  HWREG(ulBase + PECI_O_ACARG) = ulArg;
+  HWREG(ulBase + PECI_O_ACRDWR0) = ulData0;
+  HWREG(ulBase + PECI_O_ACRDWR1) = ulData1;
+  HWREG(ulBase + PECI_O_ACADDR) =
+      (ucHidRe << 24) | (ucSize << 16) | (ucDomain << 8) | (ucProcAdd << 0);
 
-    //
-    // Now, issue the command.
-    //
-    HWREG(ulBase + PECI_O_ACCMD) = ucCmd;
+  //
+  // Now, issue the command.
+  //
+  HWREG(ulBase + PECI_O_ACCMD) = ucCmd;
 }
 
 //*****************************************************************************
@@ -911,37 +867,33 @@ PECIAdvCmdSend(unsigned long ulBase, unsigned char ucCmd,
 //! \return None.
 //
 //*****************************************************************************
-unsigned long
-PECIAdvCmdSendNonBlocking(unsigned long ulBase, unsigned char ucCmd,
-                          unsigned char ucHidRe, unsigned char ucDomain,
-                          unsigned char ucProcAdd, unsigned long ulArg,
-                          unsigned char ucSize, unsigned long ulData0,
-                          unsigned long ulData1)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+unsigned long PECIAdvCmdSendNonBlocking(
+    unsigned long ulBase, unsigned char ucCmd, unsigned char ucHidRe,
+    unsigned char ucDomain, unsigned char ucProcAdd, unsigned long ulArg,
+    unsigned char ucSize, unsigned long ulData0, unsigned long ulData1) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // Check for the interface to be idle.
-    // If not, return immediately.
-    //
-    if(HWREG(ulBase + PECI_O_ACCODE) == 0xFFFFFFFF)
-    {
-        return(0);
-    }
+  //
+  // Check for the interface to be idle.
+  // If not, return immediately.
+  //
+  if (HWREG(ulBase + PECI_O_ACCODE) == 0xFFFFFFFF) {
+    return (0);
+  }
 
-    //
-    // Send the command.
-    //
-    PECIAdvCmdSend(ulBase, ucCmd, ucHidRe, ucDomain, ucProcAdd, ulArg,
-                   ucSize, ulData0, ulData1);
+  //
+  // Send the command.
+  //
+  PECIAdvCmdSend(ulBase, ucCmd, ucHidRe, ucDomain, ucProcAdd, ulArg, ucSize,
+                 ulData0, ulData1);
 
-    //
-    // Return, indicating that the command has been issued.
-    //
-    return(1);
+  //
+  // Return, indicating that the command has been issued.
+  //
+  return (1);
 }
 
 //*****************************************************************************
@@ -958,38 +910,33 @@ PECIAdvCmdSendNonBlocking(unsigned long ulBase, unsigned char ucCmd,
 //! code associated with the Advanced Command.
 //
 //*****************************************************************************
-unsigned long
-PECIAdvCmdStatusGet(unsigned long ulBase, unsigned long *pulData0,
-                    unsigned long *pulData1)
-{
-    unsigned long ulCode;
+unsigned long PECIAdvCmdStatusGet(unsigned long ulBase, unsigned long *pulData0,
+                                  unsigned long *pulData1) {
+  unsigned long ulCode;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == PECI0_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == PECI0_BASE);
 
-    //
-    // If the command has completed, optionally read and save the data
-    // registers.
-    //
-    ulCode = HWREG(ulBase + PECI_O_ACCODE);
-    if(ulCode != 0xFFFFFFFF)
-    {
-        if(pulData0 != (void *)0)
-        {
-            *pulData0 = HWREG(ulBase + PECI_O_ACRDWR0);
-        }
-        if(pulData1 != (void *)0)
-        {
-            *pulData1 = HWREG(ulBase + PECI_O_ACRDWR1);
-        }
+  //
+  // If the command has completed, optionally read and save the data
+  // registers.
+  //
+  ulCode = HWREG(ulBase + PECI_O_ACCODE);
+  if (ulCode != 0xFFFFFFFF) {
+    if (pulData0 != (void *)0) {
+      *pulData0 = HWREG(ulBase + PECI_O_ACRDWR0);
     }
+    if (pulData1 != (void *)0) {
+      *pulData1 = HWREG(ulBase + PECI_O_ACRDWR1);
+    }
+  }
 
-    //
-    // Return the command code from the most recently completed command.
-    //
-    return(ulCode);
+  //
+  // Return the command code from the most recently completed command.
+  //
+  return (ulCode);
 }
 
 //*****************************************************************************

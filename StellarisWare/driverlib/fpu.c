@@ -5,23 +5,23 @@
 //
 // Copyright (c) 2011-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -33,7 +33,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -45,9 +45,10 @@
 //
 //*****************************************************************************
 
+#include "driverlib/fpu.h"
+
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
-#include "driverlib/fpu.h"
 
 //*****************************************************************************
 //
@@ -61,15 +62,13 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-FPUEnable(void)
-{
-    //
-    // Enable the coprocessors used by the floating-point unit.
-    //
-    HWREG(NVIC_CPAC) = ((HWREG(NVIC_CPAC) &
-                         ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
-                        NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
+void FPUEnable(void) {
+  //
+  // Enable the coprocessors used by the floating-point unit.
+  //
+  HWREG(NVIC_CPAC) =
+      ((HWREG(NVIC_CPAC) & ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
+       NVIC_CPAC_CP10_FULL | NVIC_CPAC_CP11_FULL);
 }
 
 //*****************************************************************************
@@ -82,15 +81,13 @@ FPUEnable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-FPUDisable(void)
-{
-    //
-    // Disable the coprocessors used by the floating-point unit.
-    //
-    HWREG(NVIC_CPAC) = ((HWREG(NVIC_CPAC) &
-                         ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
-                        NVIC_CPAC_CP10_DIS | NVIC_CPAC_CP11_DIS);
+void FPUDisable(void) {
+  //
+  // Disable the coprocessors used by the floating-point unit.
+  //
+  HWREG(NVIC_CPAC) =
+      ((HWREG(NVIC_CPAC) & ~(NVIC_CPAC_CP10_M | NVIC_CPAC_CP11_M)) |
+       NVIC_CPAC_CP10_DIS | NVIC_CPAC_CP11_DIS);
 }
 
 //*****************************************************************************
@@ -113,15 +110,13 @@ FPUDisable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-FPUStackingEnable(void)
-{
-    //
-    // Enable automatic state preservation for the floating-point unit, and
-    // disable lazy state preservation (meaning that the floating-point state
-    // is always stacked when floating-point instructions are used).
-    //
-    HWREG(NVIC_FPCC) = (HWREG(NVIC_FPCC) & ~NVIC_FPCC_LSPEN) | NVIC_FPCC_ASPEN;
+void FPUStackingEnable(void) {
+  //
+  // Enable automatic state preservation for the floating-point unit, and
+  // disable lazy state preservation (meaning that the floating-point state
+  // is always stacked when floating-point instructions are used).
+  //
+  HWREG(NVIC_FPCC) = (HWREG(NVIC_FPCC) & ~NVIC_FPCC_LSPEN) | NVIC_FPCC_ASPEN;
 }
 
 //*****************************************************************************
@@ -145,14 +140,12 @@ FPUStackingEnable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-FPULazyStackingEnable(void)
-{
-    //
-    // Enable automatic and lazy state preservation for the floating-point
-    // unit.
-    //
-    HWREG(NVIC_FPCC) |= NVIC_FPCC_ASPEN | NVIC_FPCC_LSPEN;
+void FPULazyStackingEnable(void) {
+  //
+  // Enable automatic and lazy state preservation for the floating-point
+  // unit.
+  //
+  HWREG(NVIC_FPCC) |= NVIC_FPCC_ASPEN | NVIC_FPCC_LSPEN;
 }
 
 //*****************************************************************************
@@ -167,14 +160,12 @@ FPULazyStackingEnable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-FPUStackingDisable(void)
-{
-    //
-    // Disable automatic and lazy state preservation for the floating-point
-    // unit.
-    //
-    HWREG(NVIC_FPCC) &= ~(NVIC_FPCC_ASPEN | NVIC_FPCC_LSPEN);
+void FPUStackingDisable(void) {
+  //
+  // Disable automatic and lazy state preservation for the floating-point
+  // unit.
+  //
+  HWREG(NVIC_FPCC) &= ~(NVIC_FPCC_ASPEN | NVIC_FPCC_LSPEN);
 }
 
 //*****************************************************************************
@@ -196,13 +187,11 @@ FPUStackingDisable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-FPUHalfPrecisionModeSet(unsigned long ulMode)
-{
-    //
-    // Set the half-precision floating-point format.
-    //
-    HWREG(NVIC_FPDSC) = (HWREG(NVIC_FPDSC) & ~(NVIC_FPDSC_AHP)) | ulMode;
+void FPUHalfPrecisionModeSet(unsigned long ulMode) {
+  //
+  // Set the half-precision floating-point format.
+  //
+  HWREG(NVIC_FPDSC) = (HWREG(NVIC_FPDSC) & ~(NVIC_FPDSC_AHP)) | ulMode;
 }
 
 //*****************************************************************************
@@ -222,13 +211,11 @@ FPUHalfPrecisionModeSet(unsigned long ulMode)
 //! \return None.
 //
 //*****************************************************************************
-void
-FPUNaNModeSet(unsigned long ulMode)
-{
-    //
-    // Set the NaN mode.
-    //
-    HWREG(NVIC_FPDSC) = (HWREG(NVIC_FPDSC) & ~(NVIC_FPDSC_DN)) | ulMode;
+void FPUNaNModeSet(unsigned long ulMode) {
+  //
+  // Set the NaN mode.
+  //
+  HWREG(NVIC_FPDSC) = (HWREG(NVIC_FPDSC) & ~(NVIC_FPDSC_DN)) | ulMode;
 }
 
 //*****************************************************************************
@@ -250,13 +237,11 @@ FPUNaNModeSet(unsigned long ulMode)
 //! \return None.
 //
 //*****************************************************************************
-void
-FPUFlushToZeroModeSet(unsigned long ulMode)
-{
-    //
-    // Set the flush-to-zero mode.
-    //
-    HWREG(NVIC_FPDSC) = (HWREG(NVIC_FPDSC) & ~(NVIC_FPDSC_FZ)) | ulMode;
+void FPUFlushToZeroModeSet(unsigned long ulMode) {
+  //
+  // Set the flush-to-zero mode.
+  //
+  HWREG(NVIC_FPDSC) = (HWREG(NVIC_FPDSC) & ~(NVIC_FPDSC_FZ)) | ulMode;
 }
 
 //*****************************************************************************
@@ -282,13 +267,11 @@ FPUFlushToZeroModeSet(unsigned long ulMode)
 //! \return None.
 //
 //*****************************************************************************
-void
-FPURoundingModeSet(unsigned long ulMode)
-{
-    //
-    // Set the rounding mode.
-    //
-    HWREG(NVIC_FPDSC) = (HWREG(NVIC_FPDSC) & ~(NVIC_FPDSC_RMODE_M)) | ulMode;
+void FPURoundingModeSet(unsigned long ulMode) {
+  //
+  // Set the rounding mode.
+  //
+  HWREG(NVIC_FPDSC) = (HWREG(NVIC_FPDSC) & ~(NVIC_FPDSC_RMODE_M)) | ulMode;
 }
 
 //*****************************************************************************

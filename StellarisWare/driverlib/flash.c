@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2005-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,13 +44,14 @@
 //
 //*****************************************************************************
 
+#include "driverlib/flash.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_flash.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/flash.h"
-#include "driverlib/interrupt.h"
 
 //*****************************************************************************
 //
@@ -58,13 +59,8 @@
 // Memory Protection Program Enable (FMPPE) register.
 //
 //*****************************************************************************
-static const unsigned long g_pulFMPPERegs[] =
-{
-    FLASH_FMPPE,
-    FLASH_FMPPE1,
-    FLASH_FMPPE2,
-    FLASH_FMPPE3
-};
+static const unsigned long g_pulFMPPERegs[] = {FLASH_FMPPE, FLASH_FMPPE1,
+                                               FLASH_FMPPE2, FLASH_FMPPE3};
 
 //*****************************************************************************
 //
@@ -72,13 +68,8 @@ static const unsigned long g_pulFMPPERegs[] =
 // Memory Protection Read Enable (FMPRE) register.
 //
 //*****************************************************************************
-static const unsigned long g_pulFMPRERegs[] =
-{
-    FLASH_FMPRE,
-    FLASH_FMPRE1,
-    FLASH_FMPRE2,
-    FLASH_FMPRE3
-};
+static const unsigned long g_pulFMPRERegs[] = {FLASH_FMPRE, FLASH_FMPRE1,
+                                               FLASH_FMPRE2, FLASH_FMPRE3};
 
 //*****************************************************************************
 //
@@ -91,13 +82,11 @@ static const unsigned long g_pulFMPRERegs[] =
 //! \return Returns the number of processor clocks per micro-second.
 //
 //*****************************************************************************
-unsigned long
-FlashUsecGet(void)
-{
-    //
-    // Return the number of clocks per micro-second.
-    //
-    return(HWREG(FLASH_USECRL) + 1);
+unsigned long FlashUsecGet(void) {
+  //
+  // Return the number of clocks per micro-second.
+  //
+  return (HWREG(FLASH_USECRL) + 1);
 }
 
 //*****************************************************************************
@@ -114,13 +103,11 @@ FlashUsecGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-FlashUsecSet(unsigned long ulClocks)
-{
-    //
-    // Set the number of clocks per micro-second.
-    //
-    HWREG(FLASH_USECRL) = ulClocks - 1;
+void FlashUsecSet(unsigned long ulClocks) {
+  //
+  // Set the number of clocks per micro-second.
+  //
+  HWREG(FLASH_USECRL) = ulClocks - 1;
 }
 
 //*****************************************************************************
@@ -139,46 +126,42 @@ FlashUsecSet(unsigned long ulClocks)
 //! specified or the block is write-protected.
 //
 //*****************************************************************************
-long
-FlashErase(unsigned long ulAddress)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(!(ulAddress & (FLASH_ERASE_SIZE - 1)));
+long FlashErase(unsigned long ulAddress) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(!(ulAddress & (FLASH_ERASE_SIZE - 1)));
 
-    //
-    // Clear the flash access and error interrupts.
-    //
-    HWREG(FLASH_FCMISC) = (FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC |
-                           FLASH_FCMISC_ERMISC);
+  //
+  // Clear the flash access and error interrupts.
+  //
+  HWREG(FLASH_FCMISC) =
+      (FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC | FLASH_FCMISC_ERMISC);
 
-    //
-    // Erase the block.
-    //
-    HWREG(FLASH_FMA) = ulAddress;
-    HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_ERASE;
+  //
+  // Erase the block.
+  //
+  HWREG(FLASH_FMA) = ulAddress;
+  HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_ERASE;
 
-    //
-    // Wait until the block has been erased.
-    //
-    while(HWREG(FLASH_FMC) & FLASH_FMC_ERASE)
-    {
-    }
+  //
+  // Wait until the block has been erased.
+  //
+  while (HWREG(FLASH_FMC) & FLASH_FMC_ERASE) {
+  }
 
-    //
-    // Return an error if an access violation or erase error occurred.
-    //
-    if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS |
-                             FLASH_FCRIS_ERRIS))
-    {
-        return(-1);
-    }
+  //
+  // Return an error if an access violation or erase error occurred.
+  //
+  if (HWREG(FLASH_FCRIS) &
+      (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS | FLASH_FCRIS_ERRIS)) {
+    return (-1);
+  }
 
-    //
-    // Success.
-    //
-    return(0);
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -205,107 +188,96 @@ FlashErase(unsigned long ulAddress)
 //! \return Returns 0 on success, or -1 if a programming error is encountered.
 //
 //*****************************************************************************
-long
-FlashProgram(unsigned long *pulData, unsigned long ulAddress,
-             unsigned long ulCount)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(!(ulAddress & 3));
-    ASSERT(!(ulCount & 3));
+long FlashProgram(unsigned long *pulData, unsigned long ulAddress,
+                  unsigned long ulCount) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(!(ulAddress & 3));
+  ASSERT(!(ulCount & 3));
 
-    //
-    // Clear the flash access and error interrupts.
-    //
-    HWREG(FLASH_FCMISC) = (FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC |
-                           FLASH_FCMISC_INVDMISC | FLASH_FCMISC_PROGMISC);
+  //
+  // Clear the flash access and error interrupts.
+  //
+  HWREG(FLASH_FCMISC) = (FLASH_FCMISC_AMISC | FLASH_FCMISC_VOLTMISC |
+                         FLASH_FCMISC_INVDMISC | FLASH_FCMISC_PROGMISC);
 
+  //
+  // See if this device has a write buffer.
+  //
+  if (HWREG(SYSCTL_NVMSTAT) & SYSCTL_NVMSTAT_FWB) {
     //
-    // See if this device has a write buffer.
+    // Loop over the words to be programmed.
     //
-    if(HWREG(SYSCTL_NVMSTAT) & SYSCTL_NVMSTAT_FWB)
-    {
+    while (ulCount) {
+      //
+      // Set the address of this block of words.
+      //
+      HWREG(FLASH_FMA) = ulAddress & ~(0x7f);
+
+      //
+      // Loop over the words in this 32-word block.
+      //
+      while (((ulAddress & 0x7c) || (HWREG(FLASH_FWBVAL) == 0)) &&
+             (ulCount != 0)) {
         //
-        // Loop over the words to be programmed.
+        // Write this word into the write buffer.
         //
-        while(ulCount)
-        {
-            //
-            // Set the address of this block of words.
-            //
-            HWREG(FLASH_FMA) = ulAddress & ~(0x7f);
+        HWREG(FLASH_FWBN + (ulAddress & 0x7c)) = *pulData++;
+        ulAddress += 4;
+        ulCount -= 4;
+      }
 
-            //
-            // Loop over the words in this 32-word block.
-            //
-            while(((ulAddress & 0x7c) || (HWREG(FLASH_FWBVAL) == 0)) &&
-                  (ulCount != 0))
-            {
-                //
-                // Write this word into the write buffer.
-                //
-                HWREG(FLASH_FWBN + (ulAddress & 0x7c)) = *pulData++;
-                ulAddress += 4;
-                ulCount -= 4;
-            }
+      //
+      // Program the contents of the write buffer into flash.
+      //
+      HWREG(FLASH_FMC2) = FLASH_FMC2_WRKEY | FLASH_FMC2_WRBUF;
 
-            //
-            // Program the contents of the write buffer into flash.
-            //
-            HWREG(FLASH_FMC2) = FLASH_FMC2_WRKEY | FLASH_FMC2_WRBUF;
-
-            //
-            // Wait until the write buffer has been programmed.
-            //
-            while(HWREG(FLASH_FMC2) & FLASH_FMC2_WRBUF)
-            {
-            }
-        }
+      //
+      // Wait until the write buffer has been programmed.
+      //
+      while (HWREG(FLASH_FMC2) & FLASH_FMC2_WRBUF) {
+      }
     }
-    else
-    {
-        //
-        // Loop over the words to be programmed.
-        //
-        while(ulCount)
-        {
-            //
-            // Program the next word.
-            //
-            HWREG(FLASH_FMA) = ulAddress;
-            HWREG(FLASH_FMD) = *pulData;
-            HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_WRITE;
+  } else {
+    //
+    // Loop over the words to be programmed.
+    //
+    while (ulCount) {
+      //
+      // Program the next word.
+      //
+      HWREG(FLASH_FMA) = ulAddress;
+      HWREG(FLASH_FMD) = *pulData;
+      HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_WRITE;
 
-            //
-            // Wait until the word has been programmed.
-            //
-            while(HWREG(FLASH_FMC) & FLASH_FMC_WRITE)
-            {
-            }
+      //
+      // Wait until the word has been programmed.
+      //
+      while (HWREG(FLASH_FMC) & FLASH_FMC_WRITE) {
+      }
 
-            //
-            // Increment to the next word.
-            //
-            pulData++;
-            ulAddress += 4;
-            ulCount -= 4;
-        }
+      //
+      // Increment to the next word.
+      //
+      pulData++;
+      ulAddress += 4;
+      ulCount -= 4;
     }
+  }
 
-    //
-    // Return an error if an access violation occurred.
-    //
-    if(HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS |
-                             FLASH_FCRIS_INVDRIS | FLASH_FCRIS_PROGRIS))
-    {
-        return(-1);
-    }
+  //
+  // Return an error if an access violation occurred.
+  //
+  if (HWREG(FLASH_FCRIS) & (FLASH_FCRIS_ARIS | FLASH_FCRIS_VOLTRIS |
+                            FLASH_FCRIS_INVDRIS | FLASH_FCRIS_PROGRIS)) {
+    return (-1);
+  }
 
-    //
-    // Success.
-    //
-    return(0);
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -324,79 +296,72 @@ FlashProgram(unsigned long *pulData, unsigned long ulAddress,
 //! FlashProtectSet() for possible values.
 //
 //*****************************************************************************
-tFlashProtection
-FlashProtectGet(unsigned long ulAddress)
-{
-    unsigned long ulFMPRE, ulFMPPE;
-    unsigned long ulBank;
+tFlashProtection FlashProtectGet(unsigned long ulAddress) {
+  unsigned long ulFMPRE, ulFMPPE;
+  unsigned long ulBank;
 
-    //
-    // Check the argument.
-    //
-    ASSERT(!(ulAddress & (FLASH_PROTECT_SIZE - 1)));
+  //
+  // Check the argument.
+  //
+  ASSERT(!(ulAddress & (FLASH_PROTECT_SIZE - 1)));
 
-    //
-    // Calculate the Flash Bank from Base Address, and mask off the Bank
-    // from ulAddress for subsequent reference.
-    //
-    ulBank = (((ulAddress / FLASH_PROTECT_SIZE) / 32) % 4);
-    ulAddress &= ((FLASH_PROTECT_SIZE * 32) - 1);
+  //
+  // Calculate the Flash Bank from Base Address, and mask off the Bank
+  // from ulAddress for subsequent reference.
+  //
+  ulBank = (((ulAddress / FLASH_PROTECT_SIZE) / 32) % 4);
+  ulAddress &= ((FLASH_PROTECT_SIZE * 32) - 1);
 
-    //
-    // Read the appropriate flash protection registers for the specified
-    // flash bank.
-    //
-    ulFMPRE = HWREG(g_pulFMPRERegs[ulBank]);
-    ulFMPPE = HWREG(g_pulFMPPERegs[ulBank]);
+  //
+  // Read the appropriate flash protection registers for the specified
+  // flash bank.
+  //
+  ulFMPRE = HWREG(g_pulFMPRERegs[ulBank]);
+  ulFMPPE = HWREG(g_pulFMPPERegs[ulBank]);
 
+  //
+  // For Stellaris Sandstorm-class devices, revision C1 and C2, the upper
+  // bits of the FMPPE register are used for JTAG protect options, and are
+  // not available for the FLASH protection scheme.  When Querying Block
+  // Protection, assume these bits are 1.
+  //
+  if (CLASS_IS_SANDSTORM && (REVISION_IS_C1 || REVISION_IS_C2)) {
+    ulFMPRE |= (FLASH_FMP_BLOCK_31 | FLASH_FMP_BLOCK_30);
+  }
+
+  //
+  // Check the appropriate protection bits for the block of memory that
+  // is specified by the address.
+  //
+  switch ((((ulFMPRE >> (ulAddress / FLASH_PROTECT_SIZE)) & FLASH_FMP_BLOCK_0)
+           << 1) |
+          ((ulFMPPE >> (ulAddress / FLASH_PROTECT_SIZE)) & FLASH_FMP_BLOCK_0)) {
     //
-    // For Stellaris Sandstorm-class devices, revision C1 and C2, the upper
-    // bits of the FMPPE register are used for JTAG protect options, and are
-    // not available for the FLASH protection scheme.  When Querying Block
-    // Protection, assume these bits are 1.
+    // This block is marked as execute only (that is, it can not be erased
+    // or programmed, and the only reads allowed are via the instruction
+    // fetch interface).
     //
-    if(CLASS_IS_SANDSTORM && (REVISION_IS_C1 || REVISION_IS_C2))
-    {
-        ulFMPRE |= (FLASH_FMP_BLOCK_31 | FLASH_FMP_BLOCK_30);
+    case 0:
+    case 1: {
+      return (FlashExecuteOnly);
     }
 
     //
-    // Check the appropriate protection bits for the block of memory that
-    // is specified by the address.
+    // This block is marked as read only (that is, it can not be erased or
+    // programmed).
     //
-    switch((((ulFMPRE >> (ulAddress / FLASH_PROTECT_SIZE)) &
-             FLASH_FMP_BLOCK_0) << 1) |
-           ((ulFMPPE >> (ulAddress / FLASH_PROTECT_SIZE)) & FLASH_FMP_BLOCK_0))
-    {
-        //
-        // This block is marked as execute only (that is, it can not be erased
-        // or programmed, and the only reads allowed are via the instruction
-        // fetch interface).
-        //
-        case 0:
-        case 1:
-        {
-            return(FlashExecuteOnly);
-        }
-
-        //
-        // This block is marked as read only (that is, it can not be erased or
-        // programmed).
-        //
-        case 2:
-        {
-            return(FlashReadOnly);
-        }
-
-        //
-        // This block is read/write; it can be read, erased, and programmed.
-        //
-        case 3:
-        default:
-        {
-            return(FlashReadWrite);
-        }
+    case 2: {
+      return (FlashReadOnly);
     }
+
+    //
+    // This block is read/write; it can be read, erased, and programmed.
+    //
+    case 3:
+    default: {
+      return (FlashReadWrite);
+    }
+  }
 }
 
 //*****************************************************************************
@@ -424,148 +389,137 @@ FlashProtectGet(unsigned long ulAddress)
 //! protection was specified.
 //
 //*****************************************************************************
-long
-FlashProtectSet(unsigned long ulAddress, tFlashProtection eProtect)
-{
-    unsigned long ulProtectRE, ulProtectPE;
-    unsigned long ulBank;
+long FlashProtectSet(unsigned long ulAddress, tFlashProtection eProtect) {
+  unsigned long ulProtectRE, ulProtectPE;
+  unsigned long ulBank;
 
-    //
-    // Check the argument.
-    //
-    ASSERT(!(ulAddress & (FLASH_PROTECT_SIZE - 1)));
-    ASSERT((eProtect == FlashReadWrite) || (eProtect == FlashReadOnly) ||
-           (eProtect == FlashExecuteOnly));
+  //
+  // Check the argument.
+  //
+  ASSERT(!(ulAddress & (FLASH_PROTECT_SIZE - 1)));
+  ASSERT((eProtect == FlashReadWrite) || (eProtect == FlashReadOnly) ||
+         (eProtect == FlashExecuteOnly));
 
-    //
-    // Convert the address into a block number.
-    //
-    ulAddress /= FLASH_PROTECT_SIZE;
+  //
+  // Convert the address into a block number.
+  //
+  ulAddress /= FLASH_PROTECT_SIZE;
 
-    //
-    // ulAddress contains a "raw" block number.  Derive the Flash Bank from
-    // the "raw" block number, and convert ulAddress to a "relative"
-    // block number.
-    //
-    ulBank = ((ulAddress / 32) % 4);
-    ulAddress %= 32;
+  //
+  // ulAddress contains a "raw" block number.  Derive the Flash Bank from
+  // the "raw" block number, and convert ulAddress to a "relative"
+  // block number.
+  //
+  ulBank = ((ulAddress / 32) % 4);
+  ulAddress %= 32;
 
-    //
-    // Get the current protection for the specified flash bank.
-    //
-    ulProtectRE = HWREG(g_pulFMPRERegs[ulBank]);
-    ulProtectPE = HWREG(g_pulFMPPERegs[ulBank]);
+  //
+  // Get the current protection for the specified flash bank.
+  //
+  ulProtectRE = HWREG(g_pulFMPRERegs[ulBank]);
+  ulProtectPE = HWREG(g_pulFMPPERegs[ulBank]);
 
+  //
+  // For Stellaris Sandstorm-class devices, revision C1 and C2, the upper
+  // bits of the FMPPE register are used for JTAG protect options, and are
+  // not available for the FLASH protection scheme.  When setting protection,
+  // check to see if block 30 or 31 and protection is FlashExecuteOnly.  If
+  // so, return an error condition.
+  //
+  if (CLASS_IS_SANDSTORM && (REVISION_IS_C1 || REVISION_IS_C2)) {
+    if ((ulAddress >= 30) && (eProtect == FlashExecuteOnly)) {
+      return (-1);
+    }
+  }
+
+  //
+  // Set the protection based on the requested proection.
+  //
+  switch (eProtect) {
     //
-    // For Stellaris Sandstorm-class devices, revision C1 and C2, the upper
-    // bits of the FMPPE register are used for JTAG protect options, and are
-    // not available for the FLASH protection scheme.  When setting protection,
-    // check to see if block 30 or 31 and protection is FlashExecuteOnly.  If
-    // so, return an error condition.
+    // Make this block execute only.
     //
-    if(CLASS_IS_SANDSTORM && (REVISION_IS_C1 || REVISION_IS_C2))
-    {
-        if((ulAddress >= 30) && (eProtect == FlashExecuteOnly))
-        {
-            return(-1);
-        }
+    case FlashExecuteOnly: {
+      //
+      // Turn off the read and program bits for this block.
+      //
+      ulProtectRE &= ~(FLASH_FMP_BLOCK_0 << ulAddress);
+      ulProtectPE &= ~(FLASH_FMP_BLOCK_0 << ulAddress);
+
+      //
+      // We're done handling this protection.
+      //
+      break;
     }
 
     //
-    // Set the protection based on the requested proection.
+    // Make this block read only.
     //
-    switch(eProtect)
-    {
-        //
-        // Make this block execute only.
-        //
-        case FlashExecuteOnly:
-        {
-            //
-            // Turn off the read and program bits for this block.
-            //
-            ulProtectRE &= ~(FLASH_FMP_BLOCK_0 << ulAddress);
-            ulProtectPE &= ~(FLASH_FMP_BLOCK_0 << ulAddress);
+    case FlashReadOnly: {
+      //
+      // The block can not be made read only if it is execute only.
+      //
+      if (((ulProtectRE >> ulAddress) & FLASH_FMP_BLOCK_0) !=
+          FLASH_FMP_BLOCK_0) {
+        return (-1);
+      }
 
-            //
-            // We're done handling this protection.
-            //
-            break;
-        }
+      //
+      // Make this block read only.
+      //
+      ulProtectPE &= ~(FLASH_FMP_BLOCK_0 << ulAddress);
 
-        //
-        // Make this block read only.
-        //
-        case FlashReadOnly:
-        {
-            //
-            // The block can not be made read only if it is execute only.
-            //
-            if(((ulProtectRE >> ulAddress) & FLASH_FMP_BLOCK_0) !=
-               FLASH_FMP_BLOCK_0)
-            {
-                return(-1);
-            }
-
-            //
-            // Make this block read only.
-            //
-            ulProtectPE &= ~(FLASH_FMP_BLOCK_0 << ulAddress);
-
-            //
-            // We're done handling this protection.
-            //
-            break;
-        }
-
-        //
-        // Make this block read/write.
-        //
-        case FlashReadWrite:
-        default:
-        {
-            //
-            // The block can not be made read/write if it is not already
-            // read/write.
-            //
-            if((((ulProtectRE >> ulAddress) & FLASH_FMP_BLOCK_0) !=
-                FLASH_FMP_BLOCK_0) ||
-               (((ulProtectPE >> ulAddress) & FLASH_FMP_BLOCK_0) !=
-                FLASH_FMP_BLOCK_0))
-            {
-                return(-1);
-            }
-
-            //
-            // The block is already read/write, so there is nothing to do.
-            //
-            return(0);
-        }
+      //
+      // We're done handling this protection.
+      //
+      break;
     }
 
     //
-    // For Stellaris Sandstorm-class devices, revision C1 and C2, the upper
-    // bits of the FMPPE register are used for JTAG options, and are not
-    // available for the FLASH protection scheme.  When setting block
-    // protection, ensure that these bits are not altered.
+    // Make this block read/write.
     //
-    if(CLASS_IS_SANDSTORM && (REVISION_IS_C1 || REVISION_IS_C2))
-    {
-        ulProtectRE &= ~(FLASH_FMP_BLOCK_31 | FLASH_FMP_BLOCK_30);
-        ulProtectRE |= (HWREG(g_pulFMPRERegs[ulBank]) &
-                        (FLASH_FMP_BLOCK_31 | FLASH_FMP_BLOCK_30));
+    case FlashReadWrite:
+    default: {
+      //
+      // The block can not be made read/write if it is not already
+      // read/write.
+      //
+      if ((((ulProtectRE >> ulAddress) & FLASH_FMP_BLOCK_0) !=
+           FLASH_FMP_BLOCK_0) ||
+          (((ulProtectPE >> ulAddress) & FLASH_FMP_BLOCK_0) !=
+           FLASH_FMP_BLOCK_0)) {
+        return (-1);
+      }
+
+      //
+      // The block is already read/write, so there is nothing to do.
+      //
+      return (0);
     }
+  }
 
-    //
-    // Set the new protection for the specified flash bank.
-    //
-    HWREG(g_pulFMPRERegs[ulBank]) = ulProtectRE;
-    HWREG(g_pulFMPPERegs[ulBank]) = ulProtectPE;
+  //
+  // For Stellaris Sandstorm-class devices, revision C1 and C2, the upper
+  // bits of the FMPPE register are used for JTAG options, and are not
+  // available for the FLASH protection scheme.  When setting block
+  // protection, ensure that these bits are not altered.
+  //
+  if (CLASS_IS_SANDSTORM && (REVISION_IS_C1 || REVISION_IS_C2)) {
+    ulProtectRE &= ~(FLASH_FMP_BLOCK_31 | FLASH_FMP_BLOCK_30);
+    ulProtectRE |= (HWREG(g_pulFMPRERegs[ulBank]) &
+                    (FLASH_FMP_BLOCK_31 | FLASH_FMP_BLOCK_30));
+  }
 
-    //
-    // Success.
-    //
-    return(0);
+  //
+  // Set the new protection for the specified flash bank.
+  //
+  HWREG(g_pulFMPRERegs[ulBank]) = ulProtectRE;
+  HWREG(g_pulFMPPERegs[ulBank]) = ulProtectPE;
+
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -581,37 +535,33 @@ FlashProtectSet(unsigned long ulAddress, tFlashProtection eProtect)
 //! \return Returns 0 on success, or -1 if a hardware error is encountered.
 //
 //*****************************************************************************
-long
-FlashProtectSave(void)
-{
-    unsigned long ulTemp, ulLimit;
+long FlashProtectSave(void) {
+  unsigned long ulTemp, ulLimit;
+
+  //
+  // If running on a Sandstorm-class device, only trigger a save of the first
+  // two protection registers (FMPRE and FMPPE).  Otherwise, save the
+  // entire bank of flash protection registers.
+  //
+  ulLimit = CLASS_IS_SANDSTORM ? 2 : 8;
+  for (ulTemp = 0; ulTemp < ulLimit; ulTemp++) {
+    //
+    // Tell the flash controller to write the flash protection register.
+    //
+    HWREG(FLASH_FMA) = ulTemp;
+    HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
 
     //
-    // If running on a Sandstorm-class device, only trigger a save of the first
-    // two protection registers (FMPRE and FMPPE).  Otherwise, save the
-    // entire bank of flash protection registers.
+    // Wait until the write has completed.
     //
-    ulLimit = CLASS_IS_SANDSTORM ? 2 : 8;
-    for(ulTemp = 0; ulTemp < ulLimit; ulTemp++)
-    {
-        //
-        // Tell the flash controller to write the flash protection register.
-        //
-        HWREG(FLASH_FMA) = ulTemp;
-        HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
-
-        //
-        // Wait until the write has completed.
-        //
-        while(HWREG(FLASH_FMC) & FLASH_FMC_COMT)
-        {
-        }
+    while (HWREG(FLASH_FMC) & FLASH_FMC_COMT) {
     }
+  }
 
-    //
-    // Success.
-    //
-    return(0);
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -627,33 +577,30 @@ FlashProtectSave(void)
 //! \return Returns 0 on success, or -1 if a hardware error is encountered.
 //
 //*****************************************************************************
-long
-FlashUserGet(unsigned long *pulUser0, unsigned long *pulUser1)
-{
-    //
-    // Verify that the pointers are valid.
-    //
-    ASSERT(pulUser0 != 0);
-    ASSERT(pulUser1 != 0);
+long FlashUserGet(unsigned long *pulUser0, unsigned long *pulUser1) {
+  //
+  // Verify that the pointers are valid.
+  //
+  ASSERT(pulUser0 != 0);
+  ASSERT(pulUser1 != 0);
 
-    //
-    // Verify that hardware supports user registers.
-    //
-    if(CLASS_IS_SANDSTORM)
-    {
-        return(-1);
-    }
+  //
+  // Verify that hardware supports user registers.
+  //
+  if (CLASS_IS_SANDSTORM) {
+    return (-1);
+  }
 
-    //
-    // Get and store the current value of the user registers.
-    //
-    *pulUser0 = HWREG(FLASH_USERREG0);
-    *pulUser1 = HWREG(FLASH_USERREG1);
+  //
+  // Get and store the current value of the user registers.
+  //
+  *pulUser0 = HWREG(FLASH_USERREG0);
+  *pulUser1 = HWREG(FLASH_USERREG1);
 
-    //
-    // Success.
-    //
-    return(0);
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -669,27 +616,24 @@ FlashUserGet(unsigned long *pulUser0, unsigned long *pulUser1)
 //! \return Returns 0 on success, or -1 if a hardware error is encountered.
 //
 //*****************************************************************************
-long
-FlashUserSet(unsigned long ulUser0, unsigned long ulUser1)
-{
-    //
-    // Verify that hardware supports user registers.
-    //
-    if(CLASS_IS_SANDSTORM)
-    {
-        return(-1);
-    }
+long FlashUserSet(unsigned long ulUser0, unsigned long ulUser1) {
+  //
+  // Verify that hardware supports user registers.
+  //
+  if (CLASS_IS_SANDSTORM) {
+    return (-1);
+  }
 
-    //
-    // Save the new values into the user registers.
-    //
-    HWREG(FLASH_USERREG0) = ulUser0;
-    HWREG(FLASH_USERREG1) = ulUser1;
+  //
+  // Save the new values into the user registers.
+  //
+  HWREG(FLASH_USERREG0) = ulUser0;
+  HWREG(FLASH_USERREG1) = ulUser1;
 
-    //
-    // Success.
-    //
-    return(0);
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -705,48 +649,43 @@ FlashUserSet(unsigned long ulUser0, unsigned long ulUser1)
 //! \return Returns 0 on success, or -1 if a hardware error is encountered.
 //
 //*****************************************************************************
-long
-FlashUserSave(void)
-{
-    //
-    // Verify that hardware supports user registers.
-    //
-    if(CLASS_IS_SANDSTORM)
-    {
-        return(-1);
-    }
+long FlashUserSave(void) {
+  //
+  // Verify that hardware supports user registers.
+  //
+  if (CLASS_IS_SANDSTORM) {
+    return (-1);
+  }
 
-    //
-    // Setting the MSB of FMA will trigger a permanent save of a USER
-    // register.  Bit 0 will indicate User 0 (0) or User 1 (1).
-    //
-    HWREG(FLASH_FMA) = 0x80000000;
-    HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
+  //
+  // Setting the MSB of FMA will trigger a permanent save of a USER
+  // register.  Bit 0 will indicate User 0 (0) or User 1 (1).
+  //
+  HWREG(FLASH_FMA) = 0x80000000;
+  HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
 
-    //
-    // Wait until the write has completed.
-    //
-    while(HWREG(FLASH_FMC) & FLASH_FMC_COMT)
-    {
-    }
+  //
+  // Wait until the write has completed.
+  //
+  while (HWREG(FLASH_FMC) & FLASH_FMC_COMT) {
+  }
 
-    //
-    // Tell the flash controller to write the USER1 Register.
-    //
-    HWREG(FLASH_FMA) = 0x80000001;
-    HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
+  //
+  // Tell the flash controller to write the USER1 Register.
+  //
+  HWREG(FLASH_FMA) = 0x80000001;
+  HWREG(FLASH_FMC) = FLASH_FMC_WRKEY | FLASH_FMC_COMT;
 
-    //
-    // Wait until the write has completed.
-    //
-    while(HWREG(FLASH_FMC) & FLASH_FMC_COMT)
-    {
-    }
+  //
+  // Wait until the write has completed.
+  //
+  while (HWREG(FLASH_FMC) & FLASH_FMC_COMT) {
+  }
 
-    //
-    // Success.
-    //
-    return(0);
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -769,18 +708,16 @@ FlashUserSave(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-FlashIntRegister(void (*pfnHandler)(void))
-{
-    //
-    // Register the interrupt handler, returning an error if an error occurs.
-    //
-    IntRegister(INT_FLASH, pfnHandler);
+void FlashIntRegister(void (*pfnHandler)(void)) {
+  //
+  // Register the interrupt handler, returning an error if an error occurs.
+  //
+  IntRegister(INT_FLASH, pfnHandler);
 
-    //
-    // Enable the flash interrupt.
-    //
-    IntEnable(INT_FLASH);
+  //
+  // Enable the flash interrupt.
+  //
+  IntEnable(INT_FLASH);
 }
 
 //*****************************************************************************
@@ -797,18 +734,16 @@ FlashIntRegister(void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-FlashIntUnregister(void)
-{
-    //
-    // Disable the interrupt.
-    //
-    IntDisable(INT_FLASH);
+void FlashIntUnregister(void) {
+  //
+  // Disable the interrupt.
+  //
+  IntDisable(INT_FLASH);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_FLASH);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_FLASH);
 }
 
 //*****************************************************************************
@@ -825,13 +760,11 @@ FlashIntUnregister(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-FlashIntEnable(unsigned long ulIntFlags)
-{
-    //
-    // Enable the specified interrupts.
-    //
-    HWREG(FLASH_FCIM) |= ulIntFlags;
+void FlashIntEnable(unsigned long ulIntFlags) {
+  //
+  // Enable the specified interrupts.
+  //
+  HWREG(FLASH_FCIM) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -848,13 +781,11 @@ FlashIntEnable(unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-FlashIntDisable(unsigned long ulIntFlags)
-{
-    //
-    // Disable the specified interrupts.
-    //
-    HWREG(FLASH_FCIM) &= ~(ulIntFlags);
+void FlashIntDisable(unsigned long ulIntFlags) {
+  //
+  // Disable the specified interrupts.
+  //
+  HWREG(FLASH_FCIM) &= ~(ulIntFlags);
 }
 
 //*****************************************************************************
@@ -872,21 +803,16 @@ FlashIntDisable(unsigned long ulIntFlags)
 //! \b FLASH_INT_PROGRAM and \b FLASH_INT_ACCESS.
 //
 //*****************************************************************************
-unsigned long
-FlashIntStatus(tBoolean bMasked)
-{
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(FLASH_FCMISC));
-    }
-    else
-    {
-        return(HWREG(FLASH_FCRIS));
-    }
+unsigned long FlashIntStatus(tBoolean bMasked) {
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(FLASH_FCMISC));
+  } else {
+    return (HWREG(FLASH_FCRIS));
+  }
 }
 
 //*****************************************************************************
@@ -912,13 +838,11 @@ FlashIntStatus(tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-FlashIntClear(unsigned long ulIntFlags)
-{
-    //
-    // Clear the flash interrupt.
-    //
-    HWREG(FLASH_FCMISC) = ulIntFlags;
+void FlashIntClear(unsigned long ulIntFlags) {
+  //
+  // Clear the flash interrupt.
+  //
+  HWREG(FLASH_FCMISC) = ulIntFlags;
 }
 
 //*****************************************************************************

@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2011-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,10 +44,10 @@
 //
 //*****************************************************************************
 
+#include "driverlib/interrupt.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_sysexc.h"
 #include "inc/hw_types.h"
-#include "driverlib/interrupt.h"
 
 //*****************************************************************************
 //
@@ -68,18 +68,16 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-SysExcIntRegister(void (*pfnHandler)(void))
-{
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(INT_SYSEXC, pfnHandler);
+void SysExcIntRegister(void (*pfnHandler)(void)) {
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(INT_SYSEXC, pfnHandler);
 
-    //
-    // Enable the system exception interrupt.
-    //
-    IntEnable(INT_SYSEXC);
+  //
+  // Enable the system exception interrupt.
+  //
+  IntEnable(INT_SYSEXC);
 }
 
 //*****************************************************************************
@@ -97,18 +95,16 @@ SysExcIntRegister(void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-SysExcIntUnregister(void)
-{
-    //
-    // Disable the system exception interrupt.
-    //
-    IntDisable(INT_SYSEXC);
+void SysExcIntUnregister(void) {
+  //
+  // Disable the system exception interrupt.
+  //
+  IntDisable(INT_SYSEXC);
 
-    //
-    // Unregister the system exception interrupt handler.
-    //
-    IntUnregister(INT_SYSEXC);
+  //
+  // Unregister the system exception interrupt handler.
+  //
+  IntUnregister(INT_SYSEXC);
 }
 
 //*****************************************************************************
@@ -133,13 +129,11 @@ SysExcIntUnregister(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysExcIntEnable(unsigned long ulIntFlags)
-{
-    //
-    // Enable the specified interrupts.
-    //
-    HWREG(SYSEXC_IM) |= ulIntFlags;
+void SysExcIntEnable(unsigned long ulIntFlags) {
+  //
+  // Enable the specified interrupts.
+  //
+  HWREG(SYSEXC_IM) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -164,13 +158,11 @@ SysExcIntEnable(unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysExcIntDisable(unsigned long ulIntFlags)
-{
-    //
-    // Disable the specified interrupts.
-    //
-    HWREG(SYSEXC_IM) &= ~(ulIntFlags);
+void SysExcIntDisable(unsigned long ulIntFlags) {
+  //
+  // Disable the specified interrupts.
+  //
+  HWREG(SYSEXC_IM) &= ~(ulIntFlags);
 }
 
 //*****************************************************************************
@@ -190,21 +182,16 @@ SysExcIntDisable(unsigned long ulIntFlags)
 //! \b SYSEXC_INT_FP_IDC.
 //
 //*****************************************************************************
-unsigned long
-SysExcIntStatus(tBoolean bMasked)
-{
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(SYSEXC_MIS));
-    }
-    else
-    {
-        return(HWREG(SYSEXC_RIS));
-    }
+unsigned long SysExcIntStatus(tBoolean bMasked) {
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(SYSEXC_MIS));
+  } else {
+    return (HWREG(SYSEXC_RIS));
+  }
 }
 
 //*****************************************************************************
@@ -239,13 +226,11 @@ SysExcIntStatus(tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysExcIntClear(unsigned long ulIntFlags)
-{
-    //
-    // Clear the requested interrupt sources.
-    //
-    HWREG(SYSEXC_IC) = ulIntFlags;
+void SysExcIntClear(unsigned long ulIntFlags) {
+  //
+  // Clear the requested interrupt sources.
+  //
+  HWREG(SYSEXC_IC) = ulIntFlags;
 }
 
 //*****************************************************************************

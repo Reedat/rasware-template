@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,16 +44,17 @@
 //
 //*****************************************************************************
 
-#include "inc/hw_ints.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_types.h"
-#include "inc/hw_sysctl.h"
-#include "inc/hw_usb.h"
+#include "driverlib/usb.h"
+
 #include "driverlib/debug.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/udma.h"
-#include "driverlib/usb.h"
+#include "inc/hw_ints.h"
+#include "inc/hw_memmap.h"
+#include "inc/hw_sysctl.h"
+#include "inc/hw_types.h"
+#include "inc/hw_usb.h"
 
 //*****************************************************************************
 //
@@ -62,9 +63,9 @@
 //
 //*****************************************************************************
 #ifndef DEPRECATED
-#define USB_INT_RX_SHIFT        8
+#define USB_INT_RX_SHIFT 8
 #endif
-#define USB_INTEP_RX_SHIFT      16
+#define USB_INTEP_RX_SHIFT 16
 
 //*****************************************************************************
 //
@@ -73,7 +74,7 @@
 //
 //*****************************************************************************
 #ifndef DEPRECATED
-#define USB_INT_STATUS_SHIFT    24
+#define USB_INT_STATUS_SHIFT 24
 #endif
 
 //*****************************************************************************
@@ -82,7 +83,7 @@
 // calls.
 //
 //*****************************************************************************
-#define USB_RX_EPSTATUS_SHIFT   16
+#define USB_RX_EPSTATUS_SHIFT 16
 
 //*****************************************************************************
 //
@@ -90,7 +91,7 @@
 // control/status registers.
 //
 //*****************************************************************************
-#define EP_OFFSET(Endpoint)     (Endpoint - 0x10)
+#define EP_OFFSET(Endpoint) (Endpoint - 0x10)
 
 //*****************************************************************************
 //
@@ -108,53 +109,48 @@
 // \return None.
 //
 //*****************************************************************************
-static void
-USBIndexWrite(unsigned long ulBase, unsigned long ulEndpoint,
-              unsigned long ulIndexedReg, unsigned long ulValue,
-              unsigned long ulSize)
-{
-    unsigned long ulIndex;
+static void USBIndexWrite(unsigned long ulBase, unsigned long ulEndpoint,
+                          unsigned long ulIndexedReg, unsigned long ulValue,
+                          unsigned long ulSize) {
+  unsigned long ulIndex;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == 0) || (ulEndpoint == 1) || (ulEndpoint == 2) ||
-           (ulEndpoint == 3));
-    ASSERT((ulSize == 1) || (ulSize == 2));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == 0) || (ulEndpoint == 1) || (ulEndpoint == 2) ||
+         (ulEndpoint == 3));
+  ASSERT((ulSize == 1) || (ulSize == 2));
 
-    //
-    // Save the old index in case it was in use.
-    //
-    ulIndex = HWREGB(ulBase + USB_O_EPIDX);
+  //
+  // Save the old index in case it was in use.
+  //
+  ulIndex = HWREGB(ulBase + USB_O_EPIDX);
 
-    //
-    // Set the index.
-    //
-    HWREGB(ulBase + USB_O_EPIDX) = ulEndpoint;
+  //
+  // Set the index.
+  //
+  HWREGB(ulBase + USB_O_EPIDX) = ulEndpoint;
 
+  //
+  // Determine the size of the register value.
+  //
+  if (ulSize == 1) {
     //
-    // Determine the size of the register value.
+    // Set the value.
     //
-    if(ulSize == 1)
-    {
-        //
-        // Set the value.
-        //
-        HWREGB(ulBase + ulIndexedReg) = ulValue;
-    }
-    else
-    {
-        //
-        // Set the value.
-        //
-        HWREGH(ulBase + ulIndexedReg) = ulValue;
-    }
+    HWREGB(ulBase + ulIndexedReg) = ulValue;
+  } else {
+    //
+    // Set the value.
+    //
+    HWREGH(ulBase + ulIndexedReg) = ulValue;
+  }
 
-    //
-    // Restore the old index in case it was in use.
-    //
-    HWREGB(ulBase + USB_O_EPIDX) = ulIndex;
+  //
+  // Restore the old index in case it was in use.
+  //
+  HWREGB(ulBase + USB_O_EPIDX) = ulIndex;
 }
 
 //*****************************************************************************
@@ -172,58 +168,55 @@ USBIndexWrite(unsigned long ulBase, unsigned long ulEndpoint,
 // \return The value in the register requested.
 //
 //*****************************************************************************
-static unsigned long
-USBIndexRead(unsigned long ulBase, unsigned long ulEndpoint,
-             unsigned long ulIndexedReg, unsigned long ulSize)
-{
-    unsigned char ulIndex;
-    unsigned char ulValue;
+static unsigned long USBIndexRead(unsigned long ulBase,
+                                  unsigned long ulEndpoint,
+                                  unsigned long ulIndexedReg,
+                                  unsigned long ulSize) {
+  unsigned char ulIndex;
+  unsigned char ulValue;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == 0) || (ulEndpoint == 1) || (ulEndpoint == 2) ||
-           (ulEndpoint == 3));
-    ASSERT((ulSize == 1) || (ulSize == 2));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == 0) || (ulEndpoint == 1) || (ulEndpoint == 2) ||
+         (ulEndpoint == 3));
+  ASSERT((ulSize == 1) || (ulSize == 2));
 
-    //
-    // Save the old index in case it was in use.
-    //
-    ulIndex = HWREGB(ulBase + USB_O_EPIDX);
+  //
+  // Save the old index in case it was in use.
+  //
+  ulIndex = HWREGB(ulBase + USB_O_EPIDX);
 
-    //
-    // Set the index.
-    //
-    HWREGB(ulBase + USB_O_EPIDX) = ulEndpoint;
+  //
+  // Set the index.
+  //
+  HWREGB(ulBase + USB_O_EPIDX) = ulEndpoint;
 
+  //
+  // Determine the size of the register value.
+  //
+  if (ulSize == 1) {
     //
-    // Determine the size of the register value.
+    // Get the value.
     //
-    if(ulSize == 1)
-    {
-        //
-        // Get the value.
-        //
-        ulValue = HWREGB(ulBase + ulIndexedReg);
-    }
-    else
-    {
-        //
-        // Get the value.
-        //
-        ulValue = HWREGH(ulBase + ulIndexedReg);
-    }
+    ulValue = HWREGB(ulBase + ulIndexedReg);
+  } else {
+    //
+    // Get the value.
+    //
+    ulValue = HWREGH(ulBase + ulIndexedReg);
+  }
 
-    //
-    // Restore the old index in case it was in use.
-    //
-    HWREGB(ulBase + USB_O_EPIDX) = ulIndex;
+  //
+  // Restore the old index in case it was in use.
+  //
+  HWREGB(ulBase + USB_O_EPIDX) = ulIndex;
 
-    //
-    // Return the register's value.
-    //
-    return(ulValue);
+  //
+  // Return the register's value.
+  //
+  return (ulValue);
 }
 
 //*****************************************************************************
@@ -240,18 +233,16 @@ USBIndexRead(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostSuspend(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBHostSuspend(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Send the suspend signaling to the USB bus.
-    //
-    HWREGB(ulBase + USB_O_POWER) |= USB_POWER_SUSPEND;
+  //
+  // Send the suspend signaling to the USB bus.
+  //
+  HWREGB(ulBase + USB_O_POWER) |= USB_POWER_SUSPEND;
 }
 
 //*****************************************************************************
@@ -272,25 +263,20 @@ USBHostSuspend(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostReset(unsigned long ulBase, tBoolean bStart)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBHostReset(unsigned long ulBase, tBoolean bStart) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Send a reset signal to the bus.
-    //
-    if(bStart)
-    {
-        HWREGB(ulBase + USB_O_POWER) |= USB_POWER_RESET;
-    }
-    else
-    {
-        HWREGB(ulBase + USB_O_POWER) &= ~USB_POWER_RESET;
-    }
+  //
+  // Send a reset signal to the bus.
+  //
+  if (bStart) {
+    HWREGB(ulBase + USB_O_POWER) |= USB_POWER_RESET;
+  } else {
+    HWREGB(ulBase + USB_O_POWER) &= ~USB_POWER_RESET;
+  }
 }
 
 //*****************************************************************************
@@ -317,25 +303,20 @@ USBHostReset(unsigned long ulBase, tBoolean bStart)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostResume(unsigned long ulBase, tBoolean bStart)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBHostResume(unsigned long ulBase, tBoolean bStart) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Send a resume signal to the bus.
-    //
-    if(bStart)
-    {
-        HWREGB(ulBase + USB_O_POWER) |= USB_POWER_RESUME;
-    }
-    else
-    {
-        HWREGB(ulBase + USB_O_POWER) &= ~USB_POWER_RESUME;
-    }
+  //
+  // Send a resume signal to the bus.
+  //
+  if (bStart) {
+    HWREGB(ulBase + USB_O_POWER) |= USB_POWER_RESUME;
+  } else {
+    HWREGB(ulBase + USB_O_POWER) &= ~USB_POWER_RESUME;
+  }
 }
 
 //*****************************************************************************
@@ -352,34 +333,30 @@ USBHostResume(unsigned long ulBase, tBoolean bStart)
 //! \b USB_UNDEF_SPEED.
 //
 //*****************************************************************************
-unsigned long
-USBHostSpeedGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+unsigned long USBHostSpeedGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // If the Full Speed device bit is set, then this is a full speed device.
-    //
-    if(HWREGB(ulBase + USB_O_DEVCTL) & USB_DEVCTL_FSDEV)
-    {
-        return(USB_FULL_SPEED);
-    }
+  //
+  // If the Full Speed device bit is set, then this is a full speed device.
+  //
+  if (HWREGB(ulBase + USB_O_DEVCTL) & USB_DEVCTL_FSDEV) {
+    return (USB_FULL_SPEED);
+  }
 
-    //
-    // If the Low Speed device bit is set, then this is a low speed device.
-    //
-    if(HWREGB(ulBase + USB_O_DEVCTL) & USB_DEVCTL_LSDEV)
-    {
-        return(USB_LOW_SPEED);
-    }
+  //
+  // If the Low Speed device bit is set, then this is a low speed device.
+  //
+  if (HWREGB(ulBase + USB_O_DEVCTL) & USB_DEVCTL_LSDEV) {
+    return (USB_LOW_SPEED);
+  }
 
-    //
-    // The device speed is not known.
-    //
-    return(USB_UNDEF_SPEED);
+  //
+  // The device speed is not known.
+  //
+  return (USB_UNDEF_SPEED);
 }
 
 //*****************************************************************************
@@ -406,66 +383,62 @@ USBHostSpeedGet(unsigned long ulBase)
 //
 //*****************************************************************************
 #ifndef DEPRECATED
-unsigned long
-USBIntStatus(unsigned long ulBase)
-{
-    unsigned long ulStatus;
+unsigned long USBIntStatus(unsigned long ulBase) {
+  unsigned long ulStatus;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+
+  //
+  // Get the transmit interrupt status.
+  //
+  ulStatus = (HWREGB(ulBase + USB_O_TXIS));
+
+  //
+  // Get the receive interrupt status, these bits go into the second byte of
+  // the returned value.
+  //
+  ulStatus |= (HWREGB(ulBase + USB_O_RXIS) << USB_INT_RX_SHIFT);
+
+  //
+  // Get the general interrupt status, these bits go into the upper 8 bits
+  // of the returned value.
+  //
+  ulStatus |= (HWREGB(ulBase + USB_O_IS) << USB_INT_STATUS_SHIFT);
+
+  //
+  // Add the power fault status.
+  //
+  if (HWREG(ulBase + USB_O_EPCISC) & USB_EPCISC_PF) {
+    //
+    // Indicate a power fault was detected.
+    //
+    ulStatus |= USB_INT_POWER_FAULT;
 
     //
-    // Check the arguments.
+    // Clear the power fault interrupt.
     //
-    ASSERT(ulBase == USB0_BASE);
+    HWREGB(ulBase + USB_O_EPCISC) |= USB_EPCISC_PF;
+  }
+
+  if (HWREG(USB0_BASE + USB_O_IDVISC) & USB_IDVRIS_ID) {
+    //
+    // Indicate an id detection was detected.
+    //
+    ulStatus |= USB_INT_MODE_DETECT;
 
     //
-    // Get the transmit interrupt status.
+    // Clear the id detection interrupt.
     //
-    ulStatus = (HWREGB(ulBase + USB_O_TXIS));
+    HWREG(USB0_BASE + USB_O_IDVISC) |= USB_IDVRIS_ID;
+  }
 
-    //
-    // Get the receive interrupt status, these bits go into the second byte of
-    // the returned value.
-    //
-    ulStatus |= (HWREGB(ulBase + USB_O_RXIS) << USB_INT_RX_SHIFT);
-
-    //
-    // Get the general interrupt status, these bits go into the upper 8 bits
-    // of the returned value.
-    //
-    ulStatus |= (HWREGB(ulBase + USB_O_IS) << USB_INT_STATUS_SHIFT);
-
-    //
-    // Add the power fault status.
-    //
-    if(HWREG(ulBase + USB_O_EPCISC) & USB_EPCISC_PF)
-    {
-        //
-        // Indicate a power fault was detected.
-        //
-        ulStatus |= USB_INT_POWER_FAULT;
-
-        //
-        // Clear the power fault interrupt.
-        //
-        HWREGB(ulBase + USB_O_EPCISC) |= USB_EPCISC_PF;
-    }
-
-    if(HWREG(USB0_BASE + USB_O_IDVISC) & USB_IDVRIS_ID)
-    {
-        //
-        // Indicate an id detection was detected.
-        //
-        ulStatus |= USB_INT_MODE_DETECT;
-
-        //
-        // Clear the id detection interrupt.
-        //
-        HWREG(USB0_BASE + USB_O_IDVISC) |= USB_IDVRIS_ID;
-    }
-
-    //
-    // Return the combined interrupt status.
-    //
-    return(ulStatus);
+  //
+  // Return the combined interrupt status.
+  //
+  return (ulStatus);
 }
 #endif
 
@@ -491,61 +464,53 @@ USBIntStatus(unsigned long ulBase)
 //
 //*****************************************************************************
 #ifndef DEPRECATED
-void
-USBIntDisable(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulFlags & ~(USB_INT_ALL)) == 0);
+void USBIntDisable(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulFlags & ~(USB_INT_ALL)) == 0);
 
-    //
-    // If any transmit interrupts were disabled, then write the transmit
-    // interrupt settings out to the hardware.
-    //
-    if(ulFlags & (USB_INT_HOST_OUT | USB_INT_DEV_IN | USB_INT_EP0))
-    {
-        HWREGH(ulBase + USB_O_TXIE) &=
-            ~(ulFlags & (USB_INT_HOST_OUT | USB_INT_DEV_IN | USB_INT_EP0));
-    }
+  //
+  // If any transmit interrupts were disabled, then write the transmit
+  // interrupt settings out to the hardware.
+  //
+  if (ulFlags & (USB_INT_HOST_OUT | USB_INT_DEV_IN | USB_INT_EP0)) {
+    HWREGH(ulBase + USB_O_TXIE) &=
+        ~(ulFlags & (USB_INT_HOST_OUT | USB_INT_DEV_IN | USB_INT_EP0));
+  }
 
-    //
-    // If any receive interrupts were disabled, then write the receive
-    // interrupt settings out to the hardware.
-    //
-    if(ulFlags & (USB_INT_HOST_IN | USB_INT_DEV_OUT))
-    {
-        HWREGH(ulBase + USB_O_RXIE) &=
-            ~((ulFlags & (USB_INT_HOST_IN | USB_INT_DEV_OUT)) >>
-              USB_INT_RX_SHIFT);
-    }
+  //
+  // If any receive interrupts were disabled, then write the receive
+  // interrupt settings out to the hardware.
+  //
+  if (ulFlags & (USB_INT_HOST_IN | USB_INT_DEV_OUT)) {
+    HWREGH(ulBase + USB_O_RXIE) &=
+        ~((ulFlags & (USB_INT_HOST_IN | USB_INT_DEV_OUT)) >> USB_INT_RX_SHIFT);
+  }
 
-    //
-    // If any general interrupts were disabled, then write the general
-    // interrupt settings out to the hardware.
-    //
-    if(ulFlags & USB_INT_STATUS)
-    {
-        HWREGB(ulBase + USB_O_IE) &=
-            ~((ulFlags & USB_INT_STATUS) >> USB_INT_STATUS_SHIFT);
-    }
+  //
+  // If any general interrupts were disabled, then write the general
+  // interrupt settings out to the hardware.
+  //
+  if (ulFlags & USB_INT_STATUS) {
+    HWREGB(ulBase + USB_O_IE) &=
+        ~((ulFlags & USB_INT_STATUS) >> USB_INT_STATUS_SHIFT);
+  }
 
-    //
-    // Disable the power fault interrupt.
-    //
-    if(ulFlags & USB_INT_POWER_FAULT)
-    {
-        HWREG(ulBase + USB_O_EPCIM) = 0;
-    }
+  //
+  // Disable the power fault interrupt.
+  //
+  if (ulFlags & USB_INT_POWER_FAULT) {
+    HWREG(ulBase + USB_O_EPCIM) = 0;
+  }
 
-    //
-    // Disable the ID pin detect interrupt.
-    //
-    if(ulFlags & USB_INT_MODE_DETECT)
-    {
-        HWREG(USB0_BASE + USB_O_IDVIM) = 0;
-    }
+  //
+  // Disable the ID pin detect interrupt.
+  //
+  if (ulFlags & USB_INT_MODE_DETECT) {
+    HWREG(USB0_BASE + USB_O_IDVIM) = 0;
+  }
 }
 #endif
 
@@ -578,61 +543,53 @@ USBIntDisable(unsigned long ulBase, unsigned long ulFlags)
 //
 //*****************************************************************************
 #ifndef DEPRECATED
-void
-USBIntEnable(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulFlags & (~USB_INT_ALL)) == 0);
+void USBIntEnable(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulFlags & (~USB_INT_ALL)) == 0);
 
-    //
-    // If any transmit interrupts were enabled, then write the transmit
-    // interrupt settings out to the hardware.
-    //
-    if(ulFlags & (USB_INT_HOST_OUT | USB_INT_DEV_IN | USB_INT_EP0))
-    {
-        HWREGH(ulBase + USB_O_TXIE) |=
-            ulFlags & (USB_INT_HOST_OUT | USB_INT_DEV_IN | USB_INT_EP0);
-    }
+  //
+  // If any transmit interrupts were enabled, then write the transmit
+  // interrupt settings out to the hardware.
+  //
+  if (ulFlags & (USB_INT_HOST_OUT | USB_INT_DEV_IN | USB_INT_EP0)) {
+    HWREGH(ulBase + USB_O_TXIE) |=
+        ulFlags & (USB_INT_HOST_OUT | USB_INT_DEV_IN | USB_INT_EP0);
+  }
 
-    //
-    // If any receive interrupts were enabled, then write the receive
-    // interrupt settings out to the hardware.
-    //
-    if(ulFlags & (USB_INT_HOST_IN | USB_INT_DEV_OUT))
-    {
-        HWREGH(ulBase + USB_O_RXIE) |=
-            ((ulFlags & (USB_INT_HOST_IN | USB_INT_DEV_OUT)) >>
-             USB_INT_RX_SHIFT);
-    }
+  //
+  // If any receive interrupts were enabled, then write the receive
+  // interrupt settings out to the hardware.
+  //
+  if (ulFlags & (USB_INT_HOST_IN | USB_INT_DEV_OUT)) {
+    HWREGH(ulBase + USB_O_RXIE) |=
+        ((ulFlags & (USB_INT_HOST_IN | USB_INT_DEV_OUT)) >> USB_INT_RX_SHIFT);
+  }
 
-    //
-    // If any general interrupts were enabled, then write the general
-    // interrupt settings out to the hardware.
-    //
-    if(ulFlags & USB_INT_STATUS)
-    {
-        HWREGB(ulBase + USB_O_IE) |=
-            (ulFlags & USB_INT_STATUS) >> USB_INT_STATUS_SHIFT;
-    }
+  //
+  // If any general interrupts were enabled, then write the general
+  // interrupt settings out to the hardware.
+  //
+  if (ulFlags & USB_INT_STATUS) {
+    HWREGB(ulBase + USB_O_IE) |=
+        (ulFlags & USB_INT_STATUS) >> USB_INT_STATUS_SHIFT;
+  }
 
-    //
-    // Enable the power fault interrupt.
-    //
-    if(ulFlags & USB_INT_POWER_FAULT)
-    {
-        HWREG(ulBase + USB_O_EPCIM) = USB_EPCIM_PF;
-    }
+  //
+  // Enable the power fault interrupt.
+  //
+  if (ulFlags & USB_INT_POWER_FAULT) {
+    HWREG(ulBase + USB_O_EPCIM) = USB_EPCIM_PF;
+  }
 
-    //
-    // Enable the ID pin detect interrupt.
-    //
-    if(ulFlags & USB_INT_MODE_DETECT)
-    {
-        HWREG(USB0_BASE + USB_O_IDVIM) = USB_IDVIM_ID;
-    }
+  //
+  // Enable the ID pin detect interrupt.
+  //
+  if (ulFlags & USB_INT_MODE_DETECT) {
+    HWREG(USB0_BASE + USB_O_IDVIM) = USB_IDVIM_ID;
+  }
 }
 #endif
 
@@ -652,39 +609,34 @@ USBIntEnable(unsigned long ulBase, unsigned long ulFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBIntDisableControl(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulFlags & ~(USB_INTCTRL_ALL)) == 0);
+void USBIntDisableControl(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulFlags & ~(USB_INTCTRL_ALL)) == 0);
 
-    //
-    // If any general interrupts were disabled then write the general interrupt
-    // settings out to the hardware.
-    //
-    if(ulFlags & USB_INTCTRL_STATUS)
-    {
-        HWREGB(ulBase + USB_O_IE) &= ~(ulFlags & USB_INTCTRL_STATUS);
-    }
+  //
+  // If any general interrupts were disabled then write the general interrupt
+  // settings out to the hardware.
+  //
+  if (ulFlags & USB_INTCTRL_STATUS) {
+    HWREGB(ulBase + USB_O_IE) &= ~(ulFlags & USB_INTCTRL_STATUS);
+  }
 
-    //
-    // Disable the power fault interrupt.
-    //
-    if(ulFlags & USB_INTCTRL_POWER_FAULT)
-    {
-        HWREG(ulBase + USB_O_EPCIM) = 0;
-    }
+  //
+  // Disable the power fault interrupt.
+  //
+  if (ulFlags & USB_INTCTRL_POWER_FAULT) {
+    HWREG(ulBase + USB_O_EPCIM) = 0;
+  }
 
-    //
-    // Disable the ID pin detect interrupt.
-    //
-    if(ulFlags & USB_INTCTRL_MODE_DETECT)
-    {
-        HWREG(USB0_BASE + USB_O_IDVIM) = 0;
-    }
+  //
+  // Disable the ID pin detect interrupt.
+  //
+  if (ulFlags & USB_INTCTRL_MODE_DETECT) {
+    HWREG(USB0_BASE + USB_O_IDVIM) = 0;
+  }
 }
 
 //*****************************************************************************
@@ -703,39 +655,34 @@ USBIntDisableControl(unsigned long ulBase, unsigned long ulFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBIntEnableControl(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulFlags & (~USB_INTCTRL_ALL)) == 0);
+void USBIntEnableControl(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulFlags & (~USB_INTCTRL_ALL)) == 0);
 
-    //
-    // If any general interrupts were enabled, then write the general
-    // interrupt settings out to the hardware.
-    //
-    if(ulFlags & USB_INTCTRL_STATUS)
-    {
-        HWREGB(ulBase + USB_O_IE) |= ulFlags;
-    }
+  //
+  // If any general interrupts were enabled, then write the general
+  // interrupt settings out to the hardware.
+  //
+  if (ulFlags & USB_INTCTRL_STATUS) {
+    HWREGB(ulBase + USB_O_IE) |= ulFlags;
+  }
 
-    //
-    // Enable the power fault interrupt.
-    //
-    if(ulFlags & USB_INTCTRL_POWER_FAULT)
-    {
-        HWREG(ulBase + USB_O_EPCIM) = USB_EPCIM_PF;
-    }
+  //
+  // Enable the power fault interrupt.
+  //
+  if (ulFlags & USB_INTCTRL_POWER_FAULT) {
+    HWREG(ulBase + USB_O_EPCIM) = USB_EPCIM_PF;
+  }
 
-    //
-    // Enable the ID pin detect interrupt.
-    //
-    if(ulFlags & USB_INTCTRL_MODE_DETECT)
-    {
-        HWREG(USB0_BASE + USB_O_IDVIM) = USB_IDVIM_ID;
-    }
+  //
+  // Enable the ID pin detect interrupt.
+  //
+  if (ulFlags & USB_INTCTRL_MODE_DETECT) {
+    HWREG(USB0_BASE + USB_O_IDVIM) = USB_IDVIM_ID;
+  }
 }
 
 //*****************************************************************************
@@ -779,55 +726,51 @@ USBIntEnableControl(unsigned long ulBase, unsigned long ulFlags)
 //! \return Returns the status of the control interrupts for a USB controller.
 //
 //*****************************************************************************
-unsigned long
-USBIntStatusControl(unsigned long ulBase)
-{
-    unsigned long ulStatus;
+unsigned long USBIntStatusControl(unsigned long ulBase) {
+  unsigned long ulStatus;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+
+  //
+  // Get the general interrupt status, these bits go into the upper 8 bits
+  // of the returned value.
+  //
+  ulStatus = HWREGB(ulBase + USB_O_IS);
+
+  //
+  // Add the power fault status.
+  //
+  if (HWREG(ulBase + USB_O_EPCISC) & USB_EPCISC_PF) {
+    //
+    // Indicate a power fault was detected.
+    //
+    ulStatus |= USB_INTCTRL_POWER_FAULT;
 
     //
-    // Check the arguments.
+    // Clear the power fault interrupt.
     //
-    ASSERT(ulBase == USB0_BASE);
+    HWREGB(ulBase + USB_O_EPCISC) |= USB_EPCISC_PF;
+  }
+
+  if (HWREG(USB0_BASE + USB_O_IDVISC) & USB_IDVRIS_ID) {
+    //
+    // Indicate an id detection.
+    //
+    ulStatus |= USB_INTCTRL_MODE_DETECT;
 
     //
-    // Get the general interrupt status, these bits go into the upper 8 bits
-    // of the returned value.
+    // Clear the id detection interrupt.
     //
-    ulStatus = HWREGB(ulBase + USB_O_IS);
+    HWREG(USB0_BASE + USB_O_IDVISC) |= USB_IDVRIS_ID;
+  }
 
-    //
-    // Add the power fault status.
-    //
-    if(HWREG(ulBase + USB_O_EPCISC) & USB_EPCISC_PF)
-    {
-        //
-        // Indicate a power fault was detected.
-        //
-        ulStatus |= USB_INTCTRL_POWER_FAULT;
-
-        //
-        // Clear the power fault interrupt.
-        //
-        HWREGB(ulBase + USB_O_EPCISC) |= USB_EPCISC_PF;
-    }
-
-    if(HWREG(USB0_BASE + USB_O_IDVISC) & USB_IDVRIS_ID)
-    {
-        //
-        // Indicate an id detection.
-        //
-        ulStatus |= USB_INTCTRL_MODE_DETECT;
-
-        //
-        // Clear the id detection interrupt.
-        //
-        HWREG(USB0_BASE + USB_O_IDVISC) |= USB_IDVRIS_ID;
-    }
-
-    //
-    // Return the combined interrupt status.
-    //
-    return(ulStatus);
+  //
+  // Return the combined interrupt status.
+  //
+  return (ulStatus);
 }
 
 //*****************************************************************************
@@ -846,28 +789,26 @@ USBIntStatusControl(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBIntDisableEndpoint(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBIntDisableEndpoint(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // If any transmit interrupts were disabled, then write the transmit
-    // interrupt settings out to the hardware.
-    //
-    HWREGH(ulBase + USB_O_TXIE) &=
-        ~(ulFlags & (USB_INTEP_HOST_OUT | USB_INTEP_DEV_IN | USB_INTEP_0));
+  //
+  // If any transmit interrupts were disabled, then write the transmit
+  // interrupt settings out to the hardware.
+  //
+  HWREGH(ulBase + USB_O_TXIE) &=
+      ~(ulFlags & (USB_INTEP_HOST_OUT | USB_INTEP_DEV_IN | USB_INTEP_0));
 
-    //
-    // If any receive interrupts were disabled, then write the receive interrupt
-    // settings out to the hardware.
-    //
-    HWREGH(ulBase + USB_O_RXIE) &=
-        ~((ulFlags & (USB_INTEP_HOST_IN | USB_INTEP_DEV_OUT)) >>
-          USB_INTEP_RX_SHIFT);
+  //
+  // If any receive interrupts were disabled, then write the receive interrupt
+  // settings out to the hardware.
+  //
+  HWREGH(ulBase + USB_O_RXIE) &=
+      ~((ulFlags & (USB_INTEP_HOST_IN | USB_INTEP_DEV_OUT)) >>
+        USB_INTEP_RX_SHIFT);
 }
 
 //*****************************************************************************
@@ -886,26 +827,24 @@ USBIntDisableEndpoint(unsigned long ulBase, unsigned long ulFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBIntEnableEndpoint(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBIntEnableEndpoint(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Enable any transmit endpoint interrupts.
-    //
-    HWREGH(ulBase + USB_O_TXIE) |=
-           ulFlags & (USB_INTEP_HOST_OUT | USB_INTEP_DEV_IN | USB_INTEP_0);
+  //
+  // Enable any transmit endpoint interrupts.
+  //
+  HWREGH(ulBase + USB_O_TXIE) |=
+      ulFlags & (USB_INTEP_HOST_OUT | USB_INTEP_DEV_IN | USB_INTEP_0);
 
-    //
-    // Enable any receive endpoint interrupts.
-    //
-    HWREGH(ulBase + USB_O_RXIE) |=
-        ((ulFlags & (USB_INTEP_HOST_IN | USB_INTEP_DEV_OUT)) >>
-         USB_INTEP_RX_SHIFT);
+  //
+  // Enable any receive endpoint interrupts.
+  //
+  HWREGH(ulBase + USB_O_RXIE) |=
+      ((ulFlags & (USB_INTEP_HOST_IN | USB_INTEP_DEV_OUT)) >>
+       USB_INTEP_RX_SHIFT);
 }
 
 //*****************************************************************************
@@ -927,27 +866,25 @@ USBIntEnableEndpoint(unsigned long ulBase, unsigned long ulFlags)
 //! \return Returns the status of the endpoint interrupts for a USB controller.
 //
 //*****************************************************************************
-unsigned long
-USBIntStatusEndpoint(unsigned long ulBase)
-{
-    unsigned long ulStatus;
+unsigned long USBIntStatusEndpoint(unsigned long ulBase) {
+  unsigned long ulStatus;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Get the transmit interrupt status.
-    //
-    ulStatus = HWREGH(ulBase + USB_O_TXIS);
+  //
+  // Get the transmit interrupt status.
+  //
+  ulStatus = HWREGH(ulBase + USB_O_TXIS);
 
-    ulStatus |= (HWREGH(ulBase + USB_O_RXIS) << USB_INTEP_RX_SHIFT);
+  ulStatus |= (HWREGH(ulBase + USB_O_RXIS) << USB_INTEP_RX_SHIFT);
 
-    //
-    // Return the combined interrupt status.
-    //
-    return(ulStatus);
+  //
+  // Return the combined interrupt status.
+  //
+  return (ulStatus);
 }
 
 //*****************************************************************************
@@ -971,23 +908,21 @@ USBIntStatusEndpoint(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBIntRegister(unsigned long ulBase, void(*pfnHandler)(void))
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBIntRegister(unsigned long ulBase, void (*pfnHandler)(void)) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(INT_USB0, pfnHandler);
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(INT_USB0, pfnHandler);
 
-    //
-    // Enable the USB interrupt.
-    //
-    IntEnable(INT_USB0);
+  //
+  // Enable the USB interrupt.
+  //
+  IntEnable(INT_USB0);
 }
 
 //*****************************************************************************
@@ -1005,23 +940,21 @@ USBIntRegister(unsigned long ulBase, void(*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-USBIntUnregister(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBIntUnregister(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Disable the USB interrupt.
-    //
-    IntDisable(INT_USB0);
+  //
+  // Disable the USB interrupt.
+  //
+  IntDisable(INT_USB0);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_USB0);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_USB0);
 }
 
 //*****************************************************************************
@@ -1094,39 +1027,38 @@ USBIntUnregister(unsigned long ulBase)
 //! \return The current status flags for the endpoint depending on mode.
 //
 //*****************************************************************************
-unsigned long
-USBEndpointStatus(unsigned long ulBase, unsigned long ulEndpoint)
-{
-    unsigned long ulStatus;
+unsigned long USBEndpointStatus(unsigned long ulBase,
+                                unsigned long ulEndpoint) {
+  unsigned long ulStatus;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
-    //
-    // Get the TX portion of the endpoint status.
-    //
-    ulStatus = HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRL1);
+  //
+  // Get the TX portion of the endpoint status.
+  //
+  ulStatus = HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRL1);
 
-    //
-    // Get the RX portion of the endpoint status.
-    //
-    ulStatus |= ((HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRL1)) <<
-                 USB_RX_EPSTATUS_SHIFT);
+  //
+  // Get the RX portion of the endpoint status.
+  //
+  ulStatus |= ((HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRL1))
+               << USB_RX_EPSTATUS_SHIFT);
 
-    //
-    // Return the endpoint status.
-    //
-    return(ulStatus);
+  //
+  // Return the endpoint status.
+  //
+  return (ulStatus);
 }
 
 //*****************************************************************************
@@ -1146,36 +1078,31 @@ USBEndpointStatus(unsigned long ulBase, unsigned long ulEndpoint)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostEndpointStatusClear(unsigned long ulBase, unsigned long ulEndpoint,
-                           unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+void USBHostEndpointStatusClear(unsigned long ulBase, unsigned long ulEndpoint,
+                                unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
-    //
-    // Clear the specified flags for the endpoint.
-    //
-    if(ulEndpoint == USB_EP_0)
-    {
-        HWREGB(ulBase + USB_O_CSRL0) &= ~ulFlags;
-    }
-    else
-    {
-        HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) &= ~ulFlags;
-        HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
-            ~(ulFlags >> USB_RX_EPSTATUS_SHIFT);
-    }
+  //
+  // Clear the specified flags for the endpoint.
+  //
+  if (ulEndpoint == USB_EP_0) {
+    HWREGB(ulBase + USB_O_CSRL0) &= ~ulFlags;
+  } else {
+    HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) &= ~ulFlags;
+    HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
+        ~(ulFlags >> USB_RX_EPSTATUS_SHIFT);
+  }
 }
 
 //*****************************************************************************
@@ -1195,71 +1122,64 @@ USBHostEndpointStatusClear(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevEndpointStatusClear(unsigned long ulBase, unsigned long ulEndpoint,
-                          unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+void USBDevEndpointStatusClear(unsigned long ulBase, unsigned long ulEndpoint,
+                               unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
+  //
+  // If this is endpoint 0, then the bits have different meaning and map
+  // into the TX memory location.
+  //
+  if (ulEndpoint == USB_EP_0) {
     //
-    // If this is endpoint 0, then the bits have different meaning and map
-    // into the TX memory location.
+    // Set the Serviced RxPktRdy bit to clear the RxPktRdy.
     //
-    if(ulEndpoint == USB_EP_0)
-    {
-        //
-        // Set the Serviced RxPktRdy bit to clear the RxPktRdy.
-        //
-        if(ulFlags & USB_DEV_EP0_OUT_PKTRDY)
-        {
-            HWREGB(ulBase + USB_O_CSRL0) |= USB_CSRL0_RXRDYC;
-        }
-
-        //
-        // Set the serviced Setup End bit to clear the SetupEnd status.
-        //
-        if(ulFlags & USB_DEV_EP0_SETUP_END)
-        {
-            HWREGB(ulBase + USB_O_CSRL0) |= USB_CSRL0_SETENDC;
-        }
-
-        //
-        // Clear the Sent Stall status flag.
-        //
-        if(ulFlags & USB_DEV_EP0_SENT_STALL)
-        {
-            HWREGB(ulBase + USB_O_CSRL0) &= ~(USB_DEV_EP0_SENT_STALL);
-        }
+    if (ulFlags & USB_DEV_EP0_OUT_PKTRDY) {
+      HWREGB(ulBase + USB_O_CSRL0) |= USB_CSRL0_RXRDYC;
     }
-    else
-    {
-        //
-        // Clear out any TX flags that were passed in.  Only
-        // USB_DEV_TX_SENT_STALL and USB_DEV_TX_UNDERRUN should be cleared.
-        //
-        HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) &=
-            ~(ulFlags & (USB_DEV_TX_SENT_STALL | USB_DEV_TX_UNDERRUN));
 
-        //
-        // Clear out valid RX flags that were passed in.  Only
-        // USB_DEV_RX_SENT_STALL, USB_DEV_RX_DATA_ERROR, and USB_DEV_RX_OVERRUN
-        // should be cleared.
-        //
-        HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
-            ~((ulFlags & (USB_DEV_RX_SENT_STALL | USB_DEV_RX_DATA_ERROR |
-                          USB_DEV_RX_OVERRUN)) >> USB_RX_EPSTATUS_SHIFT);
+    //
+    // Set the serviced Setup End bit to clear the SetupEnd status.
+    //
+    if (ulFlags & USB_DEV_EP0_SETUP_END) {
+      HWREGB(ulBase + USB_O_CSRL0) |= USB_CSRL0_SETENDC;
     }
+
+    //
+    // Clear the Sent Stall status flag.
+    //
+    if (ulFlags & USB_DEV_EP0_SENT_STALL) {
+      HWREGB(ulBase + USB_O_CSRL0) &= ~(USB_DEV_EP0_SENT_STALL);
+    }
+  } else {
+    //
+    // Clear out any TX flags that were passed in.  Only
+    // USB_DEV_TX_SENT_STALL and USB_DEV_TX_UNDERRUN should be cleared.
+    //
+    HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) &=
+        ~(ulFlags & (USB_DEV_TX_SENT_STALL | USB_DEV_TX_UNDERRUN));
+
+    //
+    // Clear out valid RX flags that were passed in.  Only
+    // USB_DEV_RX_SENT_STALL, USB_DEV_RX_DATA_ERROR, and USB_DEV_RX_OVERRUN
+    // should be cleared.
+    //
+    HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
+        ~((ulFlags & (USB_DEV_RX_SENT_STALL | USB_DEV_RX_DATA_ERROR |
+                      USB_DEV_RX_OVERRUN)) >>
+          USB_RX_EPSTATUS_SHIFT);
+  }
 }
 
 //*****************************************************************************
@@ -1283,85 +1203,71 @@ USBDevEndpointStatusClear(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostEndpointDataToggle(unsigned long ulBase, unsigned long ulEndpoint,
-                          tBoolean bDataToggle, unsigned long ulFlags)
-{
-    unsigned long ulDataToggle;
+void USBHostEndpointDataToggle(unsigned long ulBase, unsigned long ulEndpoint,
+                               tBoolean bDataToggle, unsigned long ulFlags) {
+  unsigned long ulDataToggle;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
-    //
-    // The data toggle defaults to DATA0.
-    //
-    ulDataToggle = 0;
+  //
+  // The data toggle defaults to DATA0.
+  //
+  ulDataToggle = 0;
 
+  //
+  // See if the data toggle should be set to DATA1.
+  //
+  if (bDataToggle) {
     //
-    // See if the data toggle should be set to DATA1.
+    // Select the data toggle bit based on the endpoint.
     //
-    if(bDataToggle)
-    {
-        //
-        // Select the data toggle bit based on the endpoint.
-        //
-        if(ulEndpoint == USB_EP_0)
-        {
-            ulDataToggle = USB_CSRH0_DT;
-        }
-        else if(ulFlags == USB_EP_HOST_IN)
-        {
-            ulDataToggle = USB_RXCSRH1_DT;
-        }
-        else
-        {
-            ulDataToggle = USB_TXCSRH1_DT;
-        }
+    if (ulEndpoint == USB_EP_0) {
+      ulDataToggle = USB_CSRH0_DT;
+    } else if (ulFlags == USB_EP_HOST_IN) {
+      ulDataToggle = USB_RXCSRH1_DT;
+    } else {
+      ulDataToggle = USB_TXCSRH1_DT;
     }
+  }
 
+  //
+  // Set the data toggle based on the endpoint.
+  //
+  if (ulEndpoint == USB_EP_0) {
     //
-    // Set the data toggle based on the endpoint.
+    // Set the write enable and the bit value for endpoint zero.
     //
-    if(ulEndpoint == USB_EP_0)
-    {
-        //
-        // Set the write enable and the bit value for endpoint zero.
-        //
-        HWREGB(ulBase + USB_O_CSRH0) =
-            ((HWREGB(ulBase + USB_O_CSRH0) &
-              ~(USB_CSRH0_DTWE | USB_CSRH0_DT)) |
-             (ulDataToggle | USB_CSRH0_DTWE));
-    }
-    else if(ulFlags == USB_EP_HOST_IN)
-    {
-        //
-        // Set the Write enable and the bit value for an IN endpoint.
-        //
-        HWREGB(ulBase + USB_O_RXCSRH1 + EP_OFFSET(ulEndpoint)) =
-            ((HWREGB(ulBase + USB_O_RXCSRH1 + EP_OFFSET(ulEndpoint)) &
-              ~(USB_RXCSRH1_DTWE | USB_RXCSRH1_DT)) |
-             (ulDataToggle | USB_RXCSRH1_DTWE));
-    }
-    else
-    {
-        //
-        // Set the Write enable and the bit value for an OUT endpoint.
-        //
-        HWREGB(ulBase + USB_O_TXCSRH1 + EP_OFFSET(ulEndpoint)) =
-            ((HWREGB(ulBase + USB_O_TXCSRH1 + EP_OFFSET(ulEndpoint)) &
-              ~(USB_TXCSRH1_DTWE | USB_TXCSRH1_DT)) |
-             (ulDataToggle | USB_TXCSRH1_DTWE));
-    }
+    HWREGB(ulBase + USB_O_CSRH0) =
+        ((HWREGB(ulBase + USB_O_CSRH0) & ~(USB_CSRH0_DTWE | USB_CSRH0_DT)) |
+         (ulDataToggle | USB_CSRH0_DTWE));
+  } else if (ulFlags == USB_EP_HOST_IN) {
+    //
+    // Set the Write enable and the bit value for an IN endpoint.
+    //
+    HWREGB(ulBase + USB_O_RXCSRH1 + EP_OFFSET(ulEndpoint)) =
+        ((HWREGB(ulBase + USB_O_RXCSRH1 + EP_OFFSET(ulEndpoint)) &
+          ~(USB_RXCSRH1_DTWE | USB_RXCSRH1_DT)) |
+         (ulDataToggle | USB_RXCSRH1_DTWE));
+  } else {
+    //
+    // Set the Write enable and the bit value for an OUT endpoint.
+    //
+    HWREGB(ulBase + USB_O_TXCSRH1 + EP_OFFSET(ulEndpoint)) =
+        ((HWREGB(ulBase + USB_O_TXCSRH1 + EP_OFFSET(ulEndpoint)) &
+          ~(USB_TXCSRH1_DTWE | USB_TXCSRH1_DT)) |
+         (ulDataToggle | USB_TXCSRH1_DTWE));
+  }
 }
 
 //*****************************************************************************
@@ -1382,36 +1288,29 @@ USBHostEndpointDataToggle(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBEndpointDataToggleClear(unsigned long ulBase, unsigned long ulEndpoint,
-                           unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
-           (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
-           (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
-           (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
-           (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
-           (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
-           (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
-           (ulEndpoint == USB_EP_15));
+void USBEndpointDataToggleClear(unsigned long ulBase, unsigned long ulEndpoint,
+                                unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
+         (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
+         (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
+         (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
+         (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
+         (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
+         (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
+         (ulEndpoint == USB_EP_15));
 
-    //
-    // See if the transmit or receive data toggle should be cleared.
-    //
-    if(ulFlags & (USB_EP_HOST_OUT | USB_EP_DEV_IN))
-    {
-        HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) |=
-            USB_TXCSRL1_CLRDT;
-    }
-    else
-    {
-        HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) |=
-            USB_RXCSRL1_CLRDT;
-    }
+  //
+  // See if the transmit or receive data toggle should be cleared.
+  //
+  if (ulFlags & (USB_EP_HOST_OUT | USB_EP_DEV_IN)) {
+    HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) |= USB_TXCSRL1_CLRDT;
+  } else {
+    HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) |= USB_RXCSRL1_CLRDT;
+  }
 }
 
 //*****************************************************************************
@@ -1433,51 +1332,41 @@ USBEndpointDataToggleClear(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevEndpointStall(unsigned long ulBase, unsigned long ulEndpoint,
-                    unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulFlags & ~(USB_EP_DEV_IN | USB_EP_DEV_OUT)) == 0)
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+void USBDevEndpointStall(unsigned long ulBase, unsigned long ulEndpoint,
+                         unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulFlags & ~(USB_EP_DEV_IN | USB_EP_DEV_OUT)) == 0)
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
+  //
+  // Determine how to stall this endpoint.
+  //
+  if (ulEndpoint == USB_EP_0) {
     //
-    // Determine how to stall this endpoint.
+    // Perform a stall on endpoint zero.
     //
-    if(ulEndpoint == USB_EP_0)
-    {
-        //
-        // Perform a stall on endpoint zero.
-        //
-        HWREGB(ulBase + USB_O_CSRL0) |=
-            (USB_CSRL0_STALL | USB_CSRL0_RXRDYC);
-    }
-    else if(ulFlags == USB_EP_DEV_IN)
-    {
-        //
-        // Perform a stall on an IN endpoint.
-        //
-        HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) |=
-            USB_TXCSRL1_STALL;
-    }
-    else
-    {
-        //
-        // Perform a stall on an OUT endpoint.
-        //
-        HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) |=
-            USB_RXCSRL1_STALL;
-    }
+    HWREGB(ulBase + USB_O_CSRL0) |= (USB_CSRL0_STALL | USB_CSRL0_RXRDYC);
+  } else if (ulFlags == USB_EP_DEV_IN) {
+    //
+    // Perform a stall on an IN endpoint.
+    //
+    HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) |= USB_TXCSRL1_STALL;
+  } else {
+    //
+    // Perform a stall on an OUT endpoint.
+    //
+    HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) |= USB_RXCSRL1_STALL;
+  }
 }
 
 //*****************************************************************************
@@ -1500,62 +1389,53 @@ USBDevEndpointStall(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevEndpointStallClear(unsigned long ulBase, unsigned long ulEndpoint,
-                         unsigned long ulFlags)
-{
+void USBDevEndpointStallClear(unsigned long ulBase, unsigned long ulEndpoint,
+                              unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+  ASSERT((ulFlags & ~(USB_EP_DEV_IN | USB_EP_DEV_OUT)) == 0)
+
+  //
+  // Determine how to clear the stall on this endpoint.
+  //
+  if (ulEndpoint == USB_EP_0) {
     //
-    // Check the arguments.
+    // Clear the stall on endpoint zero.
     //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
-    ASSERT((ulFlags & ~(USB_EP_DEV_IN | USB_EP_DEV_OUT)) == 0)
+    HWREGB(ulBase + USB_O_CSRL0) &= ~USB_CSRL0_STALLED;
+  } else if (ulFlags == USB_EP_DEV_IN) {
+    //
+    // Clear the stall on an IN endpoint.
+    //
+    HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) &=
+        ~(USB_TXCSRL1_STALL | USB_TXCSRL1_STALLED);
 
     //
-    // Determine how to clear the stall on this endpoint.
+    // Reset the data toggle.
     //
-    if(ulEndpoint == USB_EP_0)
-    {
-        //
-        // Clear the stall on endpoint zero.
-        //
-        HWREGB(ulBase + USB_O_CSRL0) &= ~USB_CSRL0_STALLED;
-    }
-    else if(ulFlags == USB_EP_DEV_IN)
-    {
-        //
-        // Clear the stall on an IN endpoint.
-        //
-        HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) &=
-            ~(USB_TXCSRL1_STALL | USB_TXCSRL1_STALLED);
+    HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) |= USB_TXCSRL1_CLRDT;
+  } else {
+    //
+    // Clear the stall on an OUT endpoint.
+    //
+    HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
+        ~(USB_RXCSRL1_STALL | USB_RXCSRL1_STALLED);
 
-        //
-        // Reset the data toggle.
-        //
-        HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) |=
-            USB_TXCSRL1_CLRDT;
-    }
-    else
-    {
-        //
-        // Clear the stall on an OUT endpoint.
-        //
-        HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
-            ~(USB_RXCSRL1_STALL | USB_RXCSRL1_STALLED);
-
-        //
-        // Reset the data toggle.
-        //
-        HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) |=
-            USB_RXCSRL1_CLRDT;
-    }
+    //
+    // Reset the data toggle.
+    //
+    HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) |= USB_RXCSRL1_CLRDT;
+  }
 }
 
 //*****************************************************************************
@@ -1572,18 +1452,16 @@ USBDevEndpointStallClear(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevConnect(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBDevConnect(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Enable connection to the USB bus.
-    //
-    HWREGB(ulBase + USB_O_POWER) |= USB_POWER_SOFTCONN;
+  //
+  // Enable connection to the USB bus.
+  //
+  HWREGB(ulBase + USB_O_POWER) |= USB_POWER_SOFTCONN;
 }
 
 //*****************************************************************************
@@ -1601,18 +1479,16 @@ USBDevConnect(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevDisconnect(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBDevDisconnect(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Disable connection to the USB bus.
-    //
-    HWREGB(ulBase + USB_O_POWER) &= (~USB_POWER_SOFTCONN);
+  //
+  // Disable connection to the USB bus.
+  //
+  HWREGB(ulBase + USB_O_POWER) &= (~USB_POWER_SOFTCONN);
 }
 
 //*****************************************************************************
@@ -1630,18 +1506,16 @@ USBDevDisconnect(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevAddrSet(unsigned long ulBase, unsigned long ulAddress)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBDevAddrSet(unsigned long ulBase, unsigned long ulAddress) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Set the function address in the correct location.
-    //
-    HWREGB(ulBase + USB_O_FADDR) = (unsigned char)ulAddress;
+  //
+  // Set the function address in the correct location.
+  //
+  HWREGB(ulBase + USB_O_FADDR) = (unsigned char)ulAddress;
 }
 
 //*****************************************************************************
@@ -1658,18 +1532,16 @@ USBDevAddrSet(unsigned long ulBase, unsigned long ulAddress)
 //! \return The current device address.
 //
 //*****************************************************************************
-unsigned long
-USBDevAddrGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+unsigned long USBDevAddrGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Return the function address.
-    //
-    return(HWREGB(ulBase + USB_O_FADDR));
+  //
+  // Return the function address.
+  //
+  return (HWREGB(ulBase + USB_O_FADDR));
 }
 
 //*****************************************************************************
@@ -1743,215 +1615,188 @@ USBDevAddrGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostEndpointConfig(unsigned long ulBase, unsigned long ulEndpoint,
-                      unsigned long ulMaxPayload,
-                      unsigned long ulNAKPollInterval,
-                      unsigned long ulTargetEndpoint, unsigned long ulFlags)
-{
-    unsigned long ulRegister;
+void USBHostEndpointConfig(unsigned long ulBase, unsigned long ulEndpoint,
+                           unsigned long ulMaxPayload,
+                           unsigned long ulNAKPollInterval,
+                           unsigned long ulTargetEndpoint,
+                           unsigned long ulFlags) {
+  unsigned long ulRegister;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+  ASSERT(ulNAKPollInterval <= MAX_NAK_LIMIT);
+
+  //
+  // Endpoint zero is configured differently than the other endpoints, so see
+  // if this is endpoint zero.
+  //
+  if (ulEndpoint == USB_EP_0) {
+    //
+    // Set the NAK timeout.
+    //
+    HWREGB(ulBase + USB_O_NAKLMT) = ulNAKPollInterval;
 
     //
-    // Check the arguments.
+    // Set the transfer type information.
     //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
-    ASSERT(ulNAKPollInterval <= MAX_NAK_LIMIT);
+    HWREGB(ulBase + USB_O_TYPE0) =
+        ((ulFlags & USB_EP_SPEED_FULL) ? USB_TYPE0_SPEED_FULL
+                                       : USB_TYPE0_SPEED_LOW);
+  } else {
+    //
+    // Start with the target endpoint.
+    //
+    ulRegister = ulTargetEndpoint;
 
     //
-    // Endpoint zero is configured differently than the other endpoints, so see
-    // if this is endpoint zero.
+    // Set the speed for the device using this endpoint.
     //
-    if(ulEndpoint == USB_EP_0)
-    {
-        //
-        // Set the NAK timeout.
-        //
-        HWREGB(ulBase + USB_O_NAKLMT) = ulNAKPollInterval;
-
-        //
-        // Set the transfer type information.
-        //
-        HWREGB(ulBase + USB_O_TYPE0) =
-            ((ulFlags & USB_EP_SPEED_FULL) ? USB_TYPE0_SPEED_FULL :
-             USB_TYPE0_SPEED_LOW);
+    if (ulFlags & USB_EP_SPEED_FULL) {
+      ulRegister |= USB_TXTYPE1_SPEED_FULL;
+    } else {
+      ulRegister |= USB_TXTYPE1_SPEED_LOW;
     }
-    else
-    {
-        //
-        // Start with the target endpoint.
-        //
-        ulRegister = ulTargetEndpoint;
 
-        //
-        // Set the speed for the device using this endpoint.
-        //
-        if(ulFlags & USB_EP_SPEED_FULL)
-        {
-            ulRegister |= USB_TXTYPE1_SPEED_FULL;
-        }
-        else
-        {
-            ulRegister |= USB_TXTYPE1_SPEED_LOW;
-        }
+    //
+    // Set the protocol for the device using this endpoint.
+    //
+    switch (ulFlags & USB_EP_MODE_MASK) {
+      //
+      // The bulk protocol is being used.
+      //
+      case USB_EP_MODE_BULK: {
+        ulRegister |= USB_TXTYPE1_PROTO_BULK;
+        break;
+      }
 
-        //
-        // Set the protocol for the device using this endpoint.
-        //
-        switch(ulFlags & USB_EP_MODE_MASK)
-        {
-            //
-            // The bulk protocol is being used.
-            //
-            case USB_EP_MODE_BULK:
-            {
-                ulRegister |= USB_TXTYPE1_PROTO_BULK;
-                break;
-            }
+      //
+      // The isochronous protocol is being used.
+      //
+      case USB_EP_MODE_ISOC: {
+        ulRegister |= USB_TXTYPE1_PROTO_ISOC;
+        break;
+      }
 
-            //
-            // The isochronous protocol is being used.
-            //
-            case USB_EP_MODE_ISOC:
-            {
-                ulRegister |= USB_TXTYPE1_PROTO_ISOC;
-                break;
-            }
+      //
+      // The interrupt protocol is being used.
+      //
+      case USB_EP_MODE_INT: {
+        ulRegister |= USB_TXTYPE1_PROTO_INT;
+        break;
+      }
 
-            //
-            // The interrupt protocol is being used.
-            //
-            case USB_EP_MODE_INT:
-            {
-                ulRegister |= USB_TXTYPE1_PROTO_INT;
-                break;
-            }
-
-            //
-            // The control protocol is being used.
-            //
-            case USB_EP_MODE_CTRL:
-            {
-                ulRegister |= USB_TXTYPE1_PROTO_CTRL;
-                break;
-            }
-        }
-
-        //
-        // See if the transmit or receive endpoint is being configured.
-        //
-        if(ulFlags & USB_EP_HOST_OUT)
-        {
-            //
-            // Set the transfer type information.
-            //
-            HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXTYPE1) =
-                ulRegister;
-
-            //
-            // Set the NAK timeout or polling interval.
-            //
-            HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXINTERVAL1) =
-                ulNAKPollInterval;
-
-            //
-            // Set the Maximum Payload per transaction.
-            //
-            HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXMAXP1) =
-                ulMaxPayload;
-
-            //
-            // Set the transmit control value to zero.
-            //
-            ulRegister = 0;
-
-            //
-            // Allow auto setting of TxPktRdy when max packet size has been
-            // loaded into the FIFO.
-            //
-            if(ulFlags & USB_EP_AUTO_SET)
-            {
-                ulRegister |= USB_TXCSRH1_AUTOSET;
-            }
-
-            //
-            // Configure the DMA Mode.
-            //
-            if(ulFlags & USB_EP_DMA_MODE_1)
-            {
-                ulRegister |= USB_TXCSRH1_DMAEN | USB_TXCSRH1_DMAMOD;
-            }
-            else if(ulFlags & USB_EP_DMA_MODE_0)
-            {
-                ulRegister |= USB_TXCSRH1_DMAEN;
-            }
-
-            //
-            // Write out the transmit control value.
-            //
-            HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRH1) =
-                (unsigned char)ulRegister;
-        }
-        else
-        {
-            //
-            // Set the transfer type information.
-            //
-            HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXTYPE1) =
-                ulRegister;
-
-            //
-            // Set the NAK timeout or polling interval.
-            //
-            HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXINTERVAL1) =
-                ulNAKPollInterval;
-
-            //
-            // Set the Maximum Payload per transaction.
-            //
-            HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXMAXP1) =
-                ulMaxPayload;
-
-            //
-            // Set the receive control value to zero.
-            //
-            ulRegister = 0;
-
-            //
-            // Allow auto clearing of RxPktRdy when packet of size max packet
-            // has been unloaded from the FIFO.
-            //
-            if(ulFlags & USB_EP_AUTO_CLEAR)
-            {
-                ulRegister |= USB_RXCSRH1_AUTOCL;
-            }
-
-            //
-            // Configure the DMA Mode.
-            //
-            if(ulFlags & USB_EP_DMA_MODE_1)
-            {
-                ulRegister |= USB_RXCSRH1_DMAEN | USB_RXCSRH1_DMAMOD;
-            }
-            else if(ulFlags & USB_EP_DMA_MODE_0)
-            {
-                ulRegister |= USB_RXCSRH1_DMAEN;
-            }
-
-            //
-            // Write out the receive control value.
-            //
-            HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRH1) =
-                (unsigned char)ulRegister;
-        }
+      //
+      // The control protocol is being used.
+      //
+      case USB_EP_MODE_CTRL: {
+        ulRegister |= USB_TXTYPE1_PROTO_CTRL;
+        break;
+      }
     }
+
+    //
+    // See if the transmit or receive endpoint is being configured.
+    //
+    if (ulFlags & USB_EP_HOST_OUT) {
+      //
+      // Set the transfer type information.
+      //
+      HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXTYPE1) = ulRegister;
+
+      //
+      // Set the NAK timeout or polling interval.
+      //
+      HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXINTERVAL1) =
+          ulNAKPollInterval;
+
+      //
+      // Set the Maximum Payload per transaction.
+      //
+      HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXMAXP1) = ulMaxPayload;
+
+      //
+      // Set the transmit control value to zero.
+      //
+      ulRegister = 0;
+
+      //
+      // Allow auto setting of TxPktRdy when max packet size has been
+      // loaded into the FIFO.
+      //
+      if (ulFlags & USB_EP_AUTO_SET) {
+        ulRegister |= USB_TXCSRH1_AUTOSET;
+      }
+
+      //
+      // Configure the DMA Mode.
+      //
+      if (ulFlags & USB_EP_DMA_MODE_1) {
+        ulRegister |= USB_TXCSRH1_DMAEN | USB_TXCSRH1_DMAMOD;
+      } else if (ulFlags & USB_EP_DMA_MODE_0) {
+        ulRegister |= USB_TXCSRH1_DMAEN;
+      }
+
+      //
+      // Write out the transmit control value.
+      //
+      HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRH1) =
+          (unsigned char)ulRegister;
+    } else {
+      //
+      // Set the transfer type information.
+      //
+      HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXTYPE1) = ulRegister;
+
+      //
+      // Set the NAK timeout or polling interval.
+      //
+      HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXINTERVAL1) =
+          ulNAKPollInterval;
+
+      //
+      // Set the Maximum Payload per transaction.
+      //
+      HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXMAXP1) = ulMaxPayload;
+
+      //
+      // Set the receive control value to zero.
+      //
+      ulRegister = 0;
+
+      //
+      // Allow auto clearing of RxPktRdy when packet of size max packet
+      // has been unloaded from the FIFO.
+      //
+      if (ulFlags & USB_EP_AUTO_CLEAR) {
+        ulRegister |= USB_RXCSRH1_AUTOCL;
+      }
+
+      //
+      // Configure the DMA Mode.
+      //
+      if (ulFlags & USB_EP_DMA_MODE_1) {
+        ulRegister |= USB_RXCSRH1_DMAEN | USB_RXCSRH1_DMAMOD;
+      } else if (ulFlags & USB_EP_DMA_MODE_0) {
+        ulRegister |= USB_RXCSRH1_DMAEN;
+      }
+
+      //
+      // Write out the receive control value.
+      //
+      HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRH1) =
+          (unsigned char)ulRegister;
+    }
+  }
 }
 
 //*****************************************************************************
@@ -2002,136 +1847,118 @@ USBHostEndpointConfig(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevEndpointConfigSet(unsigned long ulBase, unsigned long ulEndpoint,
-                        unsigned long ulMaxPacketSize, unsigned long ulFlags)
-{
-    unsigned long ulRegister;
+void USBDevEndpointConfigSet(unsigned long ulBase, unsigned long ulEndpoint,
+                             unsigned long ulMaxPacketSize,
+                             unsigned long ulFlags) {
+  unsigned long ulRegister;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
+         (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
+         (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
+         (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
+         (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
+         (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
+         (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
+         (ulEndpoint == USB_EP_15));
+
+  //
+  // Determine if a transmit or receive endpoint is being configured.
+  //
+  if (ulFlags & USB_EP_DEV_IN) {
+    //
+    // Set the maximum packet size.
+    //
+    HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXMAXP1) = ulMaxPacketSize;
 
     //
-    // Check the arguments.
+    // The transmit control value is zero unless options are enabled.
     //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
-           (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
-           (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
-           (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
-           (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
-           (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
-           (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
-           (ulEndpoint == USB_EP_15));
+    ulRegister = 0;
 
     //
-    // Determine if a transmit or receive endpoint is being configured.
+    // Allow auto setting of TxPktRdy when max packet size has been loaded
+    // into the FIFO.
     //
-    if(ulFlags & USB_EP_DEV_IN)
-    {
-        //
-        // Set the maximum packet size.
-        //
-        HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXMAXP1) =
-            ulMaxPacketSize;
-
-        //
-        // The transmit control value is zero unless options are enabled.
-        //
-        ulRegister = 0;
-
-        //
-        // Allow auto setting of TxPktRdy when max packet size has been loaded
-        // into the FIFO.
-        //
-        if(ulFlags & USB_EP_AUTO_SET)
-        {
-            ulRegister |= USB_TXCSRH1_AUTOSET;
-        }
-
-        //
-        // Configure the DMA mode.
-        //
-        if(ulFlags & USB_EP_DMA_MODE_1)
-        {
-            ulRegister |= USB_TXCSRH1_DMAEN | USB_TXCSRH1_DMAMOD;
-        }
-        else if(ulFlags & USB_EP_DMA_MODE_0)
-        {
-            ulRegister |= USB_TXCSRH1_DMAEN;
-        }
-
-        //
-        // Enable isochronous mode if requested.
-        //
-        if((ulFlags & USB_EP_MODE_MASK) == USB_EP_MODE_ISOC)
-        {
-            ulRegister |= USB_TXCSRH1_ISO;
-        }
-
-        //
-        // Write the transmit control value.
-        //
-        HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRH1) =
-            (unsigned char)ulRegister;
-
-        //
-        // Reset the Data toggle to zero.
-        //
-        HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRL1) =
-            USB_TXCSRL1_CLRDT;
+    if (ulFlags & USB_EP_AUTO_SET) {
+      ulRegister |= USB_TXCSRH1_AUTOSET;
     }
-    else
-    {
-        //
-        // Set the MaxPacketSize.
-        //
-        HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXMAXP1) =
-            ulMaxPacketSize;
 
-        //
-        // The receive control value is zero unless options are enabled.
-        //
-        ulRegister = 0;
-
-        //
-        // Allow auto clearing of RxPktRdy when packet of size max packet
-        // has been unloaded from the FIFO.
-        //
-        if(ulFlags & USB_EP_AUTO_CLEAR)
-        {
-            ulRegister = USB_RXCSRH1_AUTOCL;
-        }
-
-        //
-        // Configure the DMA mode.
-        //
-        if(ulFlags & USB_EP_DMA_MODE_1)
-        {
-            ulRegister |= USB_RXCSRH1_DMAEN | USB_RXCSRH1_DMAMOD;
-        }
-        else if(ulFlags & USB_EP_DMA_MODE_0)
-        {
-            ulRegister |= USB_RXCSRH1_DMAEN;
-        }
-
-        //
-        // Enable isochronous mode if requested.
-        //
-        if((ulFlags & USB_EP_MODE_MASK) == USB_EP_MODE_ISOC)
-        {
-            ulRegister |= USB_RXCSRH1_ISO;
-        }
-
-        //
-        // Write the receive control value.
-        //
-        HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRH1) =
-            (unsigned char)ulRegister;
-
-        //
-        // Reset the Data toggle to zero.
-        //
-        HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRL1) =
-            USB_RXCSRL1_CLRDT;
+    //
+    // Configure the DMA mode.
+    //
+    if (ulFlags & USB_EP_DMA_MODE_1) {
+      ulRegister |= USB_TXCSRH1_DMAEN | USB_TXCSRH1_DMAMOD;
+    } else if (ulFlags & USB_EP_DMA_MODE_0) {
+      ulRegister |= USB_TXCSRH1_DMAEN;
     }
+
+    //
+    // Enable isochronous mode if requested.
+    //
+    if ((ulFlags & USB_EP_MODE_MASK) == USB_EP_MODE_ISOC) {
+      ulRegister |= USB_TXCSRH1_ISO;
+    }
+
+    //
+    // Write the transmit control value.
+    //
+    HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRH1) =
+        (unsigned char)ulRegister;
+
+    //
+    // Reset the Data toggle to zero.
+    //
+    HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRL1) = USB_TXCSRL1_CLRDT;
+  } else {
+    //
+    // Set the MaxPacketSize.
+    //
+    HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXMAXP1) = ulMaxPacketSize;
+
+    //
+    // The receive control value is zero unless options are enabled.
+    //
+    ulRegister = 0;
+
+    //
+    // Allow auto clearing of RxPktRdy when packet of size max packet
+    // has been unloaded from the FIFO.
+    //
+    if (ulFlags & USB_EP_AUTO_CLEAR) {
+      ulRegister = USB_RXCSRH1_AUTOCL;
+    }
+
+    //
+    // Configure the DMA mode.
+    //
+    if (ulFlags & USB_EP_DMA_MODE_1) {
+      ulRegister |= USB_RXCSRH1_DMAEN | USB_RXCSRH1_DMAMOD;
+    } else if (ulFlags & USB_EP_DMA_MODE_0) {
+      ulRegister |= USB_RXCSRH1_DMAEN;
+    }
+
+    //
+    // Enable isochronous mode if requested.
+    //
+    if ((ulFlags & USB_EP_MODE_MASK) == USB_EP_MODE_ISOC) {
+      ulRegister |= USB_RXCSRH1_ISO;
+    }
+
+    //
+    // Write the receive control value.
+    //
+    HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRH1) =
+        (unsigned char)ulRegister;
+
+    //
+    // Reset the Data toggle to zero.
+    //
+    HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRL1) = USB_RXCSRL1_CLRDT;
+  }
 }
 
 //*****************************************************************************
@@ -2157,160 +1984,137 @@ USBDevEndpointConfigSet(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevEndpointConfigGet(unsigned long ulBase, unsigned long ulEndpoint,
-                        unsigned long *pulMaxPacketSize,
-                        unsigned long *pulFlags)
-{
-    unsigned long ulRegister;
+void USBDevEndpointConfigGet(unsigned long ulBase, unsigned long ulEndpoint,
+                             unsigned long *pulMaxPacketSize,
+                             unsigned long *pulFlags) {
+  unsigned long ulRegister;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT(pulMaxPacketSize && pulFlags);
+  ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
+         (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
+         (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
+         (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
+         (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
+         (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
+         (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
+         (ulEndpoint == USB_EP_15));
+
+  //
+  // Determine if a transmit or receive endpoint is being queried.
+  //
+  if (*pulFlags & USB_EP_DEV_IN) {
+    //
+    // Clear the flags other than the direction bit.
+    //
+    *pulFlags = USB_EP_DEV_IN;
 
     //
-    // Check the arguments.
+    // Get the maximum packet size.
     //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT(pulMaxPacketSize && pulFlags);
-    ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
-           (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
-           (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
-           (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
-           (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
-           (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
-           (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
-           (ulEndpoint == USB_EP_15));
+    *pulMaxPacketSize =
+        (unsigned long)HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXMAXP1);
 
     //
-    // Determine if a transmit or receive endpoint is being queried.
+    // Get the current transmit control register value.
     //
-    if(*pulFlags & USB_EP_DEV_IN)
-    {
-        //
-        // Clear the flags other than the direction bit.
-        //
-        *pulFlags = USB_EP_DEV_IN;
+    ulRegister =
+        (unsigned long)HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRH1);
 
-        //
-        // Get the maximum packet size.
-        //
-        *pulMaxPacketSize = (unsigned long)HWREGH(ulBase +
-                                                  EP_OFFSET(ulEndpoint) +
-                                                  USB_O_TXMAXP1);
-
-        //
-        // Get the current transmit control register value.
-        //
-        ulRegister = (unsigned long)HWREGB(ulBase + EP_OFFSET(ulEndpoint) +
-                                           USB_O_TXCSRH1);
-
-        //
-        // Are we allowing auto setting of TxPktRdy when max packet size has
-        // been loaded into the FIFO?
-        //
-        if(ulRegister & USB_TXCSRH1_AUTOSET)
-        {
-            *pulFlags |= USB_EP_AUTO_SET;
-        }
-
-        //
-        // Get the DMA mode.
-        //
-        if(ulRegister & USB_TXCSRH1_DMAEN)
-        {
-            if(ulRegister & USB_TXCSRH1_DMAMOD)
-            {
-                *pulFlags |= USB_EP_DMA_MODE_1;
-            }
-            else
-            {
-                *pulFlags |= USB_EP_DMA_MODE_0;
-            }
-        }
-
-        //
-        // Are we in isochronous mode?
-        //
-        if(ulRegister & USB_TXCSRH1_ISO)
-        {
-            *pulFlags |= USB_EP_MODE_ISOC;
-        }
-        else
-        {
-            //
-            // The hardware doesn't differentiate between bulk, interrupt
-            // and control mode for the endpoint so we just set something
-            // that isn't isochronous.  This protocol ensures that anyone
-            // modifying the returned flags in preparation for a call to
-            // USBDevEndpointConfigSet do not see an unexpected mode change.
-            // If they decode the returned mode, however, they may be in for
-            // a surprise.
-            //
-            *pulFlags |= USB_EP_MODE_BULK;
-        }
+    //
+    // Are we allowing auto setting of TxPktRdy when max packet size has
+    // been loaded into the FIFO?
+    //
+    if (ulRegister & USB_TXCSRH1_AUTOSET) {
+      *pulFlags |= USB_EP_AUTO_SET;
     }
-    else
-    {
-        //
-        // Clear the flags other than the direction bit.
-        //
-        *pulFlags = USB_EP_DEV_OUT;
 
-        //
-        // Get the MaxPacketSize.
-        //
-        *pulMaxPacketSize = (unsigned long)HWREGH(ulBase +
-                                                  EP_OFFSET(ulEndpoint) +
-                                                  USB_O_RXMAXP1);
-
-        //
-        // Get the current receive control register value.
-        //
-        ulRegister = (unsigned long)HWREGB(ulBase + EP_OFFSET(ulEndpoint) +
-                                           USB_O_RXCSRH1);
-
-        //
-        // Are we allowing auto clearing of RxPktRdy when packet of size max
-        // packet has been unloaded from the FIFO?
-        //
-        if(ulRegister & USB_RXCSRH1_AUTOCL)
-        {
-            *pulFlags |= USB_EP_AUTO_CLEAR;
-        }
-
-        //
-        // Get the DMA mode.
-        //
-        if(ulRegister & USB_RXCSRH1_DMAEN)
-        {
-            if(ulRegister & USB_RXCSRH1_DMAMOD)
-            {
-                *pulFlags |= USB_EP_DMA_MODE_1;
-            }
-            else
-            {
-                *pulFlags |= USB_EP_DMA_MODE_0;
-            }
-        }
-
-        //
-        // Are we in isochronous mode?
-        //
-        if(ulRegister & USB_RXCSRH1_ISO)
-        {
-            *pulFlags |= USB_EP_MODE_ISOC;
-        }
-        else
-        {
-            //
-            // The hardware doesn't differentiate between bulk, interrupt
-            // and control mode for the endpoint so we just set something
-            // that isn't isochronous.  This protocol ensures that anyone
-            // modifying the returned flags in preparation for a call to
-            // USBDevEndpointConfigSet do not see an unexpected mode change.
-            // If they decode the returned mode, however, they may be in for
-            // a surprise.
-            //
-            *pulFlags |= USB_EP_MODE_BULK;
-        }
+    //
+    // Get the DMA mode.
+    //
+    if (ulRegister & USB_TXCSRH1_DMAEN) {
+      if (ulRegister & USB_TXCSRH1_DMAMOD) {
+        *pulFlags |= USB_EP_DMA_MODE_1;
+      } else {
+        *pulFlags |= USB_EP_DMA_MODE_0;
+      }
     }
+
+    //
+    // Are we in isochronous mode?
+    //
+    if (ulRegister & USB_TXCSRH1_ISO) {
+      *pulFlags |= USB_EP_MODE_ISOC;
+    } else {
+      //
+      // The hardware doesn't differentiate between bulk, interrupt
+      // and control mode for the endpoint so we just set something
+      // that isn't isochronous.  This protocol ensures that anyone
+      // modifying the returned flags in preparation for a call to
+      // USBDevEndpointConfigSet do not see an unexpected mode change.
+      // If they decode the returned mode, however, they may be in for
+      // a surprise.
+      //
+      *pulFlags |= USB_EP_MODE_BULK;
+    }
+  } else {
+    //
+    // Clear the flags other than the direction bit.
+    //
+    *pulFlags = USB_EP_DEV_OUT;
+
+    //
+    // Get the MaxPacketSize.
+    //
+    *pulMaxPacketSize =
+        (unsigned long)HWREGH(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXMAXP1);
+
+    //
+    // Get the current receive control register value.
+    //
+    ulRegister =
+        (unsigned long)HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRH1);
+
+    //
+    // Are we allowing auto clearing of RxPktRdy when packet of size max
+    // packet has been unloaded from the FIFO?
+    //
+    if (ulRegister & USB_RXCSRH1_AUTOCL) {
+      *pulFlags |= USB_EP_AUTO_CLEAR;
+    }
+
+    //
+    // Get the DMA mode.
+    //
+    if (ulRegister & USB_RXCSRH1_DMAEN) {
+      if (ulRegister & USB_RXCSRH1_DMAMOD) {
+        *pulFlags |= USB_EP_DMA_MODE_1;
+      } else {
+        *pulFlags |= USB_EP_DMA_MODE_0;
+      }
+    }
+
+    //
+    // Are we in isochronous mode?
+    //
+    if (ulRegister & USB_RXCSRH1_ISO) {
+      *pulFlags |= USB_EP_MODE_ISOC;
+    } else {
+      //
+      // The hardware doesn't differentiate between bulk, interrupt
+      // and control mode for the endpoint so we just set something
+      // that isn't isochronous.  This protocol ensures that anyone
+      // modifying the returned flags in preparation for a call to
+      // USBDevEndpointConfigSet do not see an unexpected mode change.
+      // If they decode the returned mode, however, they may be in for
+      // a surprise.
+      //
+      *pulFlags |= USB_EP_MODE_BULK;
+    }
+  }
 }
 
 //*****************************************************************************
@@ -2347,45 +2151,40 @@ USBDevEndpointConfigGet(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBFIFOConfigSet(unsigned long ulBase, unsigned long ulEndpoint,
-                 unsigned long ulFIFOAddress, unsigned long ulFIFOSize,
-                 unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
-           (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
-           (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
-           (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
-           (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
-           (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
-           (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
-           (ulEndpoint == USB_EP_15));
+void USBFIFOConfigSet(unsigned long ulBase, unsigned long ulEndpoint,
+                      unsigned long ulFIFOAddress, unsigned long ulFIFOSize,
+                      unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
+         (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
+         (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
+         (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
+         (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
+         (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
+         (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
+         (ulEndpoint == USB_EP_15));
 
+  //
+  // See if the transmit or receive FIFO is being configured.
+  //
+  if (ulFlags & (USB_EP_HOST_OUT | USB_EP_DEV_IN)) {
     //
-    // See if the transmit or receive FIFO is being configured.
+    // Set the transmit FIFO location and size for this endpoint.
     //
-    if(ulFlags & (USB_EP_HOST_OUT | USB_EP_DEV_IN))
-    {
-        //
-        // Set the transmit FIFO location and size for this endpoint.
-        //
-        USBIndexWrite(ulBase, ulEndpoint >> 4, USB_O_TXFIFOSZ, ulFIFOSize, 1);
-        USBIndexWrite(ulBase, ulEndpoint >> 4, USB_O_TXFIFOADD,
-                      ulFIFOAddress >> 3, 2);
-    }
-    else
-    {
-        //
-        // Set the receive FIFO location and size for this endpoint.
-        //
-        USBIndexWrite(ulBase, ulEndpoint >> 4, USB_O_RXFIFOSZ, ulFIFOSize, 1);
-        USBIndexWrite(ulBase, ulEndpoint >> 4, USB_O_RXFIFOADD,
-                      ulFIFOAddress >> 3, 2);
-    }
+    USBIndexWrite(ulBase, ulEndpoint >> 4, USB_O_TXFIFOSZ, ulFIFOSize, 1);
+    USBIndexWrite(ulBase, ulEndpoint >> 4, USB_O_TXFIFOADD, ulFIFOAddress >> 3,
+                  2);
+  } else {
+    //
+    // Set the receive FIFO location and size for this endpoint.
+    //
+    USBIndexWrite(ulBase, ulEndpoint >> 4, USB_O_RXFIFOSZ, ulFIFOSize, 1);
+    USBIndexWrite(ulBase, ulEndpoint >> 4, USB_O_RXFIFOADD, ulFIFOAddress >> 3,
+                  2);
+  }
 }
 
 //*****************************************************************************
@@ -2412,50 +2211,45 @@ USBFIFOConfigSet(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBFIFOConfigGet(unsigned long ulBase, unsigned long ulEndpoint,
-                 unsigned long *pulFIFOAddress, unsigned long *pulFIFOSize,
-                 unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
-           (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
-           (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
-           (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
-           (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
-           (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
-           (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
-           (ulEndpoint == USB_EP_15));
+void USBFIFOConfigGet(unsigned long ulBase, unsigned long ulEndpoint,
+                      unsigned long *pulFIFOAddress, unsigned long *pulFIFOSize,
+                      unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
+         (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
+         (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
+         (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
+         (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
+         (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
+         (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
+         (ulEndpoint == USB_EP_15));
 
+  //
+  // See if the transmit or receive FIFO is being configured.
+  //
+  if (ulFlags & (USB_EP_HOST_OUT | USB_EP_DEV_IN)) {
     //
-    // See if the transmit or receive FIFO is being configured.
+    // Get the transmit FIFO location and size for this endpoint.
     //
-    if(ulFlags & (USB_EP_HOST_OUT | USB_EP_DEV_IN))
-    {
-        //
-        // Get the transmit FIFO location and size for this endpoint.
-        //
-        *pulFIFOAddress = (USBIndexRead(ulBase, ulEndpoint >> 4,
-                                        (unsigned long)USB_O_TXFIFOADD,
-                                        2)) << 3;
-        *pulFIFOSize = USBIndexRead(ulBase, ulEndpoint >> 4,
-                                    (unsigned long)USB_O_TXFIFOSZ, 1);
+    *pulFIFOAddress = (USBIndexRead(ulBase, ulEndpoint >> 4,
+                                    (unsigned long)USB_O_TXFIFOADD, 2))
+                      << 3;
+    *pulFIFOSize =
+        USBIndexRead(ulBase, ulEndpoint >> 4, (unsigned long)USB_O_TXFIFOSZ, 1);
 
-    }
-    else
-    {
-        //
-        // Get the receive FIFO location and size for this endpoint.
-        //
-        *pulFIFOAddress = (USBIndexRead(ulBase, ulEndpoint >> 4,
-                                        (unsigned long)USB_O_RXFIFOADD,
-                                        2)) << 3;
-        *pulFIFOSize = USBIndexRead(ulBase, ulEndpoint >> 4,
-                                    (unsigned long)USB_O_RXFIFOSZ, 1);
-    }
+  } else {
+    //
+    // Get the receive FIFO location and size for this endpoint.
+    //
+    *pulFIFOAddress = (USBIndexRead(ulBase, ulEndpoint >> 4,
+                                    (unsigned long)USB_O_RXFIFOADD, 2))
+                      << 3;
+    *pulFIFOSize =
+        USBIndexRead(ulBase, ulEndpoint >> 4, (unsigned long)USB_O_RXFIFOSZ, 1);
+  }
 }
 
 //*****************************************************************************
@@ -2474,29 +2268,22 @@ USBFIFOConfigGet(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBEndpointDMAEnable(unsigned long ulBase, unsigned long ulEndpoint,
-                     unsigned long ulFlags)
-{
+void USBEndpointDMAEnable(unsigned long ulBase, unsigned long ulEndpoint,
+                          unsigned long ulFlags) {
+  //
+  // See if the transmit DMA is being enabled.
+  //
+  if (ulFlags & USB_EP_DEV_IN) {
     //
-    // See if the transmit DMA is being enabled.
+    // Enable DMA on the transmit endpoint.
     //
-    if(ulFlags & USB_EP_DEV_IN)
-    {
-        //
-        // Enable DMA on the transmit endpoint.
-        //
-        HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRH1) |=
-            USB_TXCSRH1_DMAEN;
-    }
-    else
-    {
-        //
-        // Enable DMA on the receive endpoint.
-        //
-        HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRH1) |=
-            USB_RXCSRH1_DMAEN;
-    }
+    HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRH1) |= USB_TXCSRH1_DMAEN;
+  } else {
+    //
+    // Enable DMA on the receive endpoint.
+    //
+    HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRH1) |= USB_RXCSRH1_DMAEN;
+  }
 }
 
 //*****************************************************************************
@@ -2514,30 +2301,25 @@ USBEndpointDMAEnable(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBEndpointDMADisable(unsigned long ulBase, unsigned long ulEndpoint,
-                      unsigned long ulFlags)
-{
+void USBEndpointDMADisable(unsigned long ulBase, unsigned long ulEndpoint,
+                           unsigned long ulFlags) {
+  //
+  // If this was a request to disable DMA on the IN portion of the endpoint
+  // then handle it.
+  //
+  if (ulFlags & USB_EP_DEV_IN) {
     //
-    // If this was a request to disable DMA on the IN portion of the endpoint
-    // then handle it.
+    // Just disable DMA leave the mode setting.
     //
-    if(ulFlags & USB_EP_DEV_IN)
-    {
-        //
-        // Just disable DMA leave the mode setting.
-        //
-        HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRH1) &=
-               ~USB_TXCSRH1_DMAEN;
-    }
-    else
-    {
-        //
-        // Just disable DMA leave the mode setting.
-        //
-        HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRH1) &=
-               ~USB_RXCSRH1_DMAEN;
-    }
+    HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_TXCSRH1) &=
+        ~USB_TXCSRH1_DMAEN;
+  } else {
+    //
+    // Just disable DMA leave the mode setting.
+    //
+    HWREGB(ulBase + EP_OFFSET(ulEndpoint) + USB_O_RXCSRH1) &=
+        ~USB_RXCSRH1_DMAEN;
+  }
 }
 
 //*****************************************************************************
@@ -2556,49 +2338,44 @@ USBEndpointDMADisable(unsigned long ulBase, unsigned long ulEndpoint,
 //! FIFO.
 //
 //*****************************************************************************
-unsigned long
-USBEndpointDataAvail(unsigned long ulBase, unsigned long ulEndpoint)
-{
-    unsigned long ulRegister;
+unsigned long USBEndpointDataAvail(unsigned long ulBase,
+                                   unsigned long ulEndpoint) {
+  unsigned long ulRegister;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
-    //
-    // Get the address of the receive status register to use, based on the
-    // endpoint.
-    //
-    if(ulEndpoint == USB_EP_0)
-    {
-        ulRegister = USB_O_CSRL0;
-    }
-    else
-    {
-        ulRegister = USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint);
-    }
+  //
+  // Get the address of the receive status register to use, based on the
+  // endpoint.
+  //
+  if (ulEndpoint == USB_EP_0) {
+    ulRegister = USB_O_CSRL0;
+  } else {
+    ulRegister = USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint);
+  }
 
-    //
-    // Is there a packet ready in the FIFO?
-    //
-    if((HWREGH(ulBase + ulRegister) & USB_CSRL0_RXRDY) == 0)
-    {
-        return(0);
-    }
+  //
+  // Is there a packet ready in the FIFO?
+  //
+  if ((HWREGH(ulBase + ulRegister) & USB_CSRL0_RXRDY) == 0) {
+    return (0);
+  }
 
-    //
-    // Return the byte count in the FIFO.
-    //
-    return(HWREGH(ulBase + USB_O_COUNT0 + ulEndpoint));
+  //
+  // Return the byte count in the FIFO.
+  //
+  return (HWREGH(ulBase + USB_O_COUNT0 + ulEndpoint));
 }
 
 //*****************************************************************************
@@ -2624,89 +2401,82 @@ USBEndpointDataAvail(unsigned long ulBase, unsigned long ulEndpoint)
 //! \return This call returns 0, or -1 if no packet was received.
 //
 //*****************************************************************************
-long
-USBEndpointDataGet(unsigned long ulBase, unsigned long ulEndpoint,
-                   unsigned char *pucData, unsigned long *pulSize)
-{
-    unsigned long ulRegister, ulByteCount, ulFIFO;
+long USBEndpointDataGet(unsigned long ulBase, unsigned long ulEndpoint,
+                        unsigned char *pucData, unsigned long *pulSize) {
+  unsigned long ulRegister, ulByteCount, ulFIFO;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+
+  //
+  // Get the address of the receive status register to use, based on the
+  // endpoint.
+  //
+  if (ulEndpoint == USB_EP_0) {
+    ulRegister = USB_O_CSRL0;
+  } else {
+    ulRegister = USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint);
+  }
+
+  //
+  // Don't allow reading of data if the RxPktRdy bit is not set.
+  //
+  if ((HWREGH(ulBase + ulRegister) & USB_CSRL0_RXRDY) == 0) {
+    //
+    // Can't read the data because none is available.
+    //
+    *pulSize = 0;
 
     //
-    // Check the arguments.
+    // Return a failure since there is no data to read.
     //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+    return (-1);
+  }
 
-    //
-    // Get the address of the receive status register to use, based on the
-    // endpoint.
-    //
-    if(ulEndpoint == USB_EP_0)
-    {
-        ulRegister = USB_O_CSRL0;
-    }
-    else
-    {
-        ulRegister = USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint);
-    }
+  //
+  // Get the byte count in the FIFO.
+  //
+  ulByteCount = HWREGH(ulBase + USB_O_COUNT0 + ulEndpoint);
 
-    //
-    // Don't allow reading of data if the RxPktRdy bit is not set.
-    //
-    if((HWREGH(ulBase + ulRegister) & USB_CSRL0_RXRDY) == 0)
-    {
-        //
-        // Can't read the data because none is available.
-        //
-        *pulSize = 0;
+  //
+  // Determine how many bytes are copied.
+  //
+  ulByteCount = (ulByteCount < *pulSize) ? ulByteCount : *pulSize;
 
-        //
-        // Return a failure since there is no data to read.
-        //
-        return(-1);
-    }
+  //
+  // Return the number of bytes we are going to read.
+  //
+  *pulSize = ulByteCount;
 
-    //
-    // Get the byte count in the FIFO.
-    //
-    ulByteCount = HWREGH(ulBase + USB_O_COUNT0 + ulEndpoint);
+  //
+  // Calculate the FIFO address.
+  //
+  ulFIFO = ulBase + USB_O_FIFO0 + (ulEndpoint >> 2);
 
+  //
+  // Read the data out of the FIFO.
+  //
+  for (; ulByteCount > 0; ulByteCount--) {
     //
-    // Determine how many bytes are copied.
+    // Read a byte at a time from the FIFO.
     //
-    ulByteCount = (ulByteCount < *pulSize) ? ulByteCount : *pulSize;
+    *pucData++ = HWREGB(ulFIFO);
+  }
 
-    //
-    // Return the number of bytes we are going to read.
-    //
-    *pulSize = ulByteCount;
-
-    //
-    // Calculate the FIFO address.
-    //
-    ulFIFO = ulBase + USB_O_FIFO0 + (ulEndpoint >> 2);
-
-    //
-    // Read the data out of the FIFO.
-    //
-    for(; ulByteCount > 0; ulByteCount--)
-    {
-        //
-        // Read a byte at a time from the FIFO.
-        //
-        *pucData++ = HWREGB(ulFIFO);
-    }
-
-    //
-    // Success.
-    //
-    return(0);
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -2730,42 +2500,37 @@ USBEndpointDataGet(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevEndpointDataAck(unsigned long ulBase, unsigned long ulEndpoint,
-                      tBoolean bIsLastPacket)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+void USBDevEndpointDataAck(unsigned long ulBase, unsigned long ulEndpoint,
+                           tBoolean bIsLastPacket) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
+  //
+  // Determine which endpoint is being acked.
+  //
+  if (ulEndpoint == USB_EP_0) {
     //
-    // Determine which endpoint is being acked.
+    // Clear RxPktRdy, and optionally DataEnd, on endpoint zero.
     //
-    if(ulEndpoint == USB_EP_0)
-    {
-        //
-        // Clear RxPktRdy, and optionally DataEnd, on endpoint zero.
-        //
-        HWREGB(ulBase + USB_O_CSRL0) =
-            USB_CSRL0_RXRDYC | (bIsLastPacket ? USB_CSRL0_DATAEND : 0);
-    }
-    else
-    {
-        //
-        // Clear RxPktRdy on all other endpoints.
-        //
-        HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
-            ~(USB_RXCSRL1_RXRDY);
-    }
+    HWREGB(ulBase + USB_O_CSRL0) =
+        USB_CSRL0_RXRDYC | (bIsLastPacket ? USB_CSRL0_DATAEND : 0);
+  } else {
+    //
+    // Clear RxPktRdy on all other endpoints.
+    //
+    HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
+        ~(USB_RXCSRL1_RXRDY);
+  }
 }
 
 //*****************************************************************************
@@ -2785,34 +2550,29 @@ USBDevEndpointDataAck(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostEndpointDataAck(unsigned long ulBase, unsigned long ulEndpoint)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+void USBHostEndpointDataAck(unsigned long ulBase, unsigned long ulEndpoint) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
-    //
-    // Clear RxPktRdy.
-    //
-    if(ulEndpoint == USB_EP_0)
-    {
-        HWREGB(ulBase + USB_O_CSRL0) &= ~USB_CSRL0_RXRDY;
-    }
-    else
-    {
-        HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
-            ~(USB_RXCSRL1_RXRDY);
-    }
+  //
+  // Clear RxPktRdy.
+  //
+  if (ulEndpoint == USB_EP_0) {
+    HWREGB(ulBase + USB_O_CSRL0) &= ~USB_CSRL0_RXRDY;
+  } else {
+    HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &=
+        ~(USB_RXCSRL1_RXRDY);
+  }
 }
 
 //*****************************************************************************
@@ -2835,63 +2595,56 @@ USBHostEndpointDataAck(unsigned long ulBase, unsigned long ulEndpoint)
 //! is in use and cannot be written.
 //
 //*****************************************************************************
-long
-USBEndpointDataPut(unsigned long ulBase, unsigned long ulEndpoint,
-                   unsigned char *pucData, unsigned long ulSize)
-{
-    unsigned long ulFIFO;
-    unsigned char ucTxPktRdy;
+long USBEndpointDataPut(unsigned long ulBase, unsigned long ulEndpoint,
+                        unsigned char *pucData, unsigned long ulSize) {
+  unsigned long ulFIFO;
+  unsigned char ucTxPktRdy;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
-    //
-    // Get the bit position of TxPktRdy based on the endpoint.
-    //
-    if(ulEndpoint == USB_EP_0)
-    {
-        ucTxPktRdy = USB_CSRL0_TXRDY;
-    }
-    else
-    {
-        ucTxPktRdy = USB_TXCSRL1_TXRDY;
-    }
+  //
+  // Get the bit position of TxPktRdy based on the endpoint.
+  //
+  if (ulEndpoint == USB_EP_0) {
+    ucTxPktRdy = USB_CSRL0_TXRDY;
+  } else {
+    ucTxPktRdy = USB_TXCSRL1_TXRDY;
+  }
 
-    //
-    // Don't allow transmit of data if the TxPktRdy bit is already set.
-    //
-    if(HWREGB(ulBase + USB_O_CSRL0 + ulEndpoint) & ucTxPktRdy)
-    {
-        return(-1);
-    }
+  //
+  // Don't allow transmit of data if the TxPktRdy bit is already set.
+  //
+  if (HWREGB(ulBase + USB_O_CSRL0 + ulEndpoint) & ucTxPktRdy) {
+    return (-1);
+  }
 
-    //
-    // Calculate the FIFO address.
-    //
-    ulFIFO = ulBase + USB_O_FIFO0 + (ulEndpoint >> 2);
+  //
+  // Calculate the FIFO address.
+  //
+  ulFIFO = ulBase + USB_O_FIFO0 + (ulEndpoint >> 2);
 
-    //
-    // Write the data to the FIFO.
-    //
-    for(; ulSize > 0; ulSize--)
-    {
-        HWREGB(ulFIFO) = *pucData++;
-    }
+  //
+  // Write the data to the FIFO.
+  //
+  for (; ulSize > 0; ulSize--) {
+    HWREGB(ulFIFO) = *pucData++;
+  }
 
-    //
-    // Success.
-    //
-    return(0);
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -2919,62 +2672,55 @@ USBEndpointDataPut(unsigned long ulBase, unsigned long ulEndpoint,
 //! in progress.
 //
 //*****************************************************************************
-long
-USBEndpointDataSend(unsigned long ulBase, unsigned long ulEndpoint,
-                    unsigned long ulTransType)
-{
-    unsigned long ulTxPktRdy;
+long USBEndpointDataSend(unsigned long ulBase, unsigned long ulEndpoint,
+                         unsigned long ulTransType) {
+  unsigned long ulTxPktRdy;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
+  //
+  // Get the bit position of TxPktRdy based on the endpoint.
+  //
+  if (ulEndpoint == USB_EP_0) {
     //
-    // Get the bit position of TxPktRdy based on the endpoint.
+    // Don't allow transmit of data if the TxPktRdy bit is already set.
     //
-    if(ulEndpoint == USB_EP_0)
-    {
-        //
-        // Don't allow transmit of data if the TxPktRdy bit is already set.
-        //
-        if(HWREGB(ulBase + USB_O_CSRL0) & USB_CSRL0_TXRDY)
-        {
-            return(-1);
-        }
-
-        ulTxPktRdy = ulTransType & 0xff;
-    }
-    else
-    {
-        //
-        // Don't allow transmit of data if the TxPktRdy bit is already set.
-        //
-        if(HWREGB(ulBase + USB_O_CSRL0 + ulEndpoint) & USB_TXCSRL1_TXRDY)
-        {
-            return(-1);
-        }
-
-        ulTxPktRdy = (ulTransType >> 8) & 0xff;
+    if (HWREGB(ulBase + USB_O_CSRL0) & USB_CSRL0_TXRDY) {
+      return (-1);
     }
 
+    ulTxPktRdy = ulTransType & 0xff;
+  } else {
     //
-    // Set TxPktRdy in order to send the data.
+    // Don't allow transmit of data if the TxPktRdy bit is already set.
     //
-    HWREGB(ulBase + USB_O_CSRL0 + ulEndpoint) = ulTxPktRdy;
+    if (HWREGB(ulBase + USB_O_CSRL0 + ulEndpoint) & USB_TXCSRL1_TXRDY) {
+      return (-1);
+    }
 
-    //
-    // Success.
-    //
-    return(0);
+    ulTxPktRdy = (ulTransType >> 8) & 0xff;
+  }
+
+  //
+  // Set TxPktRdy in order to send the data.
+  //
+  HWREGB(ulBase + USB_O_CSRL0 + ulEndpoint) = ulTxPktRdy;
+
+  //
+  // Success.
+  //
+  return (0);
 }
 
 //*****************************************************************************
@@ -2993,76 +2739,65 @@ USBEndpointDataSend(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBFIFOFlush(unsigned long ulBase, unsigned long ulEndpoint,
-             unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+void USBFIFOFlush(unsigned long ulBase, unsigned long ulEndpoint,
+                  unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
+  //
+  // Endpoint zero has a different register set for FIFO flushing.
+  //
+  if (ulEndpoint == USB_EP_0) {
     //
-    // Endpoint zero has a different register set for FIFO flushing.
+    // Nothing in the FIFO if neither of these bits are set.
     //
-    if(ulEndpoint == USB_EP_0)
-    {
-        //
-        // Nothing in the FIFO if neither of these bits are set.
-        //
-        if((HWREGB(ulBase + USB_O_CSRL0) &
-            (USB_CSRL0_RXRDY | USB_CSRL0_TXRDY)) != 0)
-        {
-            //
-            // Hit the Flush FIFO bit.
-            //
-            HWREGB(ulBase + USB_O_CSRH0) = USB_CSRH0_FLUSH;
-        }
+    if ((HWREGB(ulBase + USB_O_CSRL0) & (USB_CSRL0_RXRDY | USB_CSRL0_TXRDY)) !=
+        0) {
+      //
+      // Hit the Flush FIFO bit.
+      //
+      HWREGB(ulBase + USB_O_CSRH0) = USB_CSRH0_FLUSH;
     }
-    else
-    {
+  } else {
+    //
+    // Only reset the IN or OUT FIFO.
+    //
+    if (ulFlags & (USB_EP_HOST_OUT | USB_EP_DEV_IN)) {
+      //
+      // Make sure the FIFO is not empty.
+      //
+      if (HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) &
+          USB_TXCSRL1_TXRDY) {
         //
-        // Only reset the IN or OUT FIFO.
+        // Hit the Flush FIFO bit.
         //
-        if(ulFlags & (USB_EP_HOST_OUT | USB_EP_DEV_IN))
-        {
-            //
-            // Make sure the FIFO is not empty.
-            //
-            if(HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) &
-               USB_TXCSRL1_TXRDY)
-            {
-                //
-                // Hit the Flush FIFO bit.
-                //
-                HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) |=
-                    USB_TXCSRL1_FLUSH;
-            }
-        }
-        else
-        {
-            //
-            // Make sure that the FIFO is not empty.
-            //
-            if(HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &
-               USB_RXCSRL1_RXRDY)
-            {
-                //
-                // Hit the Flush FIFO bit.
-                //
-                HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) |=
-                    USB_RXCSRL1_FLUSH;
-            }
-        }
+        HWREGB(ulBase + USB_O_TXCSRL1 + EP_OFFSET(ulEndpoint)) |=
+            USB_TXCSRL1_FLUSH;
+      }
+    } else {
+      //
+      // Make sure that the FIFO is not empty.
+      //
+      if (HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) &
+          USB_RXCSRL1_RXRDY) {
+        //
+        // Hit the Flush FIFO bit.
+        //
+        HWREGB(ulBase + USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint)) |=
+            USB_RXCSRL1_FLUSH;
+      }
     }
+  }
 }
 
 //*****************************************************************************
@@ -3082,40 +2817,35 @@ USBFIFOFlush(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostRequestIN(unsigned long ulBase, unsigned long ulEndpoint)
-{
-    unsigned long ulRegister;
+void USBHostRequestIN(unsigned long ulBase, unsigned long ulEndpoint) {
+  unsigned long ulRegister;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
-    //
-    // Endpoint zero uses a different offset than the other endpoints.
-    //
-    if(ulEndpoint == USB_EP_0)
-    {
-        ulRegister = USB_O_CSRL0;
-    }
-    else
-    {
-        ulRegister = USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint);
-    }
+  //
+  // Endpoint zero uses a different offset than the other endpoints.
+  //
+  if (ulEndpoint == USB_EP_0) {
+    ulRegister = USB_O_CSRL0;
+  } else {
+    ulRegister = USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint);
+  }
 
-    //
-    // Set the request for an IN transaction.
-    //
-    HWREGB(ulBase + ulRegister) = USB_RXCSRL1_REQPKT;
+  //
+  // Set the request for an IN transaction.
+  //
+  HWREGB(ulBase + ulRegister) = USB_RXCSRL1_REQPKT;
 }
 
 //*****************************************************************************
@@ -3136,40 +2866,35 @@ USBHostRequestIN(unsigned long ulBase, unsigned long ulEndpoint)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostRequestINClear(unsigned long ulBase, unsigned long ulEndpoint)
-{
-    unsigned long ulRegister;
+void USBHostRequestINClear(unsigned long ulBase, unsigned long ulEndpoint) {
+  unsigned long ulRegister;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
-    //
-    // Endpoint zero uses a different offset than the other endpoints.
-    //
-    if(ulEndpoint == USB_EP_0)
-    {
-        ulRegister = USB_O_CSRL0;
-    }
-    else
-    {
-        ulRegister = USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint);
-    }
+  //
+  // Endpoint zero uses a different offset than the other endpoints.
+  //
+  if (ulEndpoint == USB_EP_0) {
+    ulRegister = USB_O_CSRL0;
+  } else {
+    ulRegister = USB_O_RXCSRL1 + EP_OFFSET(ulEndpoint);
+  }
 
-    //
-    // Clear the request for an IN transaction.
-    //
-    HWREGB(ulBase + ulRegister) &= ~USB_RXCSRL1_REQPKT;
+  //
+  // Clear the request for an IN transaction.
+  //
+  HWREGB(ulBase + ulRegister) &= ~USB_RXCSRL1_REQPKT;
 }
 
 //*****************************************************************************
@@ -3188,18 +2913,16 @@ USBHostRequestINClear(unsigned long ulBase, unsigned long ulEndpoint)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostRequestStatus(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBHostRequestStatus(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Set the request for a status IN transaction.
-    //
-    HWREGB(ulBase + USB_O_CSRL0) = USB_CSRL0_REQPKT | USB_CSRL0_STATUS;
+  //
+  // Set the request for a status IN transaction.
+  //
+  HWREGB(ulBase + USB_O_CSRL0) = USB_CSRL0_REQPKT | USB_CSRL0_STATUS;
 }
 
 //*****************************************************************************
@@ -3223,40 +2946,35 @@ USBHostRequestStatus(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostAddrSet(unsigned long ulBase, unsigned long ulEndpoint,
-               unsigned long ulAddr, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+void USBHostAddrSet(unsigned long ulBase, unsigned long ulEndpoint,
+                    unsigned long ulAddr, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
+  //
+  // See if the transmit or receive address should be set.
+  //
+  if (ulFlags & USB_EP_HOST_OUT) {
     //
-    // See if the transmit or receive address should be set.
+    // Set the transmit address.
     //
-    if(ulFlags & USB_EP_HOST_OUT)
-    {
-        //
-        // Set the transmit address.
-        //
-        HWREGB(ulBase + USB_O_TXFUNCADDR0 + (ulEndpoint >> 1)) = ulAddr;
-    }
-    else
-    {
-        //
-        // Set the receive address.
-        //
-        HWREGB(ulBase + USB_O_TXFUNCADDR0 + 4 + (ulEndpoint >> 1)) = ulAddr;
-    }
+    HWREGB(ulBase + USB_O_TXFUNCADDR0 + (ulEndpoint >> 1)) = ulAddr;
+  } else {
+    //
+    // Set the receive address.
+    //
+    HWREGB(ulBase + USB_O_TXFUNCADDR0 + 4 + (ulEndpoint >> 1)) = ulAddr;
+  }
 }
 
 //*****************************************************************************
@@ -3276,40 +2994,35 @@ USBHostAddrSet(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return Returns the current function address being used by an endpoint.
 //
 //*****************************************************************************
-unsigned long
-USBHostAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
-               unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+unsigned long USBHostAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
+                             unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
+  //
+  // See if the transmit or receive address should be returned.
+  //
+  if (ulFlags & USB_EP_HOST_OUT) {
     //
-    // See if the transmit or receive address should be returned.
+    // Return this endpoint's transmit address.
     //
-    if(ulFlags & USB_EP_HOST_OUT)
-    {
-        //
-        // Return this endpoint's transmit address.
-        //
-        return(HWREGB(ulBase + USB_O_TXFUNCADDR0 + (ulEndpoint >> 1)));
-    }
-    else
-    {
-        //
-        // Return this endpoint's receive address.
-        //
-        return(HWREGB(ulBase + USB_O_TXFUNCADDR0 + 4 + (ulEndpoint >> 1)));
-    }
+    return (HWREGB(ulBase + USB_O_TXFUNCADDR0 + (ulEndpoint >> 1)));
+  } else {
+    //
+    // Return this endpoint's receive address.
+    //
+    return (HWREGB(ulBase + USB_O_TXFUNCADDR0 + 4 + (ulEndpoint >> 1)));
+  }
 }
 
 //*****************************************************************************
@@ -3335,57 +3048,48 @@ USBHostAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostHubAddrSet(unsigned long ulBase, unsigned long ulEndpoint,
-                  unsigned long ulAddr, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+void USBHostHubAddrSet(unsigned long ulBase, unsigned long ulEndpoint,
+                       unsigned long ulAddr, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
+  //
+  // See if the hub transmit or receive address is being set.
+  //
+  if (ulFlags & USB_EP_HOST_OUT) {
     //
-    // See if the hub transmit or receive address is being set.
+    // Set the hub transmit address and port number for this endpoint.
     //
-    if(ulFlags & USB_EP_HOST_OUT)
-    {
-        //
-        // Set the hub transmit address and port number for this endpoint.
-        //
-        HWREGH(ulBase + USB_O_TXHUBADDR0 + (ulEndpoint >> 1)) = ulAddr;
-    }
-    else
-    {
-        //
-        // Set the hub receive address and port number for this endpoint.
-        //
-        HWREGH(ulBase + USB_O_TXHUBADDR0 + 4 + (ulEndpoint >> 1)) = ulAddr;
-    }
+    HWREGH(ulBase + USB_O_TXHUBADDR0 + (ulEndpoint >> 1)) = ulAddr;
+  } else {
+    //
+    // Set the hub receive address and port number for this endpoint.
+    //
+    HWREGH(ulBase + USB_O_TXHUBADDR0 + 4 + (ulEndpoint >> 1)) = ulAddr;
+  }
 
-    //
-    // Set the speed of communication for endpoint 0.  This configuration is
-    // done here because it changes on a transaction-by-transaction basis for
-    // EP0.  For other endpoints, this is set in USBHostEndpointConfig().
-    //
-    if(ulEndpoint == USB_EP_0)
-    {
-        if(ulFlags & USB_EP_SPEED_FULL)
-        {
-            HWREGB(ulBase + USB_O_TYPE0) = USB_TYPE0_SPEED_FULL;
-        }
-        else
-        {
-            HWREGB(ulBase + USB_O_TYPE0) = USB_TYPE0_SPEED_LOW;
-        }
+  //
+  // Set the speed of communication for endpoint 0.  This configuration is
+  // done here because it changes on a transaction-by-transaction basis for
+  // EP0.  For other endpoints, this is set in USBHostEndpointConfig().
+  //
+  if (ulEndpoint == USB_EP_0) {
+    if (ulFlags & USB_EP_SPEED_FULL) {
+      HWREGB(ulBase + USB_O_TYPE0) = USB_TYPE0_SPEED_FULL;
+    } else {
+      HWREGB(ulBase + USB_O_TYPE0) = USB_TYPE0_SPEED_LOW;
     }
+  }
 }
 
 //*****************************************************************************
@@ -3406,40 +3110,35 @@ USBHostHubAddrSet(unsigned long ulBase, unsigned long ulEndpoint,
 //! endpoint.
 //
 //*****************************************************************************
-unsigned long
-USBHostHubAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
-                  unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
-           (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
-           (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
-           (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
-           (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
-           (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
-           (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
-           (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
+unsigned long USBHostHubAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
+                                unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_0) || (ulEndpoint == USB_EP_1) ||
+         (ulEndpoint == USB_EP_2) || (ulEndpoint == USB_EP_3) ||
+         (ulEndpoint == USB_EP_4) || (ulEndpoint == USB_EP_5) ||
+         (ulEndpoint == USB_EP_6) || (ulEndpoint == USB_EP_7) ||
+         (ulEndpoint == USB_EP_8) || (ulEndpoint == USB_EP_9) ||
+         (ulEndpoint == USB_EP_10) || (ulEndpoint == USB_EP_11) ||
+         (ulEndpoint == USB_EP_12) || (ulEndpoint == USB_EP_13) ||
+         (ulEndpoint == USB_EP_14) || (ulEndpoint == USB_EP_15));
 
+  //
+  // See if the hub transmit or receive address should be returned.
+  //
+  if (ulFlags & USB_EP_HOST_OUT) {
     //
-    // See if the hub transmit or receive address should be returned.
+    // Return the hub transmit address for this endpoint.
     //
-    if(ulFlags & USB_EP_HOST_OUT)
-    {
-        //
-        // Return the hub transmit address for this endpoint.
-        //
-        return(HWREGB(ulBase + USB_O_TXHUBADDR0 + (ulEndpoint >> 1)));
-    }
-    else
-    {
-        //
-        // Return the hub receive address for this endpoint.
-        //
-        return(HWREGB(ulBase + USB_O_TXHUBADDR0 + 4 + (ulEndpoint >> 1)));
-    }
+    return (HWREGB(ulBase + USB_O_TXHUBADDR0 + (ulEndpoint >> 1)));
+  } else {
+    //
+    // Return the hub receive address for this endpoint.
+    //
+    return (HWREGB(ulBase + USB_O_TXHUBADDR0 + 4 + (ulEndpoint >> 1)));
+  }
 }
 
 //*****************************************************************************
@@ -3509,31 +3208,29 @@ USBHostHubAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostPwrConfig(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulFlags & ~(USB_HOST_PWREN_FILTER | USB_EPC_PFLTACT_M |
-                        USB_EPC_PFLTAEN | USB_EPC_PFLTSEN_HIGH |
-                        USB_EPC_EPEN_M)) == 0);
+void USBHostPwrConfig(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT(
+      (ulFlags & ~(USB_HOST_PWREN_FILTER | USB_EPC_PFLTACT_M | USB_EPC_PFLTAEN |
+                   USB_EPC_PFLTSEN_HIGH | USB_EPC_EPEN_M)) == 0);
 
-    //
-    // If requested, enable VBUS droop detection on parts that support this
-    // feature.
-    //
-    HWREG(ulBase + USB_O_VDC) = ulFlags >> 16;
+  //
+  // If requested, enable VBUS droop detection on parts that support this
+  // feature.
+  //
+  HWREG(ulBase + USB_O_VDC) = ulFlags >> 16;
 
-    //
-    // Set the power fault configuration as specified.  This configuration
-    // does not change whether fault detection is enabled or not.
-    //
-    HWREGH(ulBase + USB_O_EPC) =
-        (ulFlags | (HWREGH(ulBase + USB_O_EPC) &
-                    ~(USB_EPC_PFLTACT_M | USB_EPC_PFLTAEN |
-                      USB_EPC_PFLTSEN_HIGH | USB_EPC_EPEN_M)));
+  //
+  // Set the power fault configuration as specified.  This configuration
+  // does not change whether fault detection is enabled or not.
+  //
+  HWREGH(ulBase + USB_O_EPC) =
+      (ulFlags |
+       (HWREGH(ulBase + USB_O_EPC) & ~(USB_EPC_PFLTACT_M | USB_EPC_PFLTAEN |
+                                       USB_EPC_PFLTSEN_HIGH | USB_EPC_EPEN_M)));
 }
 
 //*****************************************************************************
@@ -3550,18 +3247,16 @@ USBHostPwrConfig(unsigned long ulBase, unsigned long ulFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostPwrFaultEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBHostPwrFaultEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Enable power fault input.
-    //
-    HWREGH(ulBase + USB_O_EPC) |= USB_EPC_PFLTEN;
+  //
+  // Enable power fault input.
+  //
+  HWREGH(ulBase + USB_O_EPC) |= USB_EPC_PFLTEN;
 }
 
 //*****************************************************************************
@@ -3577,18 +3272,16 @@ USBHostPwrFaultEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostPwrFaultDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBHostPwrFaultDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Enable power fault input.
-    //
-    HWREGH(ulBase + USB_O_EPC) &= ~USB_EPC_PFLTEN;
+  //
+  // Enable power fault input.
+  //
+  HWREGH(ulBase + USB_O_EPC) &= ~USB_EPC_PFLTEN;
 }
 
 //*****************************************************************************
@@ -3605,18 +3298,16 @@ USBHostPwrFaultDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostPwrEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBHostPwrEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Enable the external power supply enable signal.
-    //
-    HWREGH(ulBase + USB_O_EPC) |= USB_EPC_EPENDE;
+  //
+  // Enable the external power supply enable signal.
+  //
+  HWREGH(ulBase + USB_O_EPC) |= USB_EPC_EPENDE;
 }
 
 //*****************************************************************************
@@ -3633,18 +3324,16 @@ USBHostPwrEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostPwrDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBHostPwrDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Disable the external power supply enable signal.
-    //
-    HWREGH(ulBase + USB_O_EPC) &= ~USB_EPC_EPENDE;
+  //
+  // Disable the external power supply enable signal.
+  //
+  HWREGH(ulBase + USB_O_EPC) &= ~USB_EPC_EPENDE;
 }
 
 //*****************************************************************************
@@ -3658,18 +3347,16 @@ USBHostPwrDisable(unsigned long ulBase)
 //! \return The last frame number received.
 //
 //*****************************************************************************
-unsigned long
-USBFrameNumberGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+unsigned long USBFrameNumberGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Return the most recent frame number.
-    //
-    return(HWREGH(ulBase + USB_O_FRAME));
+  //
+  // Return the most recent frame number.
+  //
+  return (HWREGH(ulBase + USB_O_FRAME));
 }
 
 //*****************************************************************************
@@ -3686,25 +3373,20 @@ USBFrameNumberGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBOTGSessionRequest(unsigned long ulBase, tBoolean bStart)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBOTGSessionRequest(unsigned long ulBase, tBoolean bStart) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Start or end the session as directed.
-    //
-    if(bStart)
-    {
-        HWREGB(ulBase + USB_O_DEVCTL) |= USB_DEVCTL_SESSION;
-    }
-    else
-    {
-        HWREGB(ulBase + USB_O_DEVCTL) &= ~USB_DEVCTL_SESSION;
-    }
+  //
+  // Start or end the session as directed.
+  //
+  if (bStart) {
+    HWREGB(ulBase + USB_O_DEVCTL) |= USB_DEVCTL_SESSION;
+  } else {
+    HWREGB(ulBase + USB_O_DEVCTL) &= ~USB_DEVCTL_SESSION;
+  }
 }
 
 //*****************************************************************************
@@ -3722,13 +3404,11 @@ USBOTGSessionRequest(unsigned long ulBase, tBoolean bStart)
 //! \return None.
 //
 //*****************************************************************************
-unsigned long
-USBFIFOAddrGet(unsigned long ulBase, unsigned long ulEndpoint)
-{
-    //
-    // Return the FIFO address for this endpoint.
-    //
-    return(ulBase + USB_O_FIFO0 + (ulEndpoint >> 2));
+unsigned long USBFIFOAddrGet(unsigned long ulBase, unsigned long ulEndpoint) {
+  //
+  // Return the FIFO address for this endpoint.
+  //
+  return (ulBase + USB_O_FIFO0 + (ulEndpoint >> 2));
 }
 
 //*****************************************************************************
@@ -3782,28 +3462,26 @@ USBFIFOAddrGet(unsigned long ulBase, unsigned long ulEndpoint)
 //! \b USB_DUAL_MODE_NONE.
 //
 //*****************************************************************************
-unsigned long
-USBModeGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+unsigned long USBModeGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Checks the current mode in the USB_O_DEVCTL and returns the current
-    // mode.
-    //
-    // USB_OTG_MODE_ASIDE_HOST:  USB_DEVCTL_HOST | USB_DEVCTL_SESSION
-    // USB_OTG_MODE_ASIDE_DEV:   USB_DEVCTL_SESSION
-    // USB_OTG_MODE_BSIDE_HOST:  USB_DEVCTL_DEV | USB_DEVCTL_SESSION |
-    //                           USB_DEVCTL_HOST
-    // USB_OTG_MODE_BSIDE_DEV:   USB_DEVCTL_DEV | USB_DEVCTL_SESSION
-    // USB_OTG_MODE_NONE:        USB_DEVCTL_DEV
-    //
-    return(HWREGB(ulBase + USB_O_DEVCTL) &
-           (USB_DEVCTL_DEV | USB_DEVCTL_HOST | USB_DEVCTL_SESSION |
-            USB_DEVCTL_VBUS_M));
+  //
+  // Checks the current mode in the USB_O_DEVCTL and returns the current
+  // mode.
+  //
+  // USB_OTG_MODE_ASIDE_HOST:  USB_DEVCTL_HOST | USB_DEVCTL_SESSION
+  // USB_OTG_MODE_ASIDE_DEV:   USB_DEVCTL_SESSION
+  // USB_OTG_MODE_BSIDE_HOST:  USB_DEVCTL_DEV | USB_DEVCTL_SESSION |
+  //                           USB_DEVCTL_HOST
+  // USB_OTG_MODE_BSIDE_DEV:   USB_DEVCTL_DEV | USB_DEVCTL_SESSION
+  // USB_OTG_MODE_NONE:        USB_DEVCTL_DEV
+  //
+  return (HWREGB(ulBase + USB_O_DEVCTL) &
+          (USB_DEVCTL_DEV | USB_DEVCTL_HOST | USB_DEVCTL_SESSION |
+           USB_DEVCTL_VBUS_M));
 }
 
 //*****************************************************************************
@@ -3828,47 +3506,45 @@ USBModeGet(unsigned long ulBase)
 //! \return None.
 //!
 //*****************************************************************************
-void
-USBEndpointDMAChannel(unsigned long ulBase, unsigned long ulEndpoint,
-                      unsigned long ulChannel)
-{
-    unsigned long ulMask;
+void USBEndpointDMAChannel(unsigned long ulBase, unsigned long ulEndpoint,
+                           unsigned long ulChannel) {
+  unsigned long ulMask;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
-    ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
-           (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
-           (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
-           (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
-           (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
-           (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
-           (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
-           (ulEndpoint == USB_EP_15));
-    ASSERT(ulChannel <= UDMA_CHANNEL_USBEP3TX);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
+  ASSERT((ulEndpoint == USB_EP_1) || (ulEndpoint == USB_EP_2) ||
+         (ulEndpoint == USB_EP_3) || (ulEndpoint == USB_EP_4) ||
+         (ulEndpoint == USB_EP_5) || (ulEndpoint == USB_EP_6) ||
+         (ulEndpoint == USB_EP_7) || (ulEndpoint == USB_EP_8) ||
+         (ulEndpoint == USB_EP_9) || (ulEndpoint == USB_EP_10) ||
+         (ulEndpoint == USB_EP_11) || (ulEndpoint == USB_EP_12) ||
+         (ulEndpoint == USB_EP_13) || (ulEndpoint == USB_EP_14) ||
+         (ulEndpoint == USB_EP_15));
+  ASSERT(ulChannel <= UDMA_CHANNEL_USBEP3TX);
 
-    //
-    // The input select mask must be shifted into the correct position
-    // based on the channel.
-    //
-    ulMask = 0xf << (ulChannel * 4);
+  //
+  // The input select mask must be shifted into the correct position
+  // based on the channel.
+  //
+  ulMask = 0xf << (ulChannel * 4);
 
-    //
-    // Clear out the current selection for the channel.
-    //
-    ulMask = HWREG(ulBase + USB_O_DMASEL) & (~ulMask);
+  //
+  // Clear out the current selection for the channel.
+  //
+  ulMask = HWREG(ulBase + USB_O_DMASEL) & (~ulMask);
 
-    //
-    // The input select is now shifted into the correct position based on the
-    // channel.
-    //
-    ulMask |= (USB_EP_TO_INDEX(ulEndpoint)) << (ulChannel * 4);
+  //
+  // The input select is now shifted into the correct position based on the
+  // channel.
+  //
+  ulMask |= (USB_EP_TO_INDEX(ulEndpoint)) << (ulChannel * 4);
 
-    //
-    // Write the value out to the register.
-    //
-    HWREG(ulBase + USB_O_DMASEL) = ulMask;
+  //
+  // Write the value out to the register.
+  //
+  HWREG(ulBase + USB_O_DMASEL) = ulMask;
 }
 
 //*****************************************************************************
@@ -3885,21 +3561,19 @@ USBEndpointDMAChannel(unsigned long ulBase, unsigned long ulEndpoint,
 //! \return None.
 //
 //*****************************************************************************
-void
-USBHostMode(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBHostMode(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Force mode in OTG parts that support forcing USB controller mode.
-    // This bit is not writable in USB controllers that do not support
-    // forcing the mode.  Not setting the USB_GPCS_DEVMOD bit makes this a
-    // force of host mode.
-    //
-    HWREGB(ulBase + USB_O_GPCS) = USB_GPCS_DEVMODOTG;
+  //
+  // Force mode in OTG parts that support forcing USB controller mode.
+  // This bit is not writable in USB controllers that do not support
+  // forcing the mode.  Not setting the USB_GPCS_DEVMOD bit makes this a
+  // force of host mode.
+  //
+  HWREGB(ulBase + USB_O_GPCS) = USB_GPCS_DEVMODOTG;
 }
 
 //*****************************************************************************
@@ -3916,18 +3590,16 @@ USBHostMode(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBDevMode(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBDevMode(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Set the USB controller mode to device.
-    //
-    HWREGB(ulBase + USB_O_GPCS) = USB_GPCS_DEVMODOTG | USB_GPCS_DEVMOD;
+  //
+  // Set the USB controller mode to device.
+  //
+  HWREGB(ulBase + USB_O_GPCS) = USB_GPCS_DEVMODOTG | USB_GPCS_DEVMOD;
 }
 
 //*****************************************************************************
@@ -3942,19 +3614,17 @@ USBDevMode(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBOTGMode(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == USB0_BASE);
+void USBOTGMode(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == USB0_BASE);
 
-    //
-    // Disable the override of the USB controller mode when running on an OTG
-    // device.
-    //
-    HWREGB(ulBase + USB_O_GPCS) = 0;
+  //
+  // Disable the override of the USB controller mode when running on an OTG
+  // device.
+  //
+  HWREGB(ulBase + USB_O_GPCS) = 0;
 }
 
 //*****************************************************************************
@@ -3970,13 +3640,11 @@ USBOTGMode(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBPHYPowerOff(unsigned long ulBase)
-{
-    //
-    // Set the PWRDNPHY bit in the PHY, putting it into its low power mode.
-    //
-    HWREGB(ulBase + USB_O_POWER) |= USB_POWER_PWRDNPHY;
+void USBPHYPowerOff(unsigned long ulBase) {
+  //
+  // Set the PWRDNPHY bit in the PHY, putting it into its low power mode.
+  //
+  HWREGB(ulBase + USB_O_POWER) |= USB_POWER_PWRDNPHY;
 }
 
 //*****************************************************************************
@@ -3992,14 +3660,12 @@ USBPHYPowerOff(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-USBPHYPowerOn(unsigned long ulBase)
-{
-    //
-    // Clear the PWRDNPHY bit in the PHY, putting it into normal operating
-    // mode.
-    //
-    HWREGB(ulBase + USB_O_POWER) &= ~USB_POWER_PWRDNPHY;
+void USBPHYPowerOn(unsigned long ulBase) {
+  //
+  // Clear the PWRDNPHY bit in the PHY, putting it into normal operating
+  // mode.
+  //
+  HWREGB(ulBase + USB_O_POWER) &= ~USB_POWER_PWRDNPHY;
 }
 
 //*****************************************************************************
@@ -4017,45 +3683,34 @@ USBPHYPowerOn(unsigned long ulBase)
 //! \return Returns the number of IN or OUT endpoints available.
 //
 //*****************************************************************************
-unsigned long
-USBNumEndpointsGet(unsigned long ulBase)
-{
-    if(CLASS_IS_SANDSTORM || CLASS_IS_FURY)
-    {
-        //
-        // These part families do not support USB.
-        //
-        return(0);
-    }
-    else if(CLASS_IS_DUSTDEVIL)
-    {
-        //
-        // DustDevil class devices support 3 endpoint pairs.
-        //
-        return(3);
-    }
-    else if(CLASS_IS_TEMPEST || CLASS_IS_FIRESTORM)
-    {
-        //
-        // Tempest and Firestorm class devices support 15 endpoint pairs.
-        //
-        return(15);
-    }
-    else if(CLASS_IS_BLIZZARD)
-    {
-        //
-        // Blizzard class devices support 7 endpoint pairs.
-        //
-        return(7);
-    }
-    else
-    {
-        //
-        // The device class is not recognized so default to assuming no USB
-        // support.
-        //
-        return(0);
-    }
+unsigned long USBNumEndpointsGet(unsigned long ulBase) {
+  if (CLASS_IS_SANDSTORM || CLASS_IS_FURY) {
+    //
+    // These part families do not support USB.
+    //
+    return (0);
+  } else if (CLASS_IS_DUSTDEVIL) {
+    //
+    // DustDevil class devices support 3 endpoint pairs.
+    //
+    return (3);
+  } else if (CLASS_IS_TEMPEST || CLASS_IS_FIRESTORM) {
+    //
+    // Tempest and Firestorm class devices support 15 endpoint pairs.
+    //
+    return (15);
+  } else if (CLASS_IS_BLIZZARD) {
+    //
+    // Blizzard class devices support 7 endpoint pairs.
+    //
+    return (7);
+  } else {
+    //
+    // The device class is not recognized so default to assuming no USB
+    // support.
+    //
+    return (0);
+  }
 }
 
 //*****************************************************************************

@@ -1,47 +1,46 @@
-#include "RASDemo.h"
-
 #include <raslib/inc/common.h>
 #include <raslib/inc/linesensor.h>
+
+#include "RASDemo.h"
 
 static tLineSensor *ls;
 static tBoolean initialized = false;
 
 void initI2CLineSensor(void) {
-    tI2C *bus;
+  tI2C *bus;
 
-    // don't initialize this if we've already done so
-    if (initialized) {
-        return;
-    }
+  // don't initialize this if we've already done so
+  if (initialized) {
+    return;
+  }
 
-    initialized = true;
+  initialized = true;
 
-    // initialize an I2C bus with a couple of pins
-    bus = InitializeI2C(PIN_B3, PIN_B2);
+  // initialize an I2C bus with a couple of pins
+  bus = InitializeI2C(PIN_B3, PIN_B2);
 
-    // intialize a line sensor to be on the I2C bus at address 0
-    ls = InitializeI2CLineSensor(bus, 0);
+  // intialize a line sensor to be on the I2C bus at address 0
+  ls = InitializeI2CLineSensor(bus, 0);
 }
 
 void i2cLineSensorDemo(void) {
-    Printf("Press any key to quit\n");
+  Printf("Press any key to quit\n");
 
-    // loop as long as the user doesn't press a key
-    while (!KeyWasPressed()) {
-        int i;
-        float line[8];
+  // loop as long as the user doesn't press a key
+  while (!KeyWasPressed()) {
+    int i;
+    float line[8];
 
-        // put the values of the line sensor into the 'line' array
-        LineSensorReadArray(ls, line);
-        Printf("Line Sensor: [");
+    // put the values of the line sensor into the 'line' array
+    LineSensorReadArray(ls, line);
+    Printf("Line Sensor: [");
 
-        for (i = 0; i < 8; i++) {
-            Printf("%01.4f ", line[i]);
-        }
-
-        Printf("\b]        \r");
+    for (i = 0; i < 8; i++) {
+      Printf("%01.4f ", line[i]);
     }
 
-    Printf("\n");
-}
+    Printf("\b]        \r");
+  }
 
+  Printf("\n");
+}

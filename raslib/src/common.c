@@ -22,58 +22,50 @@
 //*****************************************************************************
 
 #include "raslib/inc/common.h"
-#include "raslib/inc/time.h"
-#include "raslib/inc/gpio.h"
-#include "raslib/inc/uart.h"
 
-#include <StellarisWare/inc/hw_types.h>
-#include <StellarisWare/driverlib/sysctl.h>
 #include <StellarisWare/driverlib/fpu.h>
 #include <StellarisWare/driverlib/interrupt.h>
+#include <StellarisWare/driverlib/sysctl.h>
+#include <StellarisWare/inc/hw_types.h>
 
+#include "raslib/inc/gpio.h"
+#include "raslib/inc/time.h"
+#include "raslib/inc/uart.h"
 
 // Does nothing
 void Dummy(void) {}
 
-
 // The following function sets up the LM4F to use RASLib
 void InitializeMCU(void) {
-    // Enable lazy stacking for interrupt handlers.  This allows floating-point
-    // instructions to be used within interrupt handlers, but at the expense of
-    // extra stack usage.
-    FPULazyStackingEnable();
+  // Enable lazy stacking for interrupt handlers.  This allows floating-point
+  // instructions to be used within interrupt handlers, but at the expense of
+  // extra stack usage.
+  FPULazyStackingEnable();
 
-    // Set the clocking to run from PLL, using external oscillator
-    SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
-                       SYSCTL_XTAL_16MHZ);
+  // Set the clocking to run from PLL, using external oscillator
+  SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
+                 SYSCTL_XTAL_16MHZ);
 
-    //Initialize System Timer
-    InitializeSystemTime();
+  // Initialize System Timer
+  InitializeSystemTime();
 
-    //Initialize GPIO Interrupt Handlers
-    InitializeGPIO();
+  // Initialize GPIO Interrupt Handlers
+  InitializeGPIO();
 
-    //Initialize UART for communication
-    InitializeUART(115200);
-    InitializeDoublePrintHack();
+  // Initialize UART for communication
+  InitializeUART(115200);
+  InitializeDoublePrintHack();
 
-    //Enable global interrupts
-    IntMasterEnable();
+  // Enable global interrupts
+  IntMasterEnable();
 }
-
 
 // Default hard-fault handler sets led
-static void DefaultFault(void) {
-    SetPin(PIN_F1, true);
-}
+static void DefaultFault(void) { SetPin(PIN_F1, true); }
 
 // Hard-fault handles
 static tCallback faultCallback = DefaultFault;
 static void *faultData;
 
-
 // Called on hard-faults
-void PanicHandler(void) {
-    faultCallback(faultData);
-}
-
+void PanicHandler(void) { faultCallback(faultData); }

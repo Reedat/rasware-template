@@ -1,24 +1,23 @@
+#include <raslib/inc/common.h>
+#include <raslib/inc/gpio.h>
+
 #include "RASDemo.h"
 
-#include <raslib/inc/gpio.h>
-#include <raslib/inc/common.h>
-
 void gpioDemo(void) {
-    Printf("Press any key to quit\n");
+  Printf("Press any key to quit\n");
 
-    // loop as long as the user doesn't press a key
-    while (!KeyWasPressed()) {
-        tPin i;
+  // loop as long as the user doesn't press a key
+  while (!KeyWasPressed()) {
+    tPin i;
 
-        // get the values of each pin in port A and display them
-        Printf("port A: ");
-        for (i = PIN_A2; i <= PIN_A7; i++) {
-            Printf(GetPin(i) ? "1" : "0");
-        }
-
-        Printf("\r");
+    // get the values of each pin in port A and display them
+    Printf("port A: ");
+    for (i = PIN_A2; i <= PIN_A7; i++) {
+      Printf(GetPin(i) ? "1" : "0");
     }
 
-    Printf("\n");
-}
+    Printf("\r");
+  }
 
+  Printf("\n");
+}

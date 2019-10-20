@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,28 +44,29 @@
 //
 //*****************************************************************************
 
+#include "driverlib/hibernate.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
+#include "driverlib/sysctl.h"
 #include "inc/hw_hibernate.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/hibernate.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/sysctl.h"
 
 //*****************************************************************************
 //
 // The delay in microseconds for writing to the Hibernation module registers.
 //
 //*****************************************************************************
-#define DELAY_USECS             95
+#define DELAY_USECS 95
 
 //*****************************************************************************
 //
 // The number of processor cycles to execute one pass of the delay loop.
 //
 //*****************************************************************************
-#define LOOP_CYCLES             3
+#define LOOP_CYCLES 3
 
 //*****************************************************************************
 //
@@ -91,29 +92,23 @@ static unsigned long g_ulWriteDelay;
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateWriteComplete(void)
-{
+void HibernateWriteComplete(void) {
+  //
+  // Add a delay here to enforce the required delay between write accesses to
+  // certain Hibernation module registers.
+  //
+  if (CLASS_IS_FURY) {
     //
-    // Add a delay here to enforce the required delay between write accesses to
-    // certain Hibernation module registers.
+    // Delay a fixed time on Fury-class devices
     //
-    if(CLASS_IS_FURY)
-    {
-        //
-        // Delay a fixed time on Fury-class devices
-        //
-        SysCtlDelay(g_ulWriteDelay);
+    SysCtlDelay(g_ulWriteDelay);
+  } else {
+    //
+    // Spin until the write complete bit is set, for later devices.
+    //
+    while (!(HWREG(HIB_CTL) & HIB_CTL_WRC)) {
     }
-    else
-    {
-        //
-        // Spin until the write complete bit is set, for later devices.
-        //
-        while(!(HWREG(HIB_CTL) & HIB_CTL_WRC))
-        {
-        }
-    }
+  }
 }
 
 //*****************************************************************************
@@ -138,33 +133,28 @@ HibernateWriteComplete(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateEnableExpClk(unsigned long ulHibClk)
-{
-    //
-    // Turn on the clock enable bit.
-    //
-    HWREG(HIB_CTL) |= HIB_CTL_CLK32EN;
+void HibernateEnableExpClk(unsigned long ulHibClk) {
+  //
+  // Turn on the clock enable bit.
+  //
+  HWREG(HIB_CTL) |= HIB_CTL_CLK32EN;
 
+  //
+  // For Fury-class devices, compute the number of delay loops that must be
+  // used to achieve the desired delay for writes to the hibernation
+  // registers.  This value is used in calls to SysCtlDelay().
+  //
+  if (CLASS_IS_FURY) {
+    g_ulWriteDelay =
+        (((ulHibClk / 1000) * DELAY_USECS) / (1000L * LOOP_CYCLES));
+    g_ulWriteDelay++;
+  } else {
     //
-    // For Fury-class devices, compute the number of delay loops that must be
-    // used to achieve the desired delay for writes to the hibernation
-    // registers.  This value is used in calls to SysCtlDelay().
+    // Non-fury parts must wait for write complete following register
+    // load (above).
     //
-    if(CLASS_IS_FURY)
-    {
-        g_ulWriteDelay = (((ulHibClk / 1000) * DELAY_USECS) /
-                          (1000L * LOOP_CYCLES));
-        g_ulWriteDelay++;
-    }
-    else
-    {
-        //
-        // Non-fury parts must wait for write complete following register
-        // load (above).
-        //
-        HibernateWriteComplete();
-    }
+    HibernateWriteComplete();
+  }
 }
 
 //*****************************************************************************
@@ -177,18 +167,16 @@ HibernateEnableExpClk(unsigned long ulHibClk)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateDisable(void)
-{
-    //
-    // Turn off the clock enable bit.
-    //
-    HWREG(HIB_CTL) &= ~HIB_CTL_CLK32EN;
+void HibernateDisable(void) {
+  //
+  // Turn off the clock enable bit.
+  //
+  HWREG(HIB_CTL) &= ~HIB_CTL_CLK32EN;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -216,24 +204,22 @@ HibernateDisable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateClockSelect(unsigned long ulClockInput)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulClockInput == HIBERNATE_CLOCK_SEL_RAW) ||
-           (ulClockInput == HIBERNATE_CLOCK_SEL_DIV128));
+void HibernateClockSelect(unsigned long ulClockInput) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulClockInput == HIBERNATE_CLOCK_SEL_RAW) ||
+         (ulClockInput == HIBERNATE_CLOCK_SEL_DIV128));
 
-    //
-    // Set the clock selection bit according to the parameter.
-    //
-    HWREG(HIB_CTL) = ulClockInput | (HWREG(HIB_CTL) & ~HIB_CTL_CLKSEL);
+  //
+  // Set the clock selection bit according to the parameter.
+  //
+  HWREG(HIB_CTL) = ulClockInput | (HWREG(HIB_CTL) & ~HIB_CTL_CLKSEL);
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -270,37 +256,35 @@ HibernateClockSelect(unsigned long ulClockInput)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateClockConfig(unsigned long ulConfig)
-{
-    unsigned long ulHIBCtl;
+void HibernateClockConfig(unsigned long ulConfig) {
+  unsigned long ulHIBCtl;
 
-    ASSERT((ulConfig & (HIBERNATE_OSC_HIGHDRIVE | HIBERNATE_OSC_LOWDRIVE |
-                        HIBERNATE_OSC_DISABLE)) == 0);
+  ASSERT((ulConfig & (HIBERNATE_OSC_HIGHDRIVE | HIBERNATE_OSC_LOWDRIVE |
+                      HIBERNATE_OSC_DISABLE)) == 0);
 
-    ulHIBCtl = HWREG(HIB_CTL);
+  ulHIBCtl = HWREG(HIB_CTL);
 
-    //
-    // Clear the current configuration bits.
-    //
-    ulHIBCtl &= ~(HIBERNATE_OSC_HIGHDRIVE | HIBERNATE_OSC_LOWDRIVE |
-                  HIBERNATE_OSC_DISABLE);
+  //
+  // Clear the current configuration bits.
+  //
+  ulHIBCtl &= ~(HIBERNATE_OSC_HIGHDRIVE | HIBERNATE_OSC_LOWDRIVE |
+                HIBERNATE_OSC_DISABLE);
 
-    //
-    // Set the new configuration bits.
-    //
-    ulHIBCtl |= ulConfig & (HIBERNATE_OSC_HIGHDRIVE | HIBERNATE_OSC_LOWDRIVE |
-                            HIBERNATE_OSC_DISABLE);
+  //
+  // Set the new configuration bits.
+  //
+  ulHIBCtl |= ulConfig & (HIBERNATE_OSC_HIGHDRIVE | HIBERNATE_OSC_LOWDRIVE |
+                          HIBERNATE_OSC_DISABLE);
 
-    //
-    // Set the hibernation clocking configuration.
-    //
-    HWREG(HIB_CTL) = ulHIBCtl;
+  //
+  // Set the hibernation clocking configuration.
+  //
+  HWREG(HIB_CTL) = ulHIBCtl;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -315,18 +299,16 @@ HibernateClockConfig(unsigned long ulConfig)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateRTCEnable(void)
-{
-    //
-    // Turn on the RTC enable bit.
-    //
-    HWREG(HIB_CTL) |= HIB_CTL_RTCEN;
+void HibernateRTCEnable(void) {
+  //
+  // Turn on the RTC enable bit.
+  //
+  HWREG(HIB_CTL) |= HIB_CTL_RTCEN;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -340,18 +322,16 @@ HibernateRTCEnable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateRTCDisable(void)
-{
-    //
-    // Turn off the RTC enable bit.
-    //
-    HWREG(HIB_CTL) &= ~HIB_CTL_RTCEN;
+void HibernateRTCDisable(void) {
+  //
+  // Turn off the RTC enable bit.
+  //
+  HWREG(HIB_CTL) &= ~HIB_CTL_RTCEN;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -374,18 +354,16 @@ HibernateRTCDisable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateBatCheckStart(void)
-{
-    //
-    // Initiated a forced battery check.
-    //
-    HWREG(HIB_CTL) |= HIB_CTL_BATCHK;
+void HibernateBatCheckStart(void) {
+  //
+  // Initiated a forced battery check.
+  //
+  HWREG(HIB_CTL) |= HIB_CTL_BATCHK;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -406,13 +384,11 @@ HibernateBatCheckStart(void)
 //! non-zero if the check is still in process.
 //
 //*****************************************************************************
-unsigned long
-HibernateBatCheckDone(void)
-{
-    //
-    // Read the current state of the batter check.
-    //
-    return(HWREG(HIB_CTL) & HIB_CTL_BATCHK);
+unsigned long HibernateBatCheckDone(void) {
+  //
+  // Read the current state of the batter check.
+  //
+  return (HWREG(HIB_CTL) & HIB_CTL_BATCHK);
 }
 
 //*****************************************************************************
@@ -436,28 +412,25 @@ HibernateBatCheckDone(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateWakeSet(unsigned long ulWakeFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(!(ulWakeFlags & ~(HIBERNATE_WAKE_PIN | HIBERNATE_WAKE_RTC |
-                             HIBERNATE_WAKE_LOW_BAT)));
+void HibernateWakeSet(unsigned long ulWakeFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(!(ulWakeFlags & ~(HIBERNATE_WAKE_PIN | HIBERNATE_WAKE_RTC |
+                           HIBERNATE_WAKE_LOW_BAT)));
 
-    //
-    // Set the specified wake flags in the control register.
-    //
-    HWREG(HIB_CTL) = (ulWakeFlags |
-                      (HWREG(HIB_CTL) & ~(HIBERNATE_WAKE_PIN |
-                                          HIBERNATE_WAKE_RTC |
-                                          HIBERNATE_WAKE_LOW_BAT)));
+  //
+  // Set the specified wake flags in the control register.
+  //
+  HWREG(HIB_CTL) =
+      (ulWakeFlags |
+       (HWREG(HIB_CTL) &
+        ~(HIBERNATE_WAKE_PIN | HIBERNATE_WAKE_RTC | HIBERNATE_WAKE_LOW_BAT)));
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
-
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -479,15 +452,13 @@ HibernateWakeSet(unsigned long ulWakeFlags)
 //! \return Returns flags indicating the configured wake conditions.
 //
 //*****************************************************************************
-unsigned long
-HibernateWakeGet(void)
-{
-    //
-    // Read the wake bits from the control register and return those bits to
-    // the caller.
-    //
-    return(HWREG(HIB_CTL) & (HIBERNATE_WAKE_PIN | HIBERNATE_WAKE_RTC |
-                             HIBERNATE_WAKE_LOW_BAT));
+unsigned long HibernateWakeGet(void) {
+  //
+  // Read the wake bits from the control register and return those bits to
+  // the caller.
+  //
+  return (HWREG(HIB_CTL) &
+          (HIBERNATE_WAKE_PIN | HIBERNATE_WAKE_RTC | HIBERNATE_WAKE_LOW_BAT));
 }
 
 //*****************************************************************************
@@ -528,26 +499,24 @@ HibernateWakeGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateLowBatSet(unsigned long ulLowBatFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(!(ulLowBatFlags & ~(HIB_CTL_VBATSEL_M | HIBERNATE_LOW_BAT_ABORT)));
+void HibernateLowBatSet(unsigned long ulLowBatFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(!(ulLowBatFlags & ~(HIB_CTL_VBATSEL_M | HIBERNATE_LOW_BAT_ABORT)));
 
-    //
-    // Set the low-battery detect and abort bits in the control register,
-    // according to the parameter.
-    //
-    HWREG(HIB_CTL) = (ulLowBatFlags |
-                      (HWREG(HIB_CTL) & ~(HIB_CTL_VBATSEL_M
-                                          | HIBERNATE_LOW_BAT_ABORT)));
+  //
+  // Set the low-battery detect and abort bits in the control register,
+  // according to the parameter.
+  //
+  HWREG(HIB_CTL) =
+      (ulLowBatFlags |
+       (HWREG(HIB_CTL) & ~(HIB_CTL_VBATSEL_M | HIBERNATE_LOW_BAT_ABORT)));
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -563,14 +532,12 @@ HibernateLowBatSet(unsigned long ulLowBatFlags)
 //! \return Returns a value indicating the configured low-battery detection.
 //
 //*****************************************************************************
-unsigned long
-HibernateLowBatGet(void)
-{
-    //
-    // Read the supported low bat bits from the control register and return
-    // those bits to the caller.
-    //
-    return(HWREG(HIB_CTL) & (HIB_CTL_VBATSEL_M | HIBERNATE_LOW_BAT_ABORT));
+unsigned long HibernateLowBatGet(void) {
+  //
+  // Read the supported low bat bits from the control register and return
+  // those bits to the caller.
+  //
+  return (HWREG(HIB_CTL) & (HIB_CTL_VBATSEL_M | HIBERNATE_LOW_BAT_ABORT));
 }
 
 //*****************************************************************************
@@ -586,18 +553,16 @@ HibernateLowBatGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateRTCSet(unsigned long ulRTCValue)
-{
-    //
-    // Write the new RTC value to the RTC load register.
-    //
-    HWREG(HIB_RTCLD) = ulRTCValue;
+void HibernateRTCSet(unsigned long ulRTCValue) {
+  //
+  // Write the new RTC value to the RTC load register.
+  //
+  HWREG(HIB_RTCLD) = ulRTCValue;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -609,13 +574,11 @@ HibernateRTCSet(unsigned long ulRTCValue)
 //! \return Returns the value of the RTC counter in seconds.
 //
 //*****************************************************************************
-unsigned long
-HibernateRTCGet(void)
-{
-    //
-    // Return the value of the RTC counter register to the caller.
-    //
-    return(HWREG(HIB_RTCC));
+unsigned long HibernateRTCGet(void) {
+  //
+  // Return the value of the RTC counter register to the caller.
+  //
+  return (HWREG(HIB_RTCC));
 }
 
 //*****************************************************************************
@@ -632,18 +595,16 @@ HibernateRTCGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateRTCMatch0Set(unsigned long ulMatch)
-{
-    //
-    // Write the new match value to the match register.
-    //
-    HWREG(HIB_RTCM0) = ulMatch;
+void HibernateRTCMatch0Set(unsigned long ulMatch) {
+  //
+  // Write the new match value to the match register.
+  //
+  HWREG(HIB_RTCM0) = ulMatch;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -655,13 +616,11 @@ HibernateRTCMatch0Set(unsigned long ulMatch)
 //! \return Returns the value of the match register.
 //
 //*****************************************************************************
-unsigned long
-HibernateRTCMatch0Get(void)
-{
-    //
-    // Return the value of the match register to the caller.
-    //
-    return(HWREG(HIB_RTCM0));
+unsigned long HibernateRTCMatch0Get(void) {
+  //
+  // Return the value of the match register to the caller.
+  //
+  return (HWREG(HIB_RTCM0));
 }
 
 //*****************************************************************************
@@ -682,18 +641,16 @@ HibernateRTCMatch0Get(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateRTCMatch1Set(unsigned long ulMatch)
-{
-    //
-    // Write the new match value to the match register.
-    //
-    HWREG(HIB_RTCM1) = ulMatch;
+void HibernateRTCMatch1Set(unsigned long ulMatch) {
+  //
+  // Write the new match value to the match register.
+  //
+  HWREG(HIB_RTCM1) = ulMatch;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -709,13 +666,11 @@ HibernateRTCMatch1Set(unsigned long ulMatch)
 //! \return Returns the value of the match register.
 //
 //*****************************************************************************
-unsigned long
-HibernateRTCMatch1Get(void)
-{
-    //
-    // Return the value of the match register to the caller.
-    //
-    return(HWREG(HIB_RTCM1));
+unsigned long HibernateRTCMatch1Get(void) {
+  //
+  // Return the value of the match register to the caller.
+  //
+  return (HWREG(HIB_RTCM1));
 }
 
 //*****************************************************************************
@@ -737,18 +692,16 @@ HibernateRTCMatch1Get(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateRTCSSMatch0Set(unsigned long ulMatch)
-{
-    //
-    // Write the new sub second match value to the sub second match register.
-    //
-    HWREG(HIB_RTCSS) = ulMatch << HIB_RTCSS_RTCSSM_S;
+void HibernateRTCSSMatch0Set(unsigned long ulMatch) {
+  //
+  // Write the new sub second match value to the sub second match register.
+  //
+  HWREG(HIB_RTCSS) = ulMatch << HIB_RTCSS_RTCSSM_S;
 
-    //
-    // Wait for write complete to be signaled on later devices.
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write complete to be signaled on later devices.
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -765,13 +718,11 @@ HibernateRTCSSMatch0Set(unsigned long ulMatch)
 //! \return Returns the value of the sub section match register.
 //
 //*****************************************************************************
-unsigned long
-HibernateRTCSSMatch0Get(void)
-{
-    //
-    // Read the current second RTC count.
-    //
-    return(HWREG(HIB_RTCSS) >> HIB_RTCSS_RTCSSM_S);
+unsigned long HibernateRTCSSMatch0Get(void) {
+  //
+  // Read the current second RTC count.
+  //
+  return (HWREG(HIB_RTCSS) >> HIB_RTCSS_RTCSSM_S);
 }
 
 //*****************************************************************************
@@ -788,13 +739,11 @@ HibernateRTCSSMatch0Get(void)
 //! \return The current RTC sub second count in 1/32768 seconds.
 //
 //*****************************************************************************
-unsigned long
-HibernateRTCSSGet(void)
-{
-    //
-    // Read the current second RTC count.
-    //
-    return(HWREG(HIB_RTCSS) & HIB_RTCSS_RTCSSC_M);
+unsigned long HibernateRTCSSGet(void) {
+  //
+  // Read the current second RTC count.
+  //
+  return (HWREG(HIB_RTCSS) & HIB_RTCSS_RTCSSC_M);
 }
 
 //*****************************************************************************
@@ -815,23 +764,21 @@ HibernateRTCSSGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateRTCTrimSet(unsigned long ulTrim)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulTrim < 0x10000);
+void HibernateRTCTrimSet(unsigned long ulTrim) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulTrim < 0x10000);
 
-    //
-    // Write the new trim value to the trim register.
-    //
-    HWREG(HIB_RTCT) = ulTrim;
+  //
+  // Write the new trim value to the trim register.
+  //
+  HWREG(HIB_RTCT) = ulTrim;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -845,13 +792,11 @@ HibernateRTCTrimSet(unsigned long ulTrim)
 //! \return None.
 //
 //*****************************************************************************
-unsigned long
-HibernateRTCTrimGet(void)
-{
-    //
-    // Return the value of the trim register to the caller.
-    //
-    return(HWREG(HIB_RTCT));
+unsigned long HibernateRTCTrimGet(void) {
+  //
+  // Return the value of the trim register to the caller.
+  //
+  return (HWREG(HIB_RTCT));
 }
 
 //*****************************************************************************
@@ -877,32 +822,29 @@ HibernateRTCTrimGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateDataSet(unsigned long *pulData, unsigned long ulCount)
-{
-    unsigned long ulIdx;
+void HibernateDataSet(unsigned long *pulData, unsigned long ulCount) {
+  unsigned long ulIdx;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulCount <= 64);
+  ASSERT(pulData != 0);
+
+  //
+  // Loop through all the words to be stored, storing one at a time.
+  //
+  for (ulIdx = 0; ulIdx < ulCount; ulIdx++) {
+    //
+    // Write a word to the battery-backed storage area.
+    //
+    HWREG(HIB_DATA + (ulIdx * 4)) = pulData[ulIdx];
 
     //
-    // Check the arguments.
+    // Wait for write completion
     //
-    ASSERT(ulCount <= 64);
-    ASSERT(pulData != 0);
-
-    //
-    // Loop through all the words to be stored, storing one at a time.
-    //
-    for(ulIdx = 0; ulIdx < ulCount; ulIdx++)
-    {
-        //
-        // Write a word to the battery-backed storage area.
-        //
-        HWREG(HIB_DATA + (ulIdx * 4)) = pulData[ulIdx];
-
-        //
-        // Wait for write completion
-        //
-        HibernateWriteComplete();
-    }
+    HibernateWriteComplete();
+  }
 }
 
 //*****************************************************************************
@@ -928,28 +870,25 @@ HibernateDataSet(unsigned long *pulData, unsigned long ulCount)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateDataGet(unsigned long *pulData, unsigned long ulCount)
-{
-    unsigned long ulIdx;
+void HibernateDataGet(unsigned long *pulData, unsigned long ulCount) {
+  unsigned long ulIdx;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulCount <= 64);
-    ASSERT(pulData != 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulCount <= 64);
+  ASSERT(pulData != 0);
 
+  //
+  // Loop through all the words to be restored, reading one at a time.
+  //
+  for (ulIdx = 0; ulIdx < ulCount; ulIdx++) {
     //
-    // Loop through all the words to be restored, reading one at a time.
+    // Read a word from the battery-backed storage area.  No delay is
+    // required between reads.
     //
-    for(ulIdx = 0; ulIdx < ulCount; ulIdx++)
-    {
-        //
-        // Read a word from the battery-backed storage area.  No delay is
-        // required between reads.
-        //
-        pulData[ulIdx] = HWREG(HIB_DATA + (ulIdx * 4));
-    }
+    pulData[ulIdx] = HWREG(HIB_DATA + (ulIdx * 4));
+  }
 }
 
 //*****************************************************************************
@@ -987,18 +926,16 @@ HibernateDataGet(unsigned long *pulData, unsigned long ulCount)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateRequest(void)
-{
-    //
-    // Set the bit in the control register to cut main power to the processor.
-    //
-    HWREG(HIB_CTL) |= HIB_CTL_HIBREQ;
+void HibernateRequest(void) {
+  //
+  // Set the bit in the control register to cut main power to the processor.
+  //
+  HWREG(HIB_CTL) |= HIB_CTL_HIBREQ;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -1027,26 +964,24 @@ HibernateRequest(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateIntEnable(unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(!(ulIntFlags & ~(HIBERNATE_INT_PIN_WAKE | HIBERNATE_INT_LOW_BAT |
-                            HIBERNATE_INT_RTC_MATCH_0 |
-                            HIBERNATE_INT_RTC_MATCH_1 |
-                            HIBERNATE_INT_WR_COMPLETE)));
+void HibernateIntEnable(unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(
+      !(ulIntFlags & ~(HIBERNATE_INT_PIN_WAKE | HIBERNATE_INT_LOW_BAT |
+                       HIBERNATE_INT_RTC_MATCH_0 | HIBERNATE_INT_RTC_MATCH_1 |
+                       HIBERNATE_INT_WR_COMPLETE)));
 
-    //
-    // Set the specified interrupt mask bits.
-    //
-    HWREG(HIB_IM) |= ulIntFlags;
+  //
+  // Set the specified interrupt mask bits.
+  //
+  HWREG(HIB_IM) |= ulIntFlags;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -1064,26 +999,24 @@ HibernateIntEnable(unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateIntDisable(unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(!(ulIntFlags & ~(HIBERNATE_INT_PIN_WAKE | HIBERNATE_INT_LOW_BAT |
-                            HIBERNATE_INT_RTC_MATCH_0 |
-                            HIBERNATE_INT_RTC_MATCH_1 |
-                            HIBERNATE_INT_WR_COMPLETE)));
+void HibernateIntDisable(unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(
+      !(ulIntFlags & ~(HIBERNATE_INT_PIN_WAKE | HIBERNATE_INT_LOW_BAT |
+                       HIBERNATE_INT_RTC_MATCH_0 | HIBERNATE_INT_RTC_MATCH_1 |
+                       HIBERNATE_INT_WR_COMPLETE)));
 
-    //
-    // Clear the specified interrupt mask bits.
-    //
-    HWREG(HIB_IM) &= ~ulIntFlags;
+  //
+  // Clear the specified interrupt mask bits.
+  //
+  HWREG(HIB_IM) &= ~ulIntFlags;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -1104,18 +1037,16 @@ HibernateIntDisable(unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateIntRegister(void (*pfnHandler)(void))
-{
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(INT_HIBERNATE, pfnHandler);
+void HibernateIntRegister(void (*pfnHandler)(void)) {
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(INT_HIBERNATE, pfnHandler);
 
-    //
-    // Enable the hibernate module interrupt.
-    //
-    IntEnable(INT_HIBERNATE);
+  //
+  // Enable the hibernate module interrupt.
+  //
+  IntEnable(INT_HIBERNATE);
 }
 
 //*****************************************************************************
@@ -1132,18 +1063,16 @@ HibernateIntRegister(void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateIntUnregister(void)
-{
-    //
-    // Disable the hibernate interrupt.
-    //
-    IntDisable(INT_HIBERNATE);
+void HibernateIntUnregister(void) {
+  //
+  // Disable the hibernate interrupt.
+  //
+  IntDisable(INT_HIBERNATE);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_HIBERNATE);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_HIBERNATE);
 }
 
 //*****************************************************************************
@@ -1161,20 +1090,15 @@ HibernateIntUnregister(void)
 //! described in the HibernateIntEnable() function.
 //
 //*****************************************************************************
-unsigned long
-HibernateIntStatus(tBoolean bMasked)
-{
-    //
-    // Read and return the Hibernation module raw or masked interrupt status.
-    //
-    if(bMasked == true)
-    {
-        return(HWREG(HIB_MIS) & 0x1f);
-    }
-    else
-    {
-        return(HWREG(HIB_RIS) & 0x1f);
-    }
+unsigned long HibernateIntStatus(tBoolean bMasked) {
+  //
+  // Read and return the Hibernation module raw or masked interrupt status.
+  //
+  if (bMasked == true) {
+    return (HWREG(HIB_MIS) & 0x1f);
+  } else {
+    return (HWREG(HIB_RIS) & 0x1f);
+  }
 }
 
 //*****************************************************************************
@@ -1202,26 +1126,24 @@ HibernateIntStatus(tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateIntClear(unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(!(ulIntFlags & ~(HIBERNATE_INT_PIN_WAKE | HIBERNATE_INT_LOW_BAT |
-                            HIBERNATE_INT_RTC_MATCH_0 |
-                            HIBERNATE_INT_RTC_MATCH_1 |
-                            HIBERNATE_INT_WR_COMPLETE)));
+void HibernateIntClear(unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(
+      !(ulIntFlags & ~(HIBERNATE_INT_PIN_WAKE | HIBERNATE_INT_LOW_BAT |
+                       HIBERNATE_INT_RTC_MATCH_0 | HIBERNATE_INT_RTC_MATCH_1 |
+                       HIBERNATE_INT_WR_COMPLETE)));
 
-    //
-    // Write the specified interrupt bits into the interrupt clear register.
-    //
-    HWREG(HIB_IC) |= ulIntFlags;
+  //
+  // Write the specified interrupt bits into the interrupt clear register.
+  //
+  HWREG(HIB_IC) |= ulIntFlags;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -1245,13 +1167,11 @@ HibernateIntClear(unsigned long ulIntFlags)
 //! not.
 //
 //*****************************************************************************
-unsigned long
-HibernateIsActive(void)
-{
-    //
-    // Read the control register, and return true if the module is enabled.
-    //
-    return(HWREG(HIB_CTL) & HIB_CTL_CLK32EN ? 1 : 0);
+unsigned long HibernateIsActive(void) {
+  //
+  // Read the control register, and return true if the module is enabled.
+  //
+  return (HWREG(HIB_CTL) & HIB_CTL_CLK32EN ? 1 : 0);
 }
 
 //*****************************************************************************
@@ -1273,18 +1193,16 @@ HibernateIsActive(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateGPIORetentionEnable(void)
-{
-    //
-    // Enable power to the pads so that pin state can be retained.
-    //
-    HWREG(HIB_CTL) |= HIB_CTL_VDD3ON;
+void HibernateGPIORetentionEnable(void) {
+  //
+  // Enable power to the pads so that pin state can be retained.
+  //
+  HWREG(HIB_CTL) |= HIB_CTL_VDD3ON;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -1304,18 +1222,16 @@ HibernateGPIORetentionEnable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-HibernateGPIORetentionDisable(void)
-{
-    //
-    // Disable the hibernate power to the pads.
-    //
-    HWREG(HIB_CTL) &= ~HIB_CTL_VDD3ON;
+void HibernateGPIORetentionDisable(void) {
+  //
+  // Disable the hibernate power to the pads.
+  //
+  HWREG(HIB_CTL) &= ~HIB_CTL_VDD3ON;
 
-    //
-    // Wait for write completion
-    //
-    HibernateWriteComplete();
+  //
+  // Wait for write completion
+  //
+  HibernateWriteComplete();
 }
 
 //*****************************************************************************
@@ -1333,17 +1249,14 @@ HibernateGPIORetentionDisable(void)
 //! retention is disabled.
 //
 //*****************************************************************************
-tBoolean
-HibernateGPIORetentionGet(void)
-{
-    //
-    // Read the current GPIO retention configuration.
-    //
-    if(HWREG(HIB_CTL) & HIB_CTL_VDD3ON)
-    {
-        return(true);
-    }
-    return(false);
+tBoolean HibernateGPIORetentionGet(void) {
+  //
+  // Read the current GPIO retention configuration.
+  //
+  if (HWREG(HIB_CTL) & HIB_CTL_VDD3ON) {
+    return (true);
+  }
+  return (false);
 }
 
 //*****************************************************************************

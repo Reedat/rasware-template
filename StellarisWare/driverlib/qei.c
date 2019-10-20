@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2005-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,13 +44,14 @@
 //
 //*****************************************************************************
 
+#include "driverlib/qei.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_qei.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/qei.h"
 
 //*****************************************************************************
 //
@@ -66,18 +67,16 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+void QEIEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Enable the QEI module.
-    //
-    HWREG(ulBase + QEI_O_CTL) |= QEI_CTL_ENABLE;
+  //
+  // Enable the QEI module.
+  //
+  HWREG(ulBase + QEI_O_CTL) |= QEI_CTL_ENABLE;
 }
 
 //*****************************************************************************
@@ -91,18 +90,16 @@ QEIEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+void QEIDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Disable the QEI module.
-    //
-    HWREG(ulBase + QEI_O_CTL) &= ~(QEI_CTL_ENABLE);
+  //
+  // Disable the QEI module.
+  //
+  HWREG(ulBase + QEI_O_CTL) &= ~(QEI_CTL_ENABLE);
 }
 
 //*****************************************************************************
@@ -136,27 +133,25 @@ QEIDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIConfigure(unsigned long ulBase, unsigned long ulConfig,
-             unsigned long ulMaxPosition)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+void QEIConfigure(unsigned long ulBase, unsigned long ulConfig,
+                  unsigned long ulMaxPosition) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Write the new configuration to the hardware.
-    //
-    HWREG(ulBase + QEI_O_CTL) = ((HWREG(ulBase + QEI_O_CTL) &
-                                  ~(QEI_CTL_CAPMODE | QEI_CTL_RESMODE |
-                                    QEI_CTL_SIGMODE | QEI_CTL_SWAP)) |
-                                 ulConfig);
+  //
+  // Write the new configuration to the hardware.
+  //
+  HWREG(ulBase + QEI_O_CTL) =
+      ((HWREG(ulBase + QEI_O_CTL) &
+        ~(QEI_CTL_CAPMODE | QEI_CTL_RESMODE | QEI_CTL_SIGMODE | QEI_CTL_SWAP)) |
+       ulConfig);
 
-    //
-    // Set the maximum position.
-    //
-    HWREG(ulBase + QEI_O_MAXPOS) = ulMaxPosition;
+  //
+  // Set the maximum position.
+  //
+  HWREG(ulBase + QEI_O_MAXPOS) = ulMaxPosition;
 }
 
 //*****************************************************************************
@@ -174,18 +169,16 @@ QEIConfigure(unsigned long ulBase, unsigned long ulConfig,
 //! \return The current position of the encoder.
 //
 //*****************************************************************************
-unsigned long
-QEIPositionGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+unsigned long QEIPositionGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Return the current position counter.
-    //
-    return(HWREG(ulBase + QEI_O_POS));
+  //
+  // Return the current position counter.
+  //
+  return (HWREG(ulBase + QEI_O_POS));
 }
 
 //*****************************************************************************
@@ -201,18 +194,16 @@ QEIPositionGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIPositionSet(unsigned long ulBase, unsigned long ulPosition)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+void QEIPositionSet(unsigned long ulBase, unsigned long ulPosition) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Set the position counter.
-    //
-    HWREG(ulBase + QEI_O_POS) = ulPosition;
+  //
+  // Set the position counter.
+  //
+  HWREG(ulBase + QEI_O_POS) = ulPosition;
 }
 
 //*****************************************************************************
@@ -230,18 +221,16 @@ QEIPositionSet(unsigned long ulBase, unsigned long ulPosition)
 //! reverse direction.
 //
 //*****************************************************************************
-long
-QEIDirectionGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+long QEIDirectionGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Return the direction of rotation.
-    //
-    return((HWREG(ulBase + QEI_O_STAT) & QEI_STAT_DIRECTION) ? -1 : 1);
+  //
+  // Return the direction of rotation.
+  //
+  return ((HWREG(ulBase + QEI_O_STAT) & QEI_STAT_DIRECTION) ? -1 : 1);
 }
 
 //*****************************************************************************
@@ -257,18 +246,16 @@ QEIDirectionGet(unsigned long ulBase)
 //! \return Returns \b true if an error has occurred and \b false otherwise.
 //
 //*****************************************************************************
-tBoolean
-QEIErrorGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+tBoolean QEIErrorGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Return the error indicator.
-    //
-    return((HWREG(ulBase + QEI_O_STAT) & QEI_STAT_ERROR) ? true : false);
+  //
+  // Return the error indicator.
+  //
+  return ((HWREG(ulBase + QEI_O_STAT) & QEI_STAT_ERROR) ? true : false);
 }
 
 //*****************************************************************************
@@ -286,18 +273,16 @@ QEIErrorGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIVelocityEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+void QEIVelocityEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Enable the velocity capture.
-    //
-    HWREG(ulBase + QEI_O_CTL) |= QEI_CTL_VELEN;
+  //
+  // Enable the velocity capture.
+  //
+  HWREG(ulBase + QEI_O_CTL) |= QEI_CTL_VELEN;
 }
 
 //*****************************************************************************
@@ -312,18 +297,16 @@ QEIVelocityEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIVelocityDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+void QEIVelocityDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Disable the velocity capture.
-    //
-    HWREG(ulBase + QEI_O_CTL) &= ~(QEI_CTL_VELEN);
+  //
+  // Disable the velocity capture.
+  //
+  HWREG(ulBase + QEI_O_CTL) &= ~(QEI_CTL_VELEN);
 }
 
 //*****************************************************************************
@@ -347,27 +330,25 @@ QEIVelocityDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIVelocityConfigure(unsigned long ulBase, unsigned long ulPreDiv,
-                     unsigned long ulPeriod)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
-    ASSERT(!(ulPreDiv & ~(QEI_CTL_VELDIV_M)));
-    ASSERT(ulPeriod != 0);
+void QEIVelocityConfigure(unsigned long ulBase, unsigned long ulPreDiv,
+                          unsigned long ulPeriod) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+  ASSERT(!(ulPreDiv & ~(QEI_CTL_VELDIV_M)));
+  ASSERT(ulPeriod != 0);
 
-    //
-    // Set the velocity predivider.
-    //
-    HWREG(ulBase + QEI_O_CTL) = ((HWREG(ulBase + QEI_O_CTL) &
-                                  ~(QEI_CTL_VELDIV_M)) | ulPreDiv);
+  //
+  // Set the velocity predivider.
+  //
+  HWREG(ulBase + QEI_O_CTL) =
+      ((HWREG(ulBase + QEI_O_CTL) & ~(QEI_CTL_VELDIV_M)) | ulPreDiv);
 
-    //
-    // Set the timer period.
-    //
-    HWREG(ulBase + QEI_O_LOAD) = ulPeriod - 1;
+  //
+  // Set the timer period.
+  //
+  HWREG(ulBase + QEI_O_LOAD) = ulPeriod - 1;
 }
 
 //*****************************************************************************
@@ -385,18 +366,16 @@ QEIVelocityConfigure(unsigned long ulBase, unsigned long ulPreDiv,
 //! \return Returns the number of pulses captured in the given time period.
 //
 //*****************************************************************************
-unsigned long
-QEIVelocityGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+unsigned long QEIVelocityGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Return the speed capture value.
-    //
-    return(HWREG(ulBase + QEI_O_SPEED));
+  //
+  // Return the speed capture value.
+  //
+  return (HWREG(ulBase + QEI_O_SPEED));
 }
 
 //*****************************************************************************
@@ -419,30 +398,28 @@ QEIVelocityGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
-{
-    unsigned long ulInt;
+void QEIIntRegister(unsigned long ulBase, void (*pfnHandler)(void)) {
+  unsigned long ulInt;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Determine the interrupt number based on the QEI module.
-    //
-    ulInt = (ulBase == QEI0_BASE) ? INT_QEI0 : INT_QEI1;
+  //
+  // Determine the interrupt number based on the QEI module.
+  //
+  ulInt = (ulBase == QEI0_BASE) ? INT_QEI0 : INT_QEI1;
 
-    //
-    // Register the interrupt handler, returning an error if an error occurs.
-    //
-    IntRegister(ulInt, pfnHandler);
+  //
+  // Register the interrupt handler, returning an error if an error occurs.
+  //
+  IntRegister(ulInt, pfnHandler);
 
-    //
-    // Enable the quadrature encoder interrupt.
-    //
-    IntEnable(ulInt);
+  //
+  // Enable the quadrature encoder interrupt.
+  //
+  IntEnable(ulInt);
 }
 
 //*****************************************************************************
@@ -461,30 +438,28 @@ QEIIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIIntUnregister(unsigned long ulBase)
-{
-    unsigned long ulInt;
+void QEIIntUnregister(unsigned long ulBase) {
+  unsigned long ulInt;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Determine the interrupt number based on the QEI module.
-    //
-    ulInt = (ulBase == QEI0_BASE) ? INT_QEI0 : INT_QEI1;
+  //
+  // Determine the interrupt number based on the QEI module.
+  //
+  ulInt = (ulBase == QEI0_BASE) ? INT_QEI0 : INT_QEI1;
 
-    //
-    // Disable the interrupt.
-    //
-    IntDisable(ulInt);
+  //
+  // Disable the interrupt.
+  //
+  IntDisable(ulInt);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(ulInt);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(ulInt);
 }
 
 //*****************************************************************************
@@ -503,18 +478,16 @@ QEIIntUnregister(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+void QEIIntEnable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Enable the specified interrupts.
-    //
-    HWREG(ulBase + QEI_O_INTEN) |= ulIntFlags;
+  //
+  // Enable the specified interrupts.
+  //
+  HWREG(ulBase + QEI_O_INTEN) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -533,18 +506,16 @@ QEIIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+void QEIIntDisable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Disable the specified interrupts.
-    //
-    HWREG(ulBase + QEI_O_INTEN) &= ~(ulIntFlags);
+  //
+  // Disable the specified interrupts.
+  //
+  HWREG(ulBase + QEI_O_INTEN) &= ~(ulIntFlags);
 }
 
 //*****************************************************************************
@@ -563,26 +534,21 @@ QEIIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \b QEI_INTERROR, \b QEI_INTDIR, \b QEI_INTTIMER, and \b QEI_INTINDEX.
 //
 //*****************************************************************************
-unsigned long
-QEIIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+unsigned long QEIIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(ulBase + QEI_O_ISC));
-    }
-    else
-    {
-        return(HWREG(ulBase + QEI_O_RIS));
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(ulBase + QEI_O_ISC));
+  } else {
+    return (HWREG(ulBase + QEI_O_RIS));
+  }
 }
 
 //*****************************************************************************
@@ -611,18 +577,16 @@ QEIIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-QEIIntClear(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
+void QEIIntClear(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == QEI0_BASE) || (ulBase == QEI1_BASE));
 
-    //
-    // Clear the requested interrupt sources.
-    //
-    HWREG(ulBase + QEI_O_ISC) = ulIntFlags;
+  //
+  // Clear the requested interrupt sources.
+  //
+  HWREG(ulBase + QEI_O_ISC) = ulIntFlags;
 }
 
 //*****************************************************************************

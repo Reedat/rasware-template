@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2006-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,13 +44,14 @@
 //
 //*****************************************************************************
 
+#include "driverlib/ethernet.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_ethernet.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/ethernet.h"
-#include "driverlib/interrupt.h"
 
 //*****************************************************************************
 //
@@ -82,37 +83,35 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetInitExpClk(unsigned long ulBase, unsigned long ulEthClk)
-{
-    unsigned long ulDiv;
+void EthernetInitExpClk(unsigned long ulBase, unsigned long ulEthClk) {
+  unsigned long ulDiv;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Set the Management Clock Divider register for access to the PHY
-    // register set (via EthernetPHYRead/Write).
-    //
-    // The MDC clock divided down from the system clock using the following
-    // formula.  A maximum of 2.5MHz is allowed for F(mdc).
-    //
-    //      F(mdc) = F(sys) / (2 * (div + 1))
-    //      div = (F(sys) / (2 * F(mdc))) - 1
-    //      div = (F(sys) / 2 / F(mdc)) - 1
-    //
-    // Note: Because we should round up, to ensure we don't violate the
-    // maximum clock speed, we can simplify this as follows:
-    //
-    //      div = F(sys) / 2 / F(mdc)
-    //
-    // For example, given a system clock of 6.0MHz, and a div value of 1,
-    // the mdc clock would be programmed as 1.5 MHz.
-    //
-    ulDiv = (ulEthClk / 2) / 2500000;
-    HWREG(ulBase + MAC_O_MDV) = (ulDiv & MAC_MDV_DIV_M);
+  //
+  // Set the Management Clock Divider register for access to the PHY
+  // register set (via EthernetPHYRead/Write).
+  //
+  // The MDC clock divided down from the system clock using the following
+  // formula.  A maximum of 2.5MHz is allowed for F(mdc).
+  //
+  //      F(mdc) = F(sys) / (2 * (div + 1))
+  //      div = (F(sys) / (2 * F(mdc))) - 1
+  //      div = (F(sys) / 2 / F(mdc)) - 1
+  //
+  // Note: Because we should round up, to ensure we don't violate the
+  // maximum clock speed, we can simplify this as follows:
+  //
+  //      div = F(sys) / 2 / F(mdc)
+  //
+  // For example, given a system clock of 6.0MHz, and a div value of 1,
+  // the mdc clock would be programmed as 1.5 MHz.
+  //
+  ulDiv = (ulEthClk / 2) / 2500000;
+  HWREG(ulBase + MAC_O_MDV) = (ulDiv & MAC_MDV_DIV_M);
 }
 
 //*****************************************************************************
@@ -155,43 +154,40 @@ EthernetInitExpClk(unsigned long ulBase, unsigned long ulEthClk)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetConfigSet(unsigned long ulBase, unsigned long ulConfig)
-{
-    unsigned long ulTemp;
+void EthernetConfigSet(unsigned long ulBase, unsigned long ulConfig) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT((ulConfig & ~(ETH_CFG_TX_DPLXEN | ETH_CFG_TX_CRCEN |
-                         ETH_CFG_TX_PADEN | ETH_CFG_RX_BADCRCDIS |
-                         ETH_CFG_RX_PRMSEN | ETH_CFG_RX_AMULEN |
-                         ETH_CFG_TS_TSEN)) == 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT((ulConfig & ~(ETH_CFG_TX_DPLXEN | ETH_CFG_TX_CRCEN | ETH_CFG_TX_PADEN |
+                       ETH_CFG_RX_BADCRCDIS | ETH_CFG_RX_PRMSEN |
+                       ETH_CFG_RX_AMULEN | ETH_CFG_TS_TSEN)) == 0);
 
-    //
-    // Setup the Transmit Control Register.
-    //
-    ulTemp  = HWREG(ulBase + MAC_O_TCTL);
-    ulTemp &= ~(MAC_TCTL_DUPLEX | MAC_TCTL_CRC | MAC_TCTL_PADEN);
-    ulTemp |= ulConfig & 0x0FF;
-    HWREG(ulBase + MAC_O_TCTL) = ulTemp;
+  //
+  // Setup the Transmit Control Register.
+  //
+  ulTemp = HWREG(ulBase + MAC_O_TCTL);
+  ulTemp &= ~(MAC_TCTL_DUPLEX | MAC_TCTL_CRC | MAC_TCTL_PADEN);
+  ulTemp |= ulConfig & 0x0FF;
+  HWREG(ulBase + MAC_O_TCTL) = ulTemp;
 
-    //
-    // Setup the Receive Control Register.
-    //
-    ulTemp  = HWREG(ulBase + MAC_O_RCTL);
-    ulTemp &= ~(MAC_RCTL_BADCRC | MAC_RCTL_PRMS | MAC_RCTL_AMUL);
-    ulTemp |= (ulConfig >> 8) & 0x0FF;
-    HWREG(ulBase + MAC_O_RCTL) = ulTemp;
+  //
+  // Setup the Receive Control Register.
+  //
+  ulTemp = HWREG(ulBase + MAC_O_RCTL);
+  ulTemp &= ~(MAC_RCTL_BADCRC | MAC_RCTL_PRMS | MAC_RCTL_AMUL);
+  ulTemp |= (ulConfig >> 8) & 0x0FF;
+  HWREG(ulBase + MAC_O_RCTL) = ulTemp;
 
-    //
-    // Setup the Time Stamp Configuration register.
-    //
-    ulTemp = HWREG(ulBase + MAC_O_TS);
-    ulTemp &= ~(MAC_TS_TSEN);
-    ulTemp |= (ulConfig >> 16) & 0x0FF;
-    HWREG(ulBase + MAC_O_TS) = ulTemp;
+  //
+  // Setup the Time Stamp Configuration register.
+  //
+  ulTemp = HWREG(ulBase + MAC_O_TS);
+  ulTemp &= ~(MAC_TS_TSEN);
+  ulTemp |= (ulConfig >> 16) & 0x0FF;
+  HWREG(ulBase + MAC_O_TS) = ulTemp;
 }
 
 //*****************************************************************************
@@ -209,24 +205,22 @@ EthernetConfigSet(unsigned long ulBase, unsigned long ulConfig)
 //! \return Returns the bit-mapped Ethernet controller configuration value.
 //
 //*****************************************************************************
-unsigned long
-EthernetConfigGet(unsigned long ulBase)
-{
-    unsigned long ulConfig;
+unsigned long EthernetConfigGet(unsigned long ulBase) {
+  unsigned long ulConfig;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Read and return the Ethernet controller configuration parameters,
-    // properly shifted into the appropriate bit field positions.
-    //
-    ulConfig = HWREG(ulBase + MAC_O_TS) << 16;
-    ulConfig |= (HWREG(ulBase + MAC_O_RCTL) & ~(MAC_RCTL_RXEN)) << 8;
-    ulConfig |= HWREG(ulBase + MAC_O_TCTL) & ~(MAC_TCTL_TXEN);
-    return(ulConfig);
+  //
+  // Read and return the Ethernet controller configuration parameters,
+  // properly shifted into the appropriate bit field positions.
+  //
+  ulConfig = HWREG(ulBase + MAC_O_TS) << 16;
+  ulConfig |= (HWREG(ulBase + MAC_O_RCTL) & ~(MAC_RCTL_RXEN)) << 8;
+  ulConfig |= HWREG(ulBase + MAC_O_TCTL) & ~(MAC_TCTL_TXEN);
+  return (ulConfig);
 }
 
 //*****************************************************************************
@@ -263,32 +257,30 @@ EthernetConfigGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetMACAddrSet(unsigned long ulBase, unsigned char *pucMACAddr)
-{
-    unsigned long ulTemp;
-    unsigned char *pucTemp = (unsigned char *)&ulTemp;
+void EthernetMACAddrSet(unsigned long ulBase, unsigned char *pucMACAddr) {
+  unsigned long ulTemp;
+  unsigned char *pucTemp = (unsigned char *)&ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(pucMACAddr != 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(pucMACAddr != 0);
 
-    //
-    // Program the MAC Address into the device.  The first four bytes of the
-    // MAC Address are placed into the IA0 register.  The remaining two bytes
-    // of the MAC address are placed into the IA1 register.
-    //
-    pucTemp[0] = pucMACAddr[0];
-    pucTemp[1] = pucMACAddr[1];
-    pucTemp[2] = pucMACAddr[2];
-    pucTemp[3] = pucMACAddr[3];
-    HWREG(ulBase + MAC_O_IA0) = ulTemp;
-    ulTemp = 0;
-    pucTemp[0] = pucMACAddr[4];
-    pucTemp[1] = pucMACAddr[5];
-    HWREG(ulBase + MAC_O_IA1) = ulTemp;
+  //
+  // Program the MAC Address into the device.  The first four bytes of the
+  // MAC Address are placed into the IA0 register.  The remaining two bytes
+  // of the MAC address are placed into the IA1 register.
+  //
+  pucTemp[0] = pucMACAddr[0];
+  pucTemp[1] = pucMACAddr[1];
+  pucTemp[2] = pucMACAddr[2];
+  pucTemp[3] = pucMACAddr[3];
+  HWREG(ulBase + MAC_O_IA0) = ulTemp;
+  ulTemp = 0;
+  pucTemp[0] = pucMACAddr[4];
+  pucTemp[1] = pucMACAddr[5];
+  HWREG(ulBase + MAC_O_IA1) = ulTemp;
 }
 
 //*****************************************************************************
@@ -308,31 +300,29 @@ EthernetMACAddrSet(unsigned long ulBase, unsigned char *pucMACAddr)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetMACAddrGet(unsigned long ulBase, unsigned char *pucMACAddr)
-{
-    unsigned long ulTemp;
-    unsigned char *pucTemp = (unsigned char *)&ulTemp;
+void EthernetMACAddrGet(unsigned long ulBase, unsigned char *pucMACAddr) {
+  unsigned long ulTemp;
+  unsigned char *pucTemp = (unsigned char *)&ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(pucMACAddr != 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(pucMACAddr != 0);
 
-    //
-    // Read the MAC address from the device.  The first four bytes of the
-    // MAC address are read from the IA0 register.  The remaining two bytes
-    // of the MAC addres
-    //
-    ulTemp = HWREG(ulBase + MAC_O_IA0);
-    pucMACAddr[0] = pucTemp[0];
-    pucMACAddr[1] = pucTemp[1];
-    pucMACAddr[2] = pucTemp[2];
-    pucMACAddr[3] = pucTemp[3];
-    ulTemp = HWREG(ulBase + MAC_O_IA1);
-    pucMACAddr[4] = pucTemp[0];
-    pucMACAddr[5] = pucTemp[1];
+  //
+  // Read the MAC address from the device.  The first four bytes of the
+  // MAC address are read from the IA0 register.  The remaining two bytes
+  // of the MAC addres
+  //
+  ulTemp = HWREG(ulBase + MAC_O_IA0);
+  pucMACAddr[0] = pucTemp[0];
+  pucMACAddr[1] = pucTemp[1];
+  pucMACAddr[2] = pucTemp[2];
+  pucMACAddr[3] = pucTemp[3];
+  ulTemp = HWREG(ulBase + MAC_O_IA1);
+  pucMACAddr[4] = pucTemp[0];
+  pucMACAddr[5] = pucTemp[1];
 }
 
 //*****************************************************************************
@@ -352,33 +342,31 @@ EthernetMACAddrGet(unsigned long ulBase, unsigned char *pucMACAddr)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+void EthernetEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Reset the receive FIFO.
-    //
-    HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RSTFIFO;
+  //
+  // Reset the receive FIFO.
+  //
+  HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RSTFIFO;
 
-    //
-    // Enable the Ethernet receiver.
-    //
-    HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RXEN;
+  //
+  // Enable the Ethernet receiver.
+  //
+  HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RXEN;
 
-    //
-    // Enable Ethernet transmitter.
-    //
-    HWREG(ulBase + MAC_O_TCTL) |= MAC_TCTL_TXEN;
+  //
+  // Enable Ethernet transmitter.
+  //
+  HWREG(ulBase + MAC_O_TCTL) |= MAC_TCTL_TXEN;
 
-    //
-    // Reset the receive FIFO again, after the receiver has been enabled.
-    //
-    HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RSTFIFO;
+  //
+  // Reset the receive FIFO again, after the receiver has been enabled.
+  //
+  HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RSTFIFO;
 }
 
 //*****************************************************************************
@@ -394,33 +382,31 @@ EthernetEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+void EthernetDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Reset the receive FIFO.
-    //
-    HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RSTFIFO;
+  //
+  // Reset the receive FIFO.
+  //
+  HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RSTFIFO;
 
-    //
-    // Disable the Ethernet transmitter.
-    //
-    HWREG(ulBase + MAC_O_TCTL) &= ~(MAC_TCTL_TXEN);
+  //
+  // Disable the Ethernet transmitter.
+  //
+  HWREG(ulBase + MAC_O_TCTL) &= ~(MAC_TCTL_TXEN);
 
-    //
-    // Disable the Ethernet receiver.
-    //
-    HWREG(ulBase + MAC_O_RCTL) &= ~(MAC_RCTL_RXEN);
+  //
+  // Disable the Ethernet receiver.
+  //
+  HWREG(ulBase + MAC_O_RCTL) &= ~(MAC_RCTL_RXEN);
 
-    //
-    // Reset the receive FIFO again, after the receiver has been disabled.
-    //
-    HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RSTFIFO;
+  //
+  // Reset the receive FIFO again, after the receiver has been disabled.
+  //
+  HWREG(ulBase + MAC_O_RCTL) |= MAC_RCTL_RSTFIFO;
 }
 
 //*****************************************************************************
@@ -440,18 +426,16 @@ EthernetDisable(unsigned long ulBase)
 //! otherwise.
 //
 //*****************************************************************************
-tBoolean
-EthernetPacketAvail(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+tBoolean EthernetPacketAvail(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Return the availability of packets.
-    //
-    return((HWREG(ulBase + MAC_O_NP) & MAC_NP_NPR_M) ? true : false);
+  //
+  // Return the availability of packets.
+  //
+  return ((HWREG(ulBase + MAC_O_NP) & MAC_NP_NPR_M) ? true : false);
 }
 
 //*****************************************************************************
@@ -471,18 +455,16 @@ EthernetPacketAvail(unsigned long ulBase)
 //! \b false otherwise.
 //
 //*****************************************************************************
-tBoolean
-EthernetSpaceAvail(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+tBoolean EthernetSpaceAvail(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Return the availability of space.
-    //
-    return((HWREG(ulBase + MAC_O_TR) & MAC_TR_NEWTX) ? false : true);
+  //
+  // Return the availability of space.
+  //
+  return ((HWREG(ulBase + MAC_O_TR) & MAC_TR_NEWTX) ? false : true);
 }
 
 //*****************************************************************************
@@ -538,82 +520,71 @@ EthernetSpaceAvail(unsigned long ulBase)
 //! for \e pucBuf, and returns the packet length \b n otherwise.
 //
 //*****************************************************************************
-static long
-EthernetPacketGetInternal(unsigned long ulBase, unsigned char *pucBuf,
-                          long lBufLen)
-{
-    unsigned long ulTemp;
-    long lFrameLen, lTempLen;
-    long i = 0;
+static long EthernetPacketGetInternal(unsigned long ulBase,
+                                      unsigned char *pucBuf, long lBufLen) {
+  unsigned long ulTemp;
+  long lFrameLen, lTempLen;
+  long i = 0;
 
-    //
-    // Read WORD 0 (see format above) from the FIFO, set the receive
-    // Frame Length and store the first two bytes of the destination
-    // address in the receive buffer.
-    //
+  //
+  // Read WORD 0 (see format above) from the FIFO, set the receive
+  // Frame Length and store the first two bytes of the destination
+  // address in the receive buffer.
+  //
+  ulTemp = HWREG(ulBase + MAC_O_DATA);
+  lFrameLen = (long)(ulTemp & 0xFFFF);
+  pucBuf[i++] = (unsigned char)((ulTemp >> 16) & 0xff);
+  pucBuf[i++] = (unsigned char)((ulTemp >> 24) & 0xff);
+
+  //
+  // Read all but the last WORD into the receive buffer.
+  //
+  lTempLen = (lBufLen < (lFrameLen - 6)) ? lBufLen : (lFrameLen - 6);
+  while (i <= (lTempLen - 4)) {
+    *(unsigned long *)&pucBuf[i] = HWREG(ulBase + MAC_O_DATA);
+    i += 4;
+  }
+
+  //
+  // Read the last 1, 2, or 3 BYTES into the buffer
+  //
+  if (i < lTempLen) {
     ulTemp = HWREG(ulBase + MAC_O_DATA);
-    lFrameLen = (long)(ulTemp & 0xFFFF);
-    pucBuf[i++] = (unsigned char) ((ulTemp >> 16) & 0xff);
-    pucBuf[i++] = (unsigned char) ((ulTemp >> 24) & 0xff);
-
-    //
-    // Read all but the last WORD into the receive buffer.
-    //
-    lTempLen = (lBufLen < (lFrameLen - 6)) ? lBufLen : (lFrameLen - 6);
-    while(i <= (lTempLen - 4))
-    {
-        *(unsigned long *)&pucBuf[i] = HWREG(ulBase + MAC_O_DATA);
-        i += 4;
+    if (i == lTempLen - 3) {
+      pucBuf[i++] = ((ulTemp >> 0) & 0xff);
+      pucBuf[i++] = ((ulTemp >> 8) & 0xff);
+      pucBuf[i++] = ((ulTemp >> 16) & 0xff);
+      i += 1;
+    } else if (i == lTempLen - 2) {
+      pucBuf[i++] = ((ulTemp >> 0) & 0xff);
+      pucBuf[i++] = ((ulTemp >> 8) & 0xff);
+      i += 2;
+    } else if (i == lTempLen - 1) {
+      pucBuf[i++] = ((ulTemp >> 0) & 0xff);
+      i += 3;
     }
+  }
 
-    //
-    // Read the last 1, 2, or 3 BYTES into the buffer
-    //
-    if(i < lTempLen)
-    {
-        ulTemp = HWREG(ulBase + MAC_O_DATA);
-        if(i == lTempLen - 3)
-        {
-            pucBuf[i++] = ((ulTemp >>  0) & 0xff);
-            pucBuf[i++] = ((ulTemp >>  8) & 0xff);
-            pucBuf[i++] = ((ulTemp >> 16) & 0xff);
-            i += 1;
-        }
-        else if(i == lTempLen - 2)
-        {
-            pucBuf[i++] = ((ulTemp >>  0) & 0xff);
-            pucBuf[i++] = ((ulTemp >>  8) & 0xff);
-            i += 2;
-        }
-        else if(i == lTempLen - 1)
-        {
-            pucBuf[i++] = ((ulTemp >>  0) & 0xff);
-            i += 3;
-        }
-    }
+  //
+  // Read any remaining WORDS (that did not fit into the buffer).
+  //
+  while (i < (lFrameLen - 2)) {
+    ulTemp = HWREG(ulBase + MAC_O_DATA);
+    i += 4;
+  }
 
-    //
-    // Read any remaining WORDS (that did not fit into the buffer).
-    //
-    while(i < (lFrameLen - 2))
-    {
-        ulTemp = HWREG(ulBase + MAC_O_DATA);
-        i += 4;
-    }
+  //
+  // If frame was larger than the buffer, return the "negative" frame length
+  //
+  lFrameLen -= 6;
+  if (lFrameLen > lBufLen) {
+    return (-lFrameLen);
+  }
 
-    //
-    // If frame was larger than the buffer, return the "negative" frame length
-    //
-    lFrameLen -= 6;
-    if(lFrameLen > lBufLen)
-    {
-        return(-lFrameLen);
-    }
-
-    //
-    // Return the Frame Length
-    //
-    return(lFrameLen);
+  //
+  // Return the Frame Length
+  //
+  return (lFrameLen);
 }
 
 //*****************************************************************************
@@ -645,29 +616,26 @@ EthernetPacketGetInternal(unsigned long ulBase, unsigned char *pucBuf,
 //! otherwise.
 //
 //*****************************************************************************
-long
-EthernetPacketGetNonBlocking(unsigned long ulBase, unsigned char *pucBuf,
-                             long lBufLen)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(pucBuf != 0);
-    ASSERT(lBufLen > 0);
+long EthernetPacketGetNonBlocking(unsigned long ulBase, unsigned char *pucBuf,
+                                  long lBufLen) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(pucBuf != 0);
+  ASSERT(lBufLen > 0);
 
-    //
-    // Check to see if any packets are available.
-    //
-    if((HWREG(ulBase + MAC_O_NP) & MAC_NP_NPR_M) == 0)
-    {
-        return(0);
-    }
+  //
+  // Check to see if any packets are available.
+  //
+  if ((HWREG(ulBase + MAC_O_NP) & MAC_NP_NPR_M) == 0) {
+    return (0);
+  }
 
-    //
-    // Read the packet, and return.
-    //
-    return(EthernetPacketGetInternal(ulBase, pucBuf, lBufLen));
+  //
+  // Read the packet, and return.
+  //
+  return (EthernetPacketGetInternal(ulBase, pucBuf, lBufLen));
 }
 
 //*****************************************************************************
@@ -694,28 +662,25 @@ EthernetPacketGetNonBlocking(unsigned long ulBase, unsigned char *pucBuf,
 //! for \e pucBuf, and returns the packet length \b n otherwise.
 //
 //*****************************************************************************
-long
-EthernetPacketGet(unsigned long ulBase, unsigned char *pucBuf,
-                  long lBufLen)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(pucBuf != 0);
-    ASSERT(lBufLen > 0);
+long EthernetPacketGet(unsigned long ulBase, unsigned char *pucBuf,
+                       long lBufLen) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(pucBuf != 0);
+  ASSERT(lBufLen > 0);
 
-    //
-    // Wait for a packet to become available
-    //
-    while((HWREG(ulBase + MAC_O_NP) & MAC_NP_NPR_M) == 0)
-    {
-    }
+  //
+  // Wait for a packet to become available
+  //
+  while ((HWREG(ulBase + MAC_O_NP) & MAC_NP_NPR_M) == 0) {
+  }
 
-    //
-    // Read the packet
-    //
-    return(EthernetPacketGetInternal(ulBase, pucBuf, lBufLen));
+  //
+  // Read the packet
+  //
+  return (EthernetPacketGetInternal(ulBase, pucBuf, lBufLen));
 }
 
 //*****************************************************************************
@@ -766,75 +731,65 @@ EthernetPacketGet(unsigned long ulBase, unsigned char *pucBuf,
 //! large for FIFO, and the packet length \b lBufLen otherwise.
 //
 //*****************************************************************************
-static long
-EthernetPacketPutInternal(unsigned long ulBase, unsigned char *pucBuf,
-                          long lBufLen)
-{
-    unsigned long ulTemp;
-    long i = 0;
+static long EthernetPacketPutInternal(unsigned long ulBase,
+                                      unsigned char *pucBuf, long lBufLen) {
+  unsigned long ulTemp;
+  long i = 0;
 
-    //
-    // If the packet is too large, return the negative packet length as
-    // an error code.
-    //
-    if(lBufLen > (2048 - 2))
-    {
-        return(-lBufLen);
+  //
+  // If the packet is too large, return the negative packet length as
+  // an error code.
+  //
+  if (lBufLen > (2048 - 2)) {
+    return (-lBufLen);
+  }
+
+  //
+  // Build and write WORD 0 (see format above) to the transmit FIFO.
+  //
+  ulTemp = (unsigned long)(lBufLen - 14);
+  ulTemp |= (pucBuf[i++] << 16);
+  ulTemp |= (pucBuf[i++] << 24);
+  HWREG(ulBase + MAC_O_DATA) = ulTemp;
+
+  //
+  // Write each subsequent WORD n to the transmit FIFO, except for the last
+  // WORD (if the word does not contain 4 bytes).
+  //
+  while (i <= (lBufLen - 4)) {
+    HWREG(ulBase + MAC_O_DATA) = *(unsigned long *)&pucBuf[i];
+    i += 4;
+  }
+
+  //
+  // Build the last word of the remaining 1, 2, or 3 bytes, and store
+  // the WORD into the transmit FIFO.
+  //
+  if (i != lBufLen) {
+    if (i == (lBufLen - 3)) {
+      ulTemp = (pucBuf[i++] << 0);
+      ulTemp |= (pucBuf[i++] << 8);
+      ulTemp |= (pucBuf[i++] << 16);
+      HWREG(ulBase + MAC_O_DATA) = ulTemp;
+    } else if (i == (lBufLen - 2)) {
+      ulTemp = (pucBuf[i++] << 0);
+      ulTemp |= (pucBuf[i++] << 8);
+      HWREG(ulBase + MAC_O_DATA) = ulTemp;
+    } else if (i == (lBufLen - 1)) {
+      ulTemp = (pucBuf[i++] << 0);
+      HWREG(ulBase + MAC_O_DATA) = ulTemp;
     }
+  }
 
-    //
-    // Build and write WORD 0 (see format above) to the transmit FIFO.
-    //
-    ulTemp = (unsigned long)(lBufLen - 14);
-    ulTemp |= (pucBuf[i++] << 16);
-    ulTemp |= (pucBuf[i++] << 24);
-    HWREG(ulBase + MAC_O_DATA) = ulTemp;
+  //
+  // Activate the transmitter
+  //
+  HWREG(ulBase + MAC_O_TR) = MAC_TR_NEWTX;
 
-    //
-    // Write each subsequent WORD n to the transmit FIFO, except for the last
-    // WORD (if the word does not contain 4 bytes).
-    //
-    while(i <= (lBufLen - 4))
-    {
-        HWREG(ulBase + MAC_O_DATA) = *(unsigned long *)&pucBuf[i];
-        i += 4;
-    }
-
-    //
-    // Build the last word of the remaining 1, 2, or 3 bytes, and store
-    // the WORD into the transmit FIFO.
-    //
-    if(i != lBufLen)
-    {
-        if(i == (lBufLen - 3))
-        {
-            ulTemp  = (pucBuf[i++] <<  0);
-            ulTemp |= (pucBuf[i++] <<  8);
-            ulTemp |= (pucBuf[i++] << 16);
-            HWREG(ulBase + MAC_O_DATA) = ulTemp;
-        }
-        else if(i == (lBufLen - 2))
-        {
-            ulTemp  = (pucBuf[i++] <<  0);
-            ulTemp |= (pucBuf[i++] <<  8);
-            HWREG(ulBase + MAC_O_DATA) = ulTemp;
-        }
-        else if(i == (lBufLen - 1))
-        {
-            ulTemp  = (pucBuf[i++] <<  0);
-            HWREG(ulBase + MAC_O_DATA) = ulTemp;
-        }
-    }
-
-    //
-    // Activate the transmitter
-    //
-    HWREG(ulBase + MAC_O_TR) = MAC_TR_NEWTX;
-
-    //
-    // Return the Buffer Length transmitted.
-    //
-    return(lBufLen);
+  //
+  // Return the Buffer Length transmitted.
+  //
+  return (lBufLen);
 }
 
 //*****************************************************************************
@@ -867,29 +822,26 @@ EthernetPacketPutInternal(unsigned long ulBase, unsigned char *pucBuf,
 //! the packet length \b lBufLen otherwise.
 //
 //*****************************************************************************
-long
-EthernetPacketPutNonBlocking(unsigned long ulBase, unsigned char *pucBuf,
-                             long lBufLen)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(pucBuf != 0);
-    ASSERT(lBufLen > 0);
+long EthernetPacketPutNonBlocking(unsigned long ulBase, unsigned char *pucBuf,
+                                  long lBufLen) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(pucBuf != 0);
+  ASSERT(lBufLen > 0);
 
-    //
-    // Check if the transmit FIFO is in use and return the appropriate code.
-    //
-    if(HWREG(ulBase + MAC_O_TR) & MAC_TR_NEWTX)
-    {
-        return(0);
-    }
+  //
+  // Check if the transmit FIFO is in use and return the appropriate code.
+  //
+  if (HWREG(ulBase + MAC_O_TR) & MAC_TR_NEWTX) {
+    return (0);
+  }
 
-    //
-    // Send the packet and return.
-    //
-    return(EthernetPacketPutInternal(ulBase, pucBuf, lBufLen));
+  //
+  // Send the packet and return.
+  //
+  return (EthernetPacketPutInternal(ulBase, pucBuf, lBufLen));
 }
 
 //*****************************************************************************
@@ -916,28 +868,25 @@ EthernetPacketPutNonBlocking(unsigned long ulBase, unsigned char *pucBuf,
 //! large for FIFO, and the packet length \b lBufLen otherwise.
 //
 //*****************************************************************************
-long
-EthernetPacketPut(unsigned long ulBase, unsigned char *pucBuf,
-                  long lBufLen)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(pucBuf != 0);
-    ASSERT(lBufLen > 0);
+long EthernetPacketPut(unsigned long ulBase, unsigned char *pucBuf,
+                       long lBufLen) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(pucBuf != 0);
+  ASSERT(lBufLen > 0);
 
-    //
-    // Wait for current packet (if any) to complete.
-    //
-    while(HWREG(ulBase + MAC_O_TR) & MAC_TR_NEWTX)
-    {
-    }
+  //
+  // Wait for current packet (if any) to complete.
+  //
+  while (HWREG(ulBase + MAC_O_TR) & MAC_TR_NEWTX) {
+  }
 
-    //
-    // Send the packet and return.
-    //
-    return(EthernetPacketPutInternal(ulBase, pucBuf, lBufLen));
+  //
+  // Send the packet and return.
+  //
+  return (EthernetPacketPutInternal(ulBase, pucBuf, lBufLen));
 }
 
 //*****************************************************************************
@@ -960,24 +909,22 @@ EthernetPacketPut(unsigned long ulBase, unsigned char *pucBuf,
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(pfnHandler != 0);
+void EthernetIntRegister(unsigned long ulBase, void (*pfnHandler)(void)) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(pfnHandler != 0);
 
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(INT_ETH, pfnHandler);
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(INT_ETH, pfnHandler);
 
-    //
-    // Enable the Ethernet interrupt.
-    //
-    IntEnable(INT_ETH);
+  //
+  // Enable the Ethernet interrupt.
+  //
+  IntEnable(INT_ETH);
 }
 
 //*****************************************************************************
@@ -996,23 +943,21 @@ EthernetIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetIntUnregister(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+void EthernetIntUnregister(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Disable the interrupt.
-    //
-    IntDisable(INT_ETH);
+  //
+  // Disable the interrupt.
+  //
+  IntDisable(INT_ETH);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_ETH);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_ETH);
 }
 
 //*****************************************************************************
@@ -1052,21 +997,19 @@ EthernetIntUnregister(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(!(ulIntFlags & ~(ETH_INT_PHY | ETH_INT_MDIO | ETH_INT_RXER |
-                            ETH_INT_RXOF | ETH_INT_TX | ETH_INT_TXER |
-                            ETH_INT_RX)));
+void EthernetIntEnable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(
+      !(ulIntFlags & ~(ETH_INT_PHY | ETH_INT_MDIO | ETH_INT_RXER |
+                       ETH_INT_RXOF | ETH_INT_TX | ETH_INT_TXER | ETH_INT_RX)));
 
-    //
-    // Enable the specified interrupts.
-    //
-    HWREG(ulBase + MAC_O_IM) |= ulIntFlags;
+  //
+  // Enable the specified interrupts.
+  //
+  HWREG(ulBase + MAC_O_IM) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1086,21 +1029,19 @@ EthernetIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(!(ulIntFlags & ~(ETH_INT_PHY | ETH_INT_MDIO | ETH_INT_RXER |
-                            ETH_INT_RXOF | ETH_INT_TX | ETH_INT_TXER |
-                            ETH_INT_RX)));
+void EthernetIntDisable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(
+      !(ulIntFlags & ~(ETH_INT_PHY | ETH_INT_MDIO | ETH_INT_RXER |
+                       ETH_INT_RXOF | ETH_INT_TX | ETH_INT_TXER | ETH_INT_RX)));
 
-    //
-    // Disable the specified interrupts.
-    //
-    HWREG(ulBase + MAC_O_IM) &= ~ulIntFlags;
+  //
+  // Disable the specified interrupts.
+  //
+  HWREG(ulBase + MAC_O_IM) &= ~ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1119,33 +1060,30 @@ EthernetIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
 //! values described in EthernetIntEnable().
 //
 //*****************************************************************************
-unsigned long
-EthernetIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    unsigned long ulStatus;
+unsigned long EthernetIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  unsigned long ulStatus;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Read the unmasked status.
-    //
-    ulStatus = HWREG(ulBase + MAC_O_RIS);
+  //
+  // Read the unmasked status.
+  //
+  ulStatus = HWREG(ulBase + MAC_O_RIS);
 
-    //
-    // If masked status is requested, mask it off.
-    //
-    if(bMasked)
-    {
-        ulStatus &= HWREG(ulBase + MAC_O_IM);
-    }
+  //
+  // If masked status is requested, mask it off.
+  //
+  if (bMasked) {
+    ulStatus &= HWREG(ulBase + MAC_O_IM);
+  }
 
-    //
-    // Return the interrupt status value.
-    //
-    return(ulStatus);
+  //
+  // Return the interrupt status value.
+  //
+  return (ulStatus);
 }
 
 //*****************************************************************************
@@ -1174,21 +1112,19 @@ EthernetIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetIntClear(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
-    ASSERT(!(ulIntFlags & ~(ETH_INT_PHY | ETH_INT_MDIO | ETH_INT_RXER |
-                            ETH_INT_RXOF | ETH_INT_TX | ETH_INT_TXER |
-                            ETH_INT_RX)));
+void EthernetIntClear(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
+  ASSERT(
+      !(ulIntFlags & ~(ETH_INT_PHY | ETH_INT_MDIO | ETH_INT_RXER |
+                       ETH_INT_RXOF | ETH_INT_TX | ETH_INT_TXER | ETH_INT_RX)));
 
-    //
-    // Clear the requested interrupt sources.
-    //
-    HWREG(ulBase + MAC_O_IACK) = ulIntFlags;
+  //
+  // Clear the requested interrupt sources.
+  //
+  HWREG(ulBase + MAC_O_IACK) = ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1206,25 +1142,22 @@ EthernetIntClear(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetPHYAddrSet(unsigned long ulBase, unsigned char ucAddr)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+void EthernetPHYAddrSet(unsigned long ulBase, unsigned char ucAddr) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Wait for any pending transaction to complete.
-    //
-    while(HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START)
-    {
-    }
+  //
+  // Wait for any pending transaction to complete.
+  //
+  while (HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START) {
+  }
 
-    //
-    // Set the PHY address.
-    //
-    HWREG(ulBase + MAC_O_MADD) = ucAddr;
+  //
+  // Set the PHY address.
+  //
+  HWREG(ulBase + MAC_O_MADD) = ucAddr;
 }
 
 //*****************************************************************************
@@ -1241,39 +1174,35 @@ EthernetPHYAddrSet(unsigned long ulBase, unsigned char ucAddr)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetPHYWrite(unsigned long ulBase, unsigned char ucRegAddr,
-                 unsigned long ulData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+void EthernetPHYWrite(unsigned long ulBase, unsigned char ucRegAddr,
+                      unsigned long ulData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Wait for any pending transaction to complete.
-    //
-    while(HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START)
-    {
-    }
+  //
+  // Wait for any pending transaction to complete.
+  //
+  while (HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START) {
+  }
 
-    //
-    // Program the DATA to be written.
-    //
-    HWREG(ulBase + MAC_O_MTXD) = ulData & MAC_MTXD_MDTX_M;
+  //
+  // Program the DATA to be written.
+  //
+  HWREG(ulBase + MAC_O_MTXD) = ulData & MAC_MTXD_MDTX_M;
 
-    //
-    // Program the PHY register address and initiate the transaction.
-    //
-    HWREG(ulBase + MAC_O_MCTL) = (((ucRegAddr << 3) & MAC_MCTL_REGADR_M) |
-                                  MAC_MCTL_WRITE | MAC_MCTL_START);
+  //
+  // Program the PHY register address and initiate the transaction.
+  //
+  HWREG(ulBase + MAC_O_MCTL) = (((ucRegAddr << 3) & MAC_MCTL_REGADR_M) |
+                                MAC_MCTL_WRITE | MAC_MCTL_START);
 
-    //
-    // Wait for the write transaction to complete.
-    //
-    while(HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START)
-    {
-    }
+  //
+  // Wait for the write transaction to complete.
+  //
+  while (HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START) {
+  }
 }
 
 //*****************************************************************************
@@ -1289,38 +1218,34 @@ EthernetPHYWrite(unsigned long ulBase, unsigned char ucRegAddr,
 //! \return Returns the 16-bit value read from the PHY.
 //
 //*****************************************************************************
-unsigned long
-EthernetPHYRead(unsigned long ulBase, unsigned char ucRegAddr)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == ETH_BASE);
+unsigned long EthernetPHYRead(unsigned long ulBase, unsigned char ucRegAddr) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == ETH_BASE);
 
-    //
-    // Wait for any pending transaction to complete.
-    //
-    while(HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START)
-    {
-    }
+  //
+  // Wait for any pending transaction to complete.
+  //
+  while (HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START) {
+  }
 
-    //
-    // Program the PHY register address and initiate the transaction.
-    //
-    HWREG(ulBase + MAC_O_MCTL) = (((ucRegAddr << 3) & MAC_MCTL_REGADR_M) |
-                                  MAC_MCTL_START);
+  //
+  // Program the PHY register address and initiate the transaction.
+  //
+  HWREG(ulBase + MAC_O_MCTL) =
+      (((ucRegAddr << 3) & MAC_MCTL_REGADR_M) | MAC_MCTL_START);
 
-    //
-    // Wait for the transaction to complete.
-    //
-    while(HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START)
-    {
-    }
+  //
+  // Wait for the transaction to complete.
+  //
+  while (HWREG(ulBase + MAC_O_MCTL) & MAC_MCTL_START) {
+  }
 
-    //
-    // Return the PHY data that was read.
-    //
-    return(HWREG(ulBase + MAC_O_MRXD) & MAC_MRXD_MDRX_M);
+  //
+  // Return the PHY data that was read.
+  //
+  return (HWREG(ulBase + MAC_O_MRXD) & MAC_MRXD_MDRX_M);
 }
 
 //*****************************************************************************
@@ -1336,16 +1261,14 @@ EthernetPHYRead(unsigned long ulBase, unsigned char ucRegAddr)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetPHYPowerOff(unsigned long ulBase)
-{
-    //
-    // Set the PWRDN bit and clear the ANEGEN bit in the PHY, putting it into
-    // its low power mode.
-    //
-    EthernetPHYWrite(ulBase, PHY_MR0,
-                     (EthernetPHYRead(ulBase, PHY_MR0) & ~PHY_MR0_ANEGEN) |
-                     PHY_MR0_PWRDN);
+void EthernetPHYPowerOff(unsigned long ulBase) {
+  //
+  // Set the PWRDN bit and clear the ANEGEN bit in the PHY, putting it into
+  // its low power mode.
+  //
+  EthernetPHYWrite(
+      ulBase, PHY_MR0,
+      (EthernetPHYRead(ulBase, PHY_MR0) & ~PHY_MR0_ANEGEN) | PHY_MR0_PWRDN);
 }
 
 //*****************************************************************************
@@ -1361,16 +1284,14 @@ EthernetPHYPowerOff(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-EthernetPHYPowerOn(unsigned long ulBase)
-{
-    //
-    // Clear the PWRDN bit and set the ANEGEN bit in the PHY, putting it into
-    // normal operating mode.
-    //
-    EthernetPHYWrite(ulBase, PHY_MR0,
-                     (EthernetPHYRead(ulBase, PHY_MR0) & ~PHY_MR0_PWRDN) |
-                     PHY_MR0_ANEGEN);
+void EthernetPHYPowerOn(unsigned long ulBase) {
+  //
+  // Clear the PWRDN bit and set the ANEGEN bit in the PHY, putting it into
+  // normal operating mode.
+  //
+  EthernetPHYWrite(
+      ulBase, PHY_MR0,
+      (EthernetPHYRead(ulBase, PHY_MR0) & ~PHY_MR0_PWRDN) | PHY_MR0_ANEGEN);
 }
 
 //*****************************************************************************

@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2005-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,14 +44,15 @@
 //
 //*****************************************************************************
 
+#include "driverlib/sysctl.h"
+
+#include "driverlib/cpu.h"
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_nvic.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
-#include "driverlib/cpu.h"
-#include "driverlib/debug.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/sysctl.h"
 
 //*****************************************************************************
 //
@@ -65,14 +66,14 @@
 // This macro extracts the array index out of the peripheral number.
 //
 //*****************************************************************************
-#define SYSCTL_PERIPH_INDEX(a)  (((a) >> 28) & 0xf)
+#define SYSCTL_PERIPH_INDEX(a) (((a) >> 28) & 0xf)
 
 //*****************************************************************************
 //
 // This macro constructs the peripheral bit mask from the peripheral number.
 //
 //*****************************************************************************
-#define SYSCTL_PERIPH_MASK(a)   (((a) & 0xffff) << (((a) & 0x001f0000) >> 16))
+#define SYSCTL_PERIPH_MASK(a) (((a)&0xffff) << (((a)&0x001f0000) >> 16))
 
 //*****************************************************************************
 //
@@ -81,13 +82,8 @@
 // contains the peripheral present bit for that peripheral.
 //
 //*****************************************************************************
-static const unsigned long g_pulDCRegs[] =
-{
-    SYSCTL_DC1,
-    SYSCTL_DC2,
-    SYSCTL_DC4,
-    SYSCTL_DC1
-};
+static const unsigned long g_pulDCRegs[] = {SYSCTL_DC1, SYSCTL_DC2, SYSCTL_DC4,
+                                            SYSCTL_DC1};
 
 //*****************************************************************************
 //
@@ -96,12 +92,8 @@ static const unsigned long g_pulDCRegs[] =
 // controls the software reset for that peripheral.
 //
 //*****************************************************************************
-static const unsigned long g_pulSRCRRegs[] =
-{
-    SYSCTL_SRCR0,
-    SYSCTL_SRCR1,
-    SYSCTL_SRCR2
-};
+static const unsigned long g_pulSRCRRegs[] = {SYSCTL_SRCR0, SYSCTL_SRCR1,
+                                              SYSCTL_SRCR2};
 
 //*****************************************************************************
 //
@@ -110,12 +102,8 @@ static const unsigned long g_pulSRCRRegs[] =
 // controls the run-mode enable for that peripheral.
 //
 //*****************************************************************************
-static const unsigned long g_pulRCGCRegs[] =
-{
-    SYSCTL_RCGC0,
-    SYSCTL_RCGC1,
-    SYSCTL_RCGC2
-};
+static const unsigned long g_pulRCGCRegs[] = {SYSCTL_RCGC0, SYSCTL_RCGC1,
+                                              SYSCTL_RCGC2};
 
 //*****************************************************************************
 //
@@ -124,12 +112,8 @@ static const unsigned long g_pulRCGCRegs[] =
 // controls the sleep-mode enable for that peripheral.
 //
 //*****************************************************************************
-static const unsigned long g_pulSCGCRegs[] =
-{
-    SYSCTL_SCGC0,
-    SYSCTL_SCGC1,
-    SYSCTL_SCGC2
-};
+static const unsigned long g_pulSCGCRegs[] = {SYSCTL_SCGC0, SYSCTL_SCGC1,
+                                              SYSCTL_SCGC2};
 
 //*****************************************************************************
 //
@@ -138,61 +122,32 @@ static const unsigned long g_pulSCGCRegs[] =
 // controls the deep-sleep-mode enable for that peripheral.
 //
 //*****************************************************************************
-static const unsigned long g_pulDCGCRegs[] =
-{
-    SYSCTL_DCGC0,
-    SYSCTL_DCGC1,
-    SYSCTL_DCGC2
-};
+static const unsigned long g_pulDCGCRegs[] = {SYSCTL_DCGC0, SYSCTL_DCGC1,
+                                              SYSCTL_DCGC2};
 
 //*****************************************************************************
 //
 // An array that maps the crystal number in RCC to a frequency.
 //
 //*****************************************************************************
-static const unsigned long g_pulXtals[] =
-{
-    1000000,
-    1843200,
-    2000000,
-    2457600,
-    3579545,
-    3686400,
-    4000000,
-    4096000,
-    4915200,
-    5000000,
-    5120000,
-    6000000,
-    6144000,
-    7372800,
-    8000000,
-    8192000,
-    10000000,
-    12000000,
-    12288000,
-    13560000,
-    14318180,
-    16000000,
-    16384000,
-    18000000,
-    20000000,
-    24000000,
-    25000000
-};
+static const unsigned long g_pulXtals[] = {
+    1000000,  1843200,  2000000,  2457600,  3579545,  3686400,  4000000,
+    4096000,  4915200,  5000000,  5120000,  6000000,  6144000,  7372800,
+    8000000,  8192000,  10000000, 12000000, 12288000, 13560000, 14318180,
+    16000000, 16384000, 18000000, 20000000, 24000000, 25000000};
 
 //*****************************************************************************
 //
 // The base addresses of the various peripheral control registers.
 //
 //*****************************************************************************
-#define SYSCTL_PPBASE           0x400fe300
-#define SYSCTL_SRBASE           0x400fe500
-#define SYSCTL_RCGCBASE         0x400fe600
-#define SYSCTL_SCGCBASE         0x400fe700
-#define SYSCTL_DCGCBASE         0x400fe800
-#define SYSCTL_PCBASE           0x400fe900
-#define SYSCTL_PRBASE           0x400fea00
+#define SYSCTL_PPBASE 0x400fe300
+#define SYSCTL_SRBASE 0x400fe500
+#define SYSCTL_RCGCBASE 0x400fe600
+#define SYSCTL_SCGCBASE 0x400fe700
+#define SYSCTL_DCGCBASE 0x400fe800
+#define SYSCTL_PCBASE 0x400fe900
+#define SYSCTL_PRBASE 0x400fea00
 
 //*****************************************************************************
 //
@@ -208,84 +163,82 @@ static const unsigned long g_pulXtals[] =
 //
 //*****************************************************************************
 #ifdef DEBUG
-static tBoolean
-SysCtlPeripheralValid(unsigned long ulPeripheral)
-{
-    return((ulPeripheral == SYSCTL_PERIPH_ADC0) ||
-           (ulPeripheral == SYSCTL_PERIPH_ADC1) ||
-           (ulPeripheral == SYSCTL_PERIPH_CAN0) ||
-           (ulPeripheral == SYSCTL_PERIPH_CAN1) ||
-           (ulPeripheral == SYSCTL_PERIPH_CAN2) ||
-           (ulPeripheral == SYSCTL_PERIPH_COMP0) ||
-           (ulPeripheral == SYSCTL_PERIPH_COMP1) ||
-           (ulPeripheral == SYSCTL_PERIPH_COMP2) ||
-           (ulPeripheral == SYSCTL_PERIPH_EEPROM0) ||
-           (ulPeripheral == SYSCTL_PERIPH_EPI0) ||
-           (ulPeripheral == SYSCTL_PERIPH_ETH) ||
-           (ulPeripheral == SYSCTL_PERIPH_FAN0) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOA) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOB) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOC) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOD) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOE) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOF) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOG) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOH) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOJ) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOK) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOL) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOM) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPION) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOP) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOQ) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOR) ||
-           (ulPeripheral == SYSCTL_PERIPH_GPIOS) ||
-           (ulPeripheral == SYSCTL_PERIPH_HIBERNATE) ||
-           (ulPeripheral == SYSCTL_PERIPH_I2C0) ||
-           (ulPeripheral == SYSCTL_PERIPH_I2C1) ||
-           (ulPeripheral == SYSCTL_PERIPH_I2C2) ||
-           (ulPeripheral == SYSCTL_PERIPH_I2C3) ||
-           (ulPeripheral == SYSCTL_PERIPH_I2C4) ||
-           (ulPeripheral == SYSCTL_PERIPH_I2C5) ||
-           (ulPeripheral == SYSCTL_PERIPH_I2S0) ||
-           (ulPeripheral == SYSCTL_PERIPH_IEEE1588) ||
-           (ulPeripheral == SYSCTL_PERIPH_LPC0) ||
-           (ulPeripheral == SYSCTL_PERIPH_MPU) ||
-           (ulPeripheral == SYSCTL_PERIPH_PECI0) ||
-           (ulPeripheral == SYSCTL_PERIPH_PLL) ||
-           (ulPeripheral == SYSCTL_PERIPH_PWM0) ||
-           (ulPeripheral == SYSCTL_PERIPH_PWM1) ||
-           (ulPeripheral == SYSCTL_PERIPH_QEI0) ||
-           (ulPeripheral == SYSCTL_PERIPH_QEI1) ||
-           (ulPeripheral == SYSCTL_PERIPH_SSI0) ||
-           (ulPeripheral == SYSCTL_PERIPH_SSI1) ||
-           (ulPeripheral == SYSCTL_PERIPH_SSI2) ||
-           (ulPeripheral == SYSCTL_PERIPH_SSI3) ||
-           (ulPeripheral == SYSCTL_PERIPH_TEMP) ||
-           (ulPeripheral == SYSCTL_PERIPH_TIMER0) ||
-           (ulPeripheral == SYSCTL_PERIPH_TIMER1) ||
-           (ulPeripheral == SYSCTL_PERIPH_TIMER2) ||
-           (ulPeripheral == SYSCTL_PERIPH_TIMER3) ||
-           (ulPeripheral == SYSCTL_PERIPH_TIMER4) ||
-           (ulPeripheral == SYSCTL_PERIPH_TIMER5) ||
-           (ulPeripheral == SYSCTL_PERIPH_UART0) ||
-           (ulPeripheral == SYSCTL_PERIPH_UART1) ||
-           (ulPeripheral == SYSCTL_PERIPH_UART2) ||
-           (ulPeripheral == SYSCTL_PERIPH_UART3) ||
-           (ulPeripheral == SYSCTL_PERIPH_UART4) ||
-           (ulPeripheral == SYSCTL_PERIPH_UART5) ||
-           (ulPeripheral == SYSCTL_PERIPH_UART6) ||
-           (ulPeripheral == SYSCTL_PERIPH_UART7) ||
-           (ulPeripheral == SYSCTL_PERIPH_UDMA) ||
-           (ulPeripheral == SYSCTL_PERIPH_USB0) ||
-           (ulPeripheral == SYSCTL_PERIPH_WDOG0) ||
-           (ulPeripheral == SYSCTL_PERIPH_WDOG1) ||
-           (ulPeripheral == SYSCTL_PERIPH_WTIMER0) ||
-           (ulPeripheral == SYSCTL_PERIPH_WTIMER1) ||
-           (ulPeripheral == SYSCTL_PERIPH_WTIMER2) ||
-           (ulPeripheral == SYSCTL_PERIPH_WTIMER3) ||
-           (ulPeripheral == SYSCTL_PERIPH_WTIMER4) ||
-           (ulPeripheral == SYSCTL_PERIPH_WTIMER5));
+static tBoolean SysCtlPeripheralValid(unsigned long ulPeripheral) {
+  return ((ulPeripheral == SYSCTL_PERIPH_ADC0) ||
+          (ulPeripheral == SYSCTL_PERIPH_ADC1) ||
+          (ulPeripheral == SYSCTL_PERIPH_CAN0) ||
+          (ulPeripheral == SYSCTL_PERIPH_CAN1) ||
+          (ulPeripheral == SYSCTL_PERIPH_CAN2) ||
+          (ulPeripheral == SYSCTL_PERIPH_COMP0) ||
+          (ulPeripheral == SYSCTL_PERIPH_COMP1) ||
+          (ulPeripheral == SYSCTL_PERIPH_COMP2) ||
+          (ulPeripheral == SYSCTL_PERIPH_EEPROM0) ||
+          (ulPeripheral == SYSCTL_PERIPH_EPI0) ||
+          (ulPeripheral == SYSCTL_PERIPH_ETH) ||
+          (ulPeripheral == SYSCTL_PERIPH_FAN0) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOA) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOB) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOC) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOD) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOE) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOF) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOG) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOH) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOJ) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOK) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOL) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOM) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPION) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOP) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOQ) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOR) ||
+          (ulPeripheral == SYSCTL_PERIPH_GPIOS) ||
+          (ulPeripheral == SYSCTL_PERIPH_HIBERNATE) ||
+          (ulPeripheral == SYSCTL_PERIPH_I2C0) ||
+          (ulPeripheral == SYSCTL_PERIPH_I2C1) ||
+          (ulPeripheral == SYSCTL_PERIPH_I2C2) ||
+          (ulPeripheral == SYSCTL_PERIPH_I2C3) ||
+          (ulPeripheral == SYSCTL_PERIPH_I2C4) ||
+          (ulPeripheral == SYSCTL_PERIPH_I2C5) ||
+          (ulPeripheral == SYSCTL_PERIPH_I2S0) ||
+          (ulPeripheral == SYSCTL_PERIPH_IEEE1588) ||
+          (ulPeripheral == SYSCTL_PERIPH_LPC0) ||
+          (ulPeripheral == SYSCTL_PERIPH_MPU) ||
+          (ulPeripheral == SYSCTL_PERIPH_PECI0) ||
+          (ulPeripheral == SYSCTL_PERIPH_PLL) ||
+          (ulPeripheral == SYSCTL_PERIPH_PWM0) ||
+          (ulPeripheral == SYSCTL_PERIPH_PWM1) ||
+          (ulPeripheral == SYSCTL_PERIPH_QEI0) ||
+          (ulPeripheral == SYSCTL_PERIPH_QEI1) ||
+          (ulPeripheral == SYSCTL_PERIPH_SSI0) ||
+          (ulPeripheral == SYSCTL_PERIPH_SSI1) ||
+          (ulPeripheral == SYSCTL_PERIPH_SSI2) ||
+          (ulPeripheral == SYSCTL_PERIPH_SSI3) ||
+          (ulPeripheral == SYSCTL_PERIPH_TEMP) ||
+          (ulPeripheral == SYSCTL_PERIPH_TIMER0) ||
+          (ulPeripheral == SYSCTL_PERIPH_TIMER1) ||
+          (ulPeripheral == SYSCTL_PERIPH_TIMER2) ||
+          (ulPeripheral == SYSCTL_PERIPH_TIMER3) ||
+          (ulPeripheral == SYSCTL_PERIPH_TIMER4) ||
+          (ulPeripheral == SYSCTL_PERIPH_TIMER5) ||
+          (ulPeripheral == SYSCTL_PERIPH_UART0) ||
+          (ulPeripheral == SYSCTL_PERIPH_UART1) ||
+          (ulPeripheral == SYSCTL_PERIPH_UART2) ||
+          (ulPeripheral == SYSCTL_PERIPH_UART3) ||
+          (ulPeripheral == SYSCTL_PERIPH_UART4) ||
+          (ulPeripheral == SYSCTL_PERIPH_UART5) ||
+          (ulPeripheral == SYSCTL_PERIPH_UART6) ||
+          (ulPeripheral == SYSCTL_PERIPH_UART7) ||
+          (ulPeripheral == SYSCTL_PERIPH_UDMA) ||
+          (ulPeripheral == SYSCTL_PERIPH_USB0) ||
+          (ulPeripheral == SYSCTL_PERIPH_WDOG0) ||
+          (ulPeripheral == SYSCTL_PERIPH_WDOG1) ||
+          (ulPeripheral == SYSCTL_PERIPH_WTIMER0) ||
+          (ulPeripheral == SYSCTL_PERIPH_WTIMER1) ||
+          (ulPeripheral == SYSCTL_PERIPH_WTIMER2) ||
+          (ulPeripheral == SYSCTL_PERIPH_WTIMER3) ||
+          (ulPeripheral == SYSCTL_PERIPH_WTIMER4) ||
+          (ulPeripheral == SYSCTL_PERIPH_WTIMER5));
 }
 #endif
 
@@ -295,44 +248,43 @@ SysCtlPeripheralValid(unsigned long ulPeripheral)
 // new peripheral defines do not work on parts that precede Blizzard class.
 //
 //*****************************************************************************
-static const unsigned long g_ppulPeripheralMap[][2] =
-{
-    { SYSCTL_PERIPH_ADC0, SYSCTL_PERIPH2_ADC0 },
-    { SYSCTL_PERIPH_ADC1, SYSCTL_PERIPH2_ADC1 },
-    { SYSCTL_PERIPH_CAN0, SYSCTL_PERIPH2_CAN0 },
-    { SYSCTL_PERIPH_CAN1, SYSCTL_PERIPH2_CAN1 },
-    { SYSCTL_PERIPH_CAN2, SYSCTL_PERIPH2_CAN2 },
-    { SYSCTL_PERIPH_COMP0, SYSCTL_PERIPH2_COMP0 },
-    { SYSCTL_PERIPH_COMP1, SYSCTL_PERIPH2_COMP0 },
-    { SYSCTL_PERIPH_COMP2, SYSCTL_PERIPH2_COMP0 },
-    { SYSCTL_PERIPH_GPIOA, SYSCTL_PERIPH2_GPIOA },
-    { SYSCTL_PERIPH_GPIOB, SYSCTL_PERIPH2_GPIOB },
-    { SYSCTL_PERIPH_GPIOC, SYSCTL_PERIPH2_GPIOC },
-    { SYSCTL_PERIPH_GPIOD, SYSCTL_PERIPH2_GPIOD },
-    { SYSCTL_PERIPH_GPIOE, SYSCTL_PERIPH2_GPIOE },
-    { SYSCTL_PERIPH_GPIOF, SYSCTL_PERIPH2_GPIOF },
-    { SYSCTL_PERIPH_GPIOG, SYSCTL_PERIPH2_GPIOG },
-    { SYSCTL_PERIPH_GPIOH, SYSCTL_PERIPH2_GPIOH },
-    { SYSCTL_PERIPH_GPIOJ, SYSCTL_PERIPH2_GPIOJ },
-    { SYSCTL_PERIPH_HIBERNATE, SYSCTL_PERIPH2_HIBERNATE },
-    { SYSCTL_PERIPH_I2C0, SYSCTL_PERIPH2_I2C0 },
-    { SYSCTL_PERIPH_I2C1, SYSCTL_PERIPH2_I2C1 },
-    { SYSCTL_PERIPH_PWM0, SYSCTL_PERIPH2_PWM0 },
-    { SYSCTL_PERIPH_QEI0, SYSCTL_PERIPH2_QEI0 },
-    { SYSCTL_PERIPH_QEI1, SYSCTL_PERIPH2_QEI1 },
-    { SYSCTL_PERIPH_SSI0, SYSCTL_PERIPH2_SSI0 },
-    { SYSCTL_PERIPH_SSI1, SYSCTL_PERIPH2_SSI1 },
-    { SYSCTL_PERIPH_TIMER0, SYSCTL_PERIPH2_TIMER0 },
-    { SYSCTL_PERIPH_TIMER1, SYSCTL_PERIPH2_TIMER1 },
-    { SYSCTL_PERIPH_TIMER2, SYSCTL_PERIPH2_TIMER2 },
-    { SYSCTL_PERIPH_TIMER3, SYSCTL_PERIPH2_TIMER3 },
-    { SYSCTL_PERIPH_UART0, SYSCTL_PERIPH2_UART0 },
-    { SYSCTL_PERIPH_UART1, SYSCTL_PERIPH2_UART1 },
-    { SYSCTL_PERIPH_UART2, SYSCTL_PERIPH2_UART2 },
-    { SYSCTL_PERIPH_UDMA, SYSCTL_PERIPH2_UDMA },
-    { SYSCTL_PERIPH_USB0, SYSCTL_PERIPH2_USB0 },
-    { SYSCTL_PERIPH_WDOG0, SYSCTL_PERIPH2_WDOG0 },
-    { SYSCTL_PERIPH_WDOG1, SYSCTL_PERIPH2_WDOG1 },
+static const unsigned long g_ppulPeripheralMap[][2] = {
+    {SYSCTL_PERIPH_ADC0, SYSCTL_PERIPH2_ADC0},
+    {SYSCTL_PERIPH_ADC1, SYSCTL_PERIPH2_ADC1},
+    {SYSCTL_PERIPH_CAN0, SYSCTL_PERIPH2_CAN0},
+    {SYSCTL_PERIPH_CAN1, SYSCTL_PERIPH2_CAN1},
+    {SYSCTL_PERIPH_CAN2, SYSCTL_PERIPH2_CAN2},
+    {SYSCTL_PERIPH_COMP0, SYSCTL_PERIPH2_COMP0},
+    {SYSCTL_PERIPH_COMP1, SYSCTL_PERIPH2_COMP0},
+    {SYSCTL_PERIPH_COMP2, SYSCTL_PERIPH2_COMP0},
+    {SYSCTL_PERIPH_GPIOA, SYSCTL_PERIPH2_GPIOA},
+    {SYSCTL_PERIPH_GPIOB, SYSCTL_PERIPH2_GPIOB},
+    {SYSCTL_PERIPH_GPIOC, SYSCTL_PERIPH2_GPIOC},
+    {SYSCTL_PERIPH_GPIOD, SYSCTL_PERIPH2_GPIOD},
+    {SYSCTL_PERIPH_GPIOE, SYSCTL_PERIPH2_GPIOE},
+    {SYSCTL_PERIPH_GPIOF, SYSCTL_PERIPH2_GPIOF},
+    {SYSCTL_PERIPH_GPIOG, SYSCTL_PERIPH2_GPIOG},
+    {SYSCTL_PERIPH_GPIOH, SYSCTL_PERIPH2_GPIOH},
+    {SYSCTL_PERIPH_GPIOJ, SYSCTL_PERIPH2_GPIOJ},
+    {SYSCTL_PERIPH_HIBERNATE, SYSCTL_PERIPH2_HIBERNATE},
+    {SYSCTL_PERIPH_I2C0, SYSCTL_PERIPH2_I2C0},
+    {SYSCTL_PERIPH_I2C1, SYSCTL_PERIPH2_I2C1},
+    {SYSCTL_PERIPH_PWM0, SYSCTL_PERIPH2_PWM0},
+    {SYSCTL_PERIPH_QEI0, SYSCTL_PERIPH2_QEI0},
+    {SYSCTL_PERIPH_QEI1, SYSCTL_PERIPH2_QEI1},
+    {SYSCTL_PERIPH_SSI0, SYSCTL_PERIPH2_SSI0},
+    {SYSCTL_PERIPH_SSI1, SYSCTL_PERIPH2_SSI1},
+    {SYSCTL_PERIPH_TIMER0, SYSCTL_PERIPH2_TIMER0},
+    {SYSCTL_PERIPH_TIMER1, SYSCTL_PERIPH2_TIMER1},
+    {SYSCTL_PERIPH_TIMER2, SYSCTL_PERIPH2_TIMER2},
+    {SYSCTL_PERIPH_TIMER3, SYSCTL_PERIPH2_TIMER3},
+    {SYSCTL_PERIPH_UART0, SYSCTL_PERIPH2_UART0},
+    {SYSCTL_PERIPH_UART1, SYSCTL_PERIPH2_UART1},
+    {SYSCTL_PERIPH_UART2, SYSCTL_PERIPH2_UART2},
+    {SYSCTL_PERIPH_UDMA, SYSCTL_PERIPH2_UDMA},
+    {SYSCTL_PERIPH_USB0, SYSCTL_PERIPH2_USB0},
+    {SYSCTL_PERIPH_WDOG0, SYSCTL_PERIPH2_WDOG0},
+    {SYSCTL_PERIPH_WDOG1, SYSCTL_PERIPH2_WDOG1},
 };
 
 //*****************************************************************************
@@ -341,35 +293,32 @@ static const unsigned long g_ppulPeripheralMap[][2] =
 // identifier.
 //
 //*****************************************************************************
-static unsigned long
-SysCtlPeripheralMapToNew(unsigned long ulPeripheral)
-{
-    unsigned long ulIndex;
+static unsigned long SysCtlPeripheralMapToNew(unsigned long ulPeripheral) {
+  unsigned long ulIndex;
 
+  //
+  // Loop through the table of old-style identifiers.
+  //
+  for (ulIndex = 0;
+       ulIndex < (sizeof(g_ppulPeripheralMap) / sizeof(g_ppulPeripheralMap[0]));
+       ulIndex++) {
     //
-    // Loop through the table of old-style identifiers.
+    // See if this peripheral matches the old-style identifier.
     //
-    for(ulIndex = 0; ulIndex < (sizeof(g_ppulPeripheralMap) /
-                                sizeof(g_ppulPeripheralMap[0])); ulIndex++)
-    {
-        //
-        // See if this peripheral matches the old-style identifier.
-        //
-        if(g_ppulPeripheralMap[ulIndex][0] == ulPeripheral)
-        {
-            //
-            // Return the new-style identifier that corresponds to this
-            // peripheral.
-            //
-            return(g_ppulPeripheralMap[ulIndex][1]);
-        }
+    if (g_ppulPeripheralMap[ulIndex][0] == ulPeripheral) {
+      //
+      // Return the new-style identifier that corresponds to this
+      // peripheral.
+      //
+      return (g_ppulPeripheralMap[ulIndex][1]);
     }
+  }
 
-    //
-    // No old-style identifier was found, so return the identifier unchanged
-    // (on the assumption that it is already a new-style identifier).
-    //
-    return(ulPeripheral);
+  //
+  // No old-style identifier was found, so return the identifier unchanged
+  // (on the assumption that it is already a new-style identifier).
+  //
+  return (ulPeripheral);
 }
 
 //*****************************************************************************
@@ -381,13 +330,11 @@ SysCtlPeripheralMapToNew(unsigned long ulPeripheral)
 //! \return The total number of bytes of SRAM.
 //
 //*****************************************************************************
-unsigned long
-SysCtlSRAMSizeGet(void)
-{
-    //
-    // Compute the size of the SRAM.
-    //
-    return(((HWREG(SYSCTL_DC0) & SYSCTL_DC0_SRAMSZ_M) >> 8) + 0x100);
+unsigned long SysCtlSRAMSizeGet(void) {
+  //
+  // Compute the size of the SRAM.
+  //
+  return (((HWREG(SYSCTL_DC0) & SYSCTL_DC0_SRAMSZ_M) >> 8) + 0x100);
 }
 
 //*****************************************************************************
@@ -399,13 +346,11 @@ SysCtlSRAMSizeGet(void)
 //! \return The total number of bytes of flash.
 //
 //*****************************************************************************
-unsigned long
-SysCtlFlashSizeGet(void)
-{
-    //
-    // Compute the size of the flash.
-    //
-    return(((HWREG(SYSCTL_DC0) & SYSCTL_DC0_FLASHSZ_M) << 11) + 0x800);
+unsigned long SysCtlFlashSizeGet(void) {
+  //
+  // Compute the size of the flash.
+  //
+  return (((HWREG(SYSCTL_DC0) & SYSCTL_DC0_FLASHSZ_M) << 11) + 0x800);
 }
 
 //*****************************************************************************
@@ -436,55 +381,35 @@ SysCtlFlashSizeGet(void)
 //! is not.
 //
 //*****************************************************************************
-tBoolean
-SysCtlPinPresent(unsigned long ulPin)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulPin == SYSCTL_PIN_PWM0) ||
-           (ulPin == SYSCTL_PIN_PWM1) ||
-           (ulPin == SYSCTL_PIN_PWM2) ||
-           (ulPin == SYSCTL_PIN_PWM3) ||
-           (ulPin == SYSCTL_PIN_PWM4) ||
-           (ulPin == SYSCTL_PIN_PWM5) ||
-           (ulPin == SYSCTL_PIN_C0MINUS) ||
-           (ulPin == SYSCTL_PIN_C0PLUS) ||
-           (ulPin == SYSCTL_PIN_C0O) ||
-           (ulPin == SYSCTL_PIN_C1MINUS) ||
-           (ulPin == SYSCTL_PIN_C1PLUS) ||
-           (ulPin == SYSCTL_PIN_C1O) ||
-           (ulPin == SYSCTL_PIN_C2MINUS) ||
-           (ulPin == SYSCTL_PIN_C2PLUS) ||
-           (ulPin == SYSCTL_PIN_C2O) ||
-           (ulPin == SYSCTL_PIN_MC_FAULT0) ||
-           (ulPin == SYSCTL_PIN_ADC0) ||
-           (ulPin == SYSCTL_PIN_ADC1) ||
-           (ulPin == SYSCTL_PIN_ADC2) ||
-           (ulPin == SYSCTL_PIN_ADC3) ||
-           (ulPin == SYSCTL_PIN_ADC4) ||
-           (ulPin == SYSCTL_PIN_ADC5) ||
-           (ulPin == SYSCTL_PIN_ADC6) ||
-           (ulPin == SYSCTL_PIN_ADC7) ||
-           (ulPin == SYSCTL_PIN_CCP0) ||
-           (ulPin == SYSCTL_PIN_CCP1) ||
-           (ulPin == SYSCTL_PIN_CCP2) ||
-           (ulPin == SYSCTL_PIN_CCP3) ||
-           (ulPin == SYSCTL_PIN_CCP4) ||
-           (ulPin == SYSCTL_PIN_CCP5) ||
-           (ulPin == SYSCTL_PIN_32KHZ));
+tBoolean SysCtlPinPresent(unsigned long ulPin) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulPin == SYSCTL_PIN_PWM0) || (ulPin == SYSCTL_PIN_PWM1) ||
+         (ulPin == SYSCTL_PIN_PWM2) || (ulPin == SYSCTL_PIN_PWM3) ||
+         (ulPin == SYSCTL_PIN_PWM4) || (ulPin == SYSCTL_PIN_PWM5) ||
+         (ulPin == SYSCTL_PIN_C0MINUS) || (ulPin == SYSCTL_PIN_C0PLUS) ||
+         (ulPin == SYSCTL_PIN_C0O) || (ulPin == SYSCTL_PIN_C1MINUS) ||
+         (ulPin == SYSCTL_PIN_C1PLUS) || (ulPin == SYSCTL_PIN_C1O) ||
+         (ulPin == SYSCTL_PIN_C2MINUS) || (ulPin == SYSCTL_PIN_C2PLUS) ||
+         (ulPin == SYSCTL_PIN_C2O) || (ulPin == SYSCTL_PIN_MC_FAULT0) ||
+         (ulPin == SYSCTL_PIN_ADC0) || (ulPin == SYSCTL_PIN_ADC1) ||
+         (ulPin == SYSCTL_PIN_ADC2) || (ulPin == SYSCTL_PIN_ADC3) ||
+         (ulPin == SYSCTL_PIN_ADC4) || (ulPin == SYSCTL_PIN_ADC5) ||
+         (ulPin == SYSCTL_PIN_ADC6) || (ulPin == SYSCTL_PIN_ADC7) ||
+         (ulPin == SYSCTL_PIN_CCP0) || (ulPin == SYSCTL_PIN_CCP1) ||
+         (ulPin == SYSCTL_PIN_CCP2) || (ulPin == SYSCTL_PIN_CCP3) ||
+         (ulPin == SYSCTL_PIN_CCP4) || (ulPin == SYSCTL_PIN_CCP5) ||
+         (ulPin == SYSCTL_PIN_32KHZ));
 
-    //
-    // Determine if this pin is present.
-    //
-    if(HWREG(SYSCTL_DC3) & ulPin)
-    {
-        return(true);
-    }
-    else
-    {
-        return(false);
-    }
+  //
+  // Determine if this pin is present.
+  //
+  if (HWREG(SYSCTL_DC3) & ulPin) {
+    return (true);
+  } else {
+    return (false);
+  }
 }
 
 //*****************************************************************************
@@ -528,49 +453,37 @@ SysCtlPinPresent(unsigned long ulPin)
 //! if it is not.
 //
 //*****************************************************************************
-tBoolean
-SysCtlPeripheralPresent(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+tBoolean SysCtlPeripheralPresent(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
+  //
+  // See if the peripheral index is 15, indicating a peripheral that is
+  // accessed via the SYSCTL_PPperiph registers.
+  //
+  if ((ulPeripheral & 0xf0000000) == 0xf0000000) {
     //
-    // See if the peripheral index is 15, indicating a peripheral that is
-    // accessed via the SYSCTL_PPperiph registers.
+    // See if this peripheral is present.
     //
-    if((ulPeripheral & 0xf0000000) == 0xf0000000)
-    {
-        //
-        // See if this peripheral is present.
-        //
-        return(HWREGBITW(SYSCTL_PPBASE + ((ulPeripheral & 0xff00) >> 8),
-                         ulPeripheral & 0xff));
+    return (HWREGBITW(SYSCTL_PPBASE + ((ulPeripheral & 0xff00) >> 8),
+                      ulPeripheral & 0xff));
+  } else if (ulPeripheral == SYSCTL_PERIPH_USB0) {
+    //
+    // USB is a special case because the DC bit is missing for USB0.
+    //
+    if (HWREG(SYSCTL_DC6) & SYSCTL_DC6_USB0_M) {
+      return (true);
+    } else {
+      return (false);
     }
-    else if(ulPeripheral == SYSCTL_PERIPH_USB0)
-    {
-        //
-        // USB is a special case because the DC bit is missing for USB0.
-        //
-        if(HWREG(SYSCTL_DC6) & SYSCTL_DC6_USB0_M)
-        {
-            return(true);
-        }
-        else
-        {
-            return(false);
-        }
-    }
-    else if(HWREG(g_pulDCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &
-            SYSCTL_PERIPH_MASK(ulPeripheral))
-    {
-        return(true);
-    }
-    else
-    {
-        return(false);
-    }
+  } else if (HWREG(g_pulDCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &
+             SYSCTL_PERIPH_MASK(ulPeripheral)) {
+    return (true);
+  } else {
+    return (false);
+  }
 }
 
 //*****************************************************************************
@@ -618,25 +531,23 @@ SysCtlPeripheralPresent(unsigned long ulPeripheral)
 //! if it is not.
 //
 //*****************************************************************************
-tBoolean
-SysCtlPeripheralReady(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+tBoolean SysCtlPeripheralReady(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
-    //
-    // Map the peripheral identifier to the new style identifiers.  If it is
-    // already a new style identifier, this is a NOP.
-    //
-    ulPeripheral = SysCtlPeripheralMapToNew(ulPeripheral);
+  //
+  // Map the peripheral identifier to the new style identifiers.  If it is
+  // already a new style identifier, this is a NOP.
+  //
+  ulPeripheral = SysCtlPeripheralMapToNew(ulPeripheral);
 
-    //
-    // See if this peripheral is ready.
-    //
-    return(HWREGBITW(SYSCTL_PRBASE + ((ulPeripheral & 0xff00) >> 8),
-                     ulPeripheral & 0xff));
+  //
+  // See if this peripheral is ready.
+  //
+  return (HWREGBITW(SYSCTL_PRBASE + ((ulPeripheral & 0xff00) >> 8),
+                    ulPeripheral & 0xff));
 }
 
 //*****************************************************************************
@@ -681,25 +592,23 @@ SysCtlPeripheralReady(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralPowerOn(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+void SysCtlPeripheralPowerOn(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
-    //
-    // Map the peripheral identifier to the new style identifiers.  If it is
-    // already a new style identifier, this is a NOP.
-    //
-    ulPeripheral = SysCtlPeripheralMapToNew(ulPeripheral);
+  //
+  // Map the peripheral identifier to the new style identifiers.  If it is
+  // already a new style identifier, this is a NOP.
+  //
+  ulPeripheral = SysCtlPeripheralMapToNew(ulPeripheral);
 
-    //
-    // Power on this peripheral.
-    //
-    HWREGBITW(SYSCTL_PCBASE + ((ulPeripheral & 0xff00) >> 8),
-              ulPeripheral & 0xff) = 1;
+  //
+  // Power on this peripheral.
+  //
+  HWREGBITW(SYSCTL_PCBASE + ((ulPeripheral & 0xff00) >> 8),
+            ulPeripheral & 0xff) = 1;
 }
 
 //*****************************************************************************
@@ -745,25 +654,23 @@ SysCtlPeripheralPowerOn(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralPowerOff(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+void SysCtlPeripheralPowerOff(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
-    //
-    // Map the peripheral identifier to the new style identifiers.  If it is
-    // already a new style identifier, this is a NOP.
-    //
-    ulPeripheral = SysCtlPeripheralMapToNew(ulPeripheral);
+  //
+  // Map the peripheral identifier to the new style identifiers.  If it is
+  // already a new style identifier, this is a NOP.
+  //
+  ulPeripheral = SysCtlPeripheralMapToNew(ulPeripheral);
 
-    //
-    // Power off this peripheral.
-    //
-    HWREGBITW(SYSCTL_PCBASE + ((ulPeripheral & 0xff00) >> 8),
-              ulPeripheral & 0xff) = 0;
+  //
+  // Power off this peripheral.
+  //
+  HWREGBITW(SYSCTL_PCBASE + ((ulPeripheral & 0xff00) >> 8),
+            ulPeripheral & 0xff) = 0;
 }
 
 //*****************************************************************************
@@ -806,62 +713,55 @@ SysCtlPeripheralPowerOff(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralReset(unsigned long ulPeripheral)
-{
-    volatile unsigned long ulDelay;
+void SysCtlPeripheralReset(unsigned long ulPeripheral) {
+  volatile unsigned long ulDelay;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
+
+  //
+  // See if the peripheral index is 15, indicating a peripheral that is
+  // accessed via the SYSCTL_SRperiph registers.
+  //
+  if ((ulPeripheral & 0xf0000000) == 0xf0000000) {
+    //
+    // Put the peripheral into the reset state.
+    //
+    HWREGBITW(SYSCTL_SRBASE + ((ulPeripheral & 0xff00) >> 8),
+              ulPeripheral & 0xff) = 1;
 
     //
-    // Check the arguments.
+    // Delay for a little bit.
     //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
-
-    //
-    // See if the peripheral index is 15, indicating a peripheral that is
-    // accessed via the SYSCTL_SRperiph registers.
-    //
-    if((ulPeripheral & 0xf0000000) == 0xf0000000)
-    {
-        //
-        // Put the peripheral into the reset state.
-        //
-        HWREGBITW(SYSCTL_SRBASE + ((ulPeripheral & 0xff00) >> 8),
-                  ulPeripheral & 0xff) = 1;
-
-        //
-        // Delay for a little bit.
-        //
-        for(ulDelay = 0; ulDelay < 16; ulDelay++)
-        {
-        }
-
-        //
-        // Take the peripheral out of the reset state.
-        //
-        HWREGBITW(SYSCTL_SRBASE + ((ulPeripheral & 0xff00) >> 8),
-                  ulPeripheral & 0xff) = 0;
+    for (ulDelay = 0; ulDelay < 16; ulDelay++) {
     }
-    else
-    {
-        //
-        // Put the peripheral into the reset state.
-        //
-        HWREG(g_pulSRCRRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) |=
-            SYSCTL_PERIPH_MASK(ulPeripheral);
 
-        //
-        // Delay for a little bit.
-        //
-        for(ulDelay = 0; ulDelay < 16; ulDelay++)
-        {
-        }
+    //
+    // Take the peripheral out of the reset state.
+    //
+    HWREGBITW(SYSCTL_SRBASE + ((ulPeripheral & 0xff00) >> 8),
+              ulPeripheral & 0xff) = 0;
+  } else {
+    //
+    // Put the peripheral into the reset state.
+    //
+    HWREG(g_pulSRCRRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) |=
+        SYSCTL_PERIPH_MASK(ulPeripheral);
 
-        //
-        // Take the peripheral out of the reset state.
-        //
-        HWREG(g_pulSRCRRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &=
-            ~SYSCTL_PERIPH_MASK(ulPeripheral);
+    //
+    // Delay for a little bit.
+    //
+    for (ulDelay = 0; ulDelay < 16; ulDelay++) {
     }
+
+    //
+    // Take the peripheral out of the reset state.
+    //
+    HWREG(g_pulSRCRRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &=
+        ~SYSCTL_PERIPH_MASK(ulPeripheral);
+  }
 }
 
 //*****************************************************************************
@@ -909,34 +809,29 @@ SysCtlPeripheralReset(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralEnable(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+void SysCtlPeripheralEnable(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
+  //
+  // See if the peripheral index is 15, indicating a peripheral that is
+  // accessed via the SYSCTL_RCGCperiph registers.
+  //
+  if ((ulPeripheral & 0xf0000000) == 0xf0000000) {
     //
-    // See if the peripheral index is 15, indicating a peripheral that is
-    // accessed via the SYSCTL_RCGCperiph registers.
+    // Enable this peripheral.
     //
-    if((ulPeripheral & 0xf0000000) == 0xf0000000)
-    {
-        //
-        // Enable this peripheral.
-        //
-        HWREGBITW(SYSCTL_RCGCBASE + ((ulPeripheral & 0xff00) >> 8),
-                  ulPeripheral & 0xff) = 1;
-    }
-    else
-    {
-        //
-        // Enable this peripheral.
-        //
-        HWREG(g_pulRCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) |=
-            SYSCTL_PERIPH_MASK(ulPeripheral);
-    }
+    HWREGBITW(SYSCTL_RCGCBASE + ((ulPeripheral & 0xff00) >> 8),
+              ulPeripheral & 0xff) = 1;
+  } else {
+    //
+    // Enable this peripheral.
+    //
+    HWREG(g_pulRCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) |=
+        SYSCTL_PERIPH_MASK(ulPeripheral);
+  }
 }
 
 //*****************************************************************************
@@ -977,34 +872,29 @@ SysCtlPeripheralEnable(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralDisable(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+void SysCtlPeripheralDisable(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
+  //
+  // See if the peripheral index is 15, indicating a peripheral that is
+  // accessed via the SYSCTL_RCGCperiph registers.
+  //
+  if ((ulPeripheral & 0xf0000000) == 0xf0000000) {
     //
-    // See if the peripheral index is 15, indicating a peripheral that is
-    // accessed via the SYSCTL_RCGCperiph registers.
+    // Disable this peripheral.
     //
-    if((ulPeripheral & 0xf0000000) == 0xf0000000)
-    {
-        //
-        // Disable this peripheral.
-        //
-        HWREGBITW(SYSCTL_RCGCBASE + ((ulPeripheral & 0xff00) >> 8),
-                  ulPeripheral & 0xff) = 0;
-    }
-    else
-    {
-        //
-        // Disable this peripheral.
-        //
-        HWREG(g_pulRCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &=
-            ~SYSCTL_PERIPH_MASK(ulPeripheral);
-    }
+    HWREGBITW(SYSCTL_RCGCBASE + ((ulPeripheral & 0xff00) >> 8),
+              ulPeripheral & 0xff) = 0;
+  } else {
+    //
+    // Disable this peripheral.
+    //
+    HWREG(g_pulRCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &=
+        ~SYSCTL_PERIPH_MASK(ulPeripheral);
+  }
 }
 
 //*****************************************************************************
@@ -1052,34 +942,29 @@ SysCtlPeripheralDisable(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralSleepEnable(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+void SysCtlPeripheralSleepEnable(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
+  //
+  // See if the peripheral index is 15, indicating a peripheral that is
+  // accessed via the SYSCTL_SCGCperiph registers.
+  //
+  if ((ulPeripheral & 0xf0000000) == 0xf0000000) {
     //
-    // See if the peripheral index is 15, indicating a peripheral that is
-    // accessed via the SYSCTL_SCGCperiph registers.
+    // Enable this peripheral in sleep mode.
     //
-    if((ulPeripheral & 0xf0000000) == 0xf0000000)
-    {
-        //
-        // Enable this peripheral in sleep mode.
-        //
-        HWREGBITW(SYSCTL_SCGCBASE + ((ulPeripheral & 0xff00) >> 8),
-                  ulPeripheral & 0xff) = 1;
-    }
-    else
-    {
-        //
-        // Enable this peripheral in sleep mode.
-        //
-        HWREG(g_pulSCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) |=
-            SYSCTL_PERIPH_MASK(ulPeripheral);
-    }
+    HWREGBITW(SYSCTL_SCGCBASE + ((ulPeripheral & 0xff00) >> 8),
+              ulPeripheral & 0xff) = 1;
+  } else {
+    //
+    // Enable this peripheral in sleep mode.
+    //
+    HWREG(g_pulSCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) |=
+        SYSCTL_PERIPH_MASK(ulPeripheral);
+  }
 }
 
 //*****************************************************************************
@@ -1128,34 +1013,29 @@ SysCtlPeripheralSleepEnable(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralSleepDisable(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+void SysCtlPeripheralSleepDisable(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
+  //
+  // See if the peripheral index is 15, indicating a peripheral that is
+  // accessed via the SYSCTL_SCGCperiph registers.
+  //
+  if ((ulPeripheral & 0xf0000000) == 0xf0000000) {
     //
-    // See if the peripheral index is 15, indicating a peripheral that is
-    // accessed via the SYSCTL_SCGCperiph registers.
+    // Disable this peripheral in sleep mode.
     //
-    if((ulPeripheral & 0xf0000000) == 0xf0000000)
-    {
-        //
-        // Disable this peripheral in sleep mode.
-        //
-        HWREGBITW(SYSCTL_SCGCBASE + ((ulPeripheral & 0xff00) >> 8),
-                  ulPeripheral & 0xff) = 0;
-    }
-    else
-    {
-        //
-        // Disable this peripheral in sleep mode.
-        //
-        HWREG(g_pulSCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &=
-            ~SYSCTL_PERIPH_MASK(ulPeripheral);
-    }
+    HWREGBITW(SYSCTL_SCGCBASE + ((ulPeripheral & 0xff00) >> 8),
+              ulPeripheral & 0xff) = 0;
+  } else {
+    //
+    // Disable this peripheral in sleep mode.
+    //
+    HWREG(g_pulSCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &=
+        ~SYSCTL_PERIPH_MASK(ulPeripheral);
+  }
 }
 
 //*****************************************************************************
@@ -1205,34 +1085,29 @@ SysCtlPeripheralSleepDisable(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralDeepSleepEnable(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+void SysCtlPeripheralDeepSleepEnable(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
+  //
+  // See if the peripheral index is 15, indicating a peripheral that is
+  // accessed via the SYSCTL_DCGCperiph registers.
+  //
+  if ((ulPeripheral & 0xf0000000) == 0xf0000000) {
     //
-    // See if the peripheral index is 15, indicating a peripheral that is
-    // accessed via the SYSCTL_DCGCperiph registers.
+    // Enable this peripheral in deep-sleep mode.
     //
-    if((ulPeripheral & 0xf0000000) == 0xf0000000)
-    {
-        //
-        // Enable this peripheral in deep-sleep mode.
-        //
-        HWREGBITW(SYSCTL_DCGCBASE + ((ulPeripheral & 0xff00) >> 8),
-                  ulPeripheral & 0xff) = 1;
-    }
-    else
-    {
-        //
-        // Enable this peripheral in deep-sleep mode.
-        //
-        HWREG(g_pulDCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) |=
-            SYSCTL_PERIPH_MASK(ulPeripheral);
-    }
+    HWREGBITW(SYSCTL_DCGCBASE + ((ulPeripheral & 0xff00) >> 8),
+              ulPeripheral & 0xff) = 1;
+  } else {
+    //
+    // Enable this peripheral in deep-sleep mode.
+    //
+    HWREG(g_pulDCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) |=
+        SYSCTL_PERIPH_MASK(ulPeripheral);
+  }
 }
 
 //*****************************************************************************
@@ -1284,34 +1159,29 @@ SysCtlPeripheralDeepSleepEnable(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralDeepSleepDisable(unsigned long ulPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(SysCtlPeripheralValid(ulPeripheral));
+void SysCtlPeripheralDeepSleepDisable(unsigned long ulPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(SysCtlPeripheralValid(ulPeripheral));
 
+  //
+  // See if the peripheral index is 15, indicating a peripheral that is
+  // accessed via the SYSCTL_DCGCperiph registers.
+  //
+  if ((ulPeripheral & 0xf0000000) == 0xf0000000) {
     //
-    // See if the peripheral index is 15, indicating a peripheral that is
-    // accessed via the SYSCTL_DCGCperiph registers.
+    // Disable this peripheral in deep-sleep mode.
     //
-    if((ulPeripheral & 0xf0000000) == 0xf0000000)
-    {
-        //
-        // Disable this peripheral in deep-sleep mode.
-        //
-        HWREGBITW(SYSCTL_DCGCBASE + ((ulPeripheral & 0xff00) >> 8),
-                  ulPeripheral & 0xff) = 0;
-    }
-    else
-    {
-        //
-        // Disable this peripheral in deep-sleep mode.
-        //
-        HWREG(g_pulDCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &=
-            ~SYSCTL_PERIPH_MASK(ulPeripheral);
-    }
+    HWREGBITW(SYSCTL_DCGCBASE + ((ulPeripheral & 0xff00) >> 8),
+              ulPeripheral & 0xff) = 0;
+  } else {
+    //
+    // Disable this peripheral in deep-sleep mode.
+    //
+    HWREG(g_pulDCGCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &=
+        ~SYSCTL_PERIPH_MASK(ulPeripheral);
+  }
 }
 
 //*****************************************************************************
@@ -1331,20 +1201,15 @@ SysCtlPeripheralDeepSleepDisable(unsigned long ulPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPeripheralClockGating(tBoolean bEnable)
-{
-    //
-    // Enable peripheral clock gating as requested.
-    //
-    if(bEnable)
-    {
-        HWREG(SYSCTL_RCC) |= SYSCTL_RCC_ACG;
-    }
-    else
-    {
-        HWREG(SYSCTL_RCC) &= ~(SYSCTL_RCC_ACG);
-    }
+void SysCtlPeripheralClockGating(tBoolean bEnable) {
+  //
+  // Enable peripheral clock gating as requested.
+  //
+  if (bEnable) {
+    HWREG(SYSCTL_RCC) |= SYSCTL_RCC_ACG;
+  } else {
+    HWREG(SYSCTL_RCC) &= ~(SYSCTL_RCC_ACG);
+  }
 }
 
 //*****************************************************************************
@@ -1375,18 +1240,16 @@ SysCtlPeripheralClockGating(tBoolean bEnable)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlIntRegister(void (*pfnHandler)(void))
-{
-    //
-    // Register the interrupt handler, returning an error if an error occurs.
-    //
-    IntRegister(INT_SYSCTL, pfnHandler);
+void SysCtlIntRegister(void (*pfnHandler)(void)) {
+  //
+  // Register the interrupt handler, returning an error if an error occurs.
+  //
+  IntRegister(INT_SYSCTL, pfnHandler);
 
-    //
-    // Enable the system control interrupt.
-    //
-    IntEnable(INT_SYSCTL);
+  //
+  // Enable the system control interrupt.
+  //
+  IntEnable(INT_SYSCTL);
 }
 
 //*****************************************************************************
@@ -1403,18 +1266,16 @@ SysCtlIntRegister(void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlIntUnregister(void)
-{
-    //
-    // Disable the interrupt.
-    //
-    IntDisable(INT_SYSCTL);
+void SysCtlIntUnregister(void) {
+  //
+  // Disable the interrupt.
+  //
+  IntDisable(INT_SYSCTL);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_SYSCTL);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_SYSCTL);
 }
 
 //*****************************************************************************
@@ -1437,13 +1298,11 @@ SysCtlIntUnregister(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlIntEnable(unsigned long ulInts)
-{
-    //
-    // Enable the specified interrupts.
-    //
-    HWREG(SYSCTL_IMC) |= ulInts;
+void SysCtlIntEnable(unsigned long ulInts) {
+  //
+  // Enable the specified interrupts.
+  //
+  HWREG(SYSCTL_IMC) |= ulInts;
 }
 
 //*****************************************************************************
@@ -1466,13 +1325,11 @@ SysCtlIntEnable(unsigned long ulInts)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlIntDisable(unsigned long ulInts)
-{
-    //
-    // Disable the specified interrupts.
-    //
-    HWREG(SYSCTL_IMC) &= ~(ulInts);
+void SysCtlIntDisable(unsigned long ulInts) {
+  //
+  // Disable the specified interrupts.
+  //
+  HWREG(SYSCTL_IMC) &= ~(ulInts);
 }
 
 //*****************************************************************************
@@ -1504,13 +1361,11 @@ SysCtlIntDisable(unsigned long ulInts)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlIntClear(unsigned long ulInts)
-{
-    //
-    // Clear the requested interrupt sources.
-    //
-    HWREG(SYSCTL_MISC) = ulInts;
+void SysCtlIntClear(unsigned long ulInts) {
+  //
+  // Clear the requested interrupt sources.
+  //
+  HWREG(SYSCTL_MISC) = ulInts;
 }
 
 //*****************************************************************************
@@ -1534,21 +1389,16 @@ SysCtlIntClear(unsigned long ulInts)
 //! which interrupt sources are available.
 //
 //*****************************************************************************
-unsigned long
-SysCtlIntStatus(tBoolean bMasked)
-{
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(SYSCTL_MISC));
-    }
-    else
-    {
-        return(HWREG(SYSCTL_RIS));
-    }
+unsigned long SysCtlIntStatus(tBoolean bMasked) {
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(SYSCTL_MISC));
+  } else {
+    return (HWREG(SYSCTL_RIS));
+  }
 }
 
 //*****************************************************************************
@@ -1572,28 +1422,21 @@ SysCtlIntStatus(tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlLDOSet(unsigned long ulVoltage)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulVoltage == SYSCTL_LDO_2_25V) ||
-           (ulVoltage == SYSCTL_LDO_2_30V) ||
-           (ulVoltage == SYSCTL_LDO_2_35V) ||
-           (ulVoltage == SYSCTL_LDO_2_40V) ||
-           (ulVoltage == SYSCTL_LDO_2_45V) ||
-           (ulVoltage == SYSCTL_LDO_2_50V) ||
-           (ulVoltage == SYSCTL_LDO_2_55V) ||
-           (ulVoltage == SYSCTL_LDO_2_60V) ||
-           (ulVoltage == SYSCTL_LDO_2_65V) ||
-           (ulVoltage == SYSCTL_LDO_2_70V) ||
-           (ulVoltage == SYSCTL_LDO_2_75V));
+void SysCtlLDOSet(unsigned long ulVoltage) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulVoltage == SYSCTL_LDO_2_25V) || (ulVoltage == SYSCTL_LDO_2_30V) ||
+         (ulVoltage == SYSCTL_LDO_2_35V) || (ulVoltage == SYSCTL_LDO_2_40V) ||
+         (ulVoltage == SYSCTL_LDO_2_45V) || (ulVoltage == SYSCTL_LDO_2_50V) ||
+         (ulVoltage == SYSCTL_LDO_2_55V) || (ulVoltage == SYSCTL_LDO_2_60V) ||
+         (ulVoltage == SYSCTL_LDO_2_65V) || (ulVoltage == SYSCTL_LDO_2_70V) ||
+         (ulVoltage == SYSCTL_LDO_2_75V));
 
-    //
-    // Set the LDO voltage to the requested value.
-    //
-    HWREG(SYSCTL_LDOPCTL) = ulVoltage;
+  //
+  // Set the LDO voltage to the requested value.
+  //
+  HWREG(SYSCTL_LDOPCTL) = ulVoltage;
 }
 
 //*****************************************************************************
@@ -1610,13 +1453,11 @@ SysCtlLDOSet(unsigned long ulVoltage)
 //! \b SYSCTL_LDO_2_70V, or \b SYSCTL_LDO_2_75V.
 //
 //*****************************************************************************
-unsigned long
-SysCtlLDOGet(void)
-{
-    //
-    // Return the LDO voltage setting.
-    //
-    return(HWREG(SYSCTL_LDOPCTL));
+unsigned long SysCtlLDOGet(void) {
+  //
+  // Return the LDO voltage setting.
+  //
+  return (HWREG(SYSCTL_LDOPCTL));
 }
 
 //*****************************************************************************
@@ -1634,19 +1475,16 @@ SysCtlLDOGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlLDOConfigSet(unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulConfig == SYSCTL_LDOCFG_ARST) ||
-           (ulConfig == SYSCTL_LDOCFG_NORST));
+void SysCtlLDOConfigSet(unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulConfig == SYSCTL_LDOCFG_ARST) || (ulConfig == SYSCTL_LDOCFG_NORST));
 
-    //
-    // Set the reset control as requested.
-    //
-    HWREG(SYSCTL_LDOARST) = ulConfig;
+  //
+  // Set the reset control as requested.
+  //
+  HWREG(SYSCTL_LDOARST) = ulConfig;
 }
 
 //*****************************************************************************
@@ -1662,22 +1500,19 @@ SysCtlLDOConfigSet(unsigned long ulConfig)
 //! \return This function does not return.
 //
 //*****************************************************************************
-void
-SysCtlReset(void)
-{
-    //
-    // Perform a software reset request.  This request causes the device to
-    // reset, no further code is executed.
-    //
-    HWREG(NVIC_APINT) = NVIC_APINT_VECTKEY | NVIC_APINT_SYSRESETREQ;
+void SysCtlReset(void) {
+  //
+  // Perform a software reset request.  This request causes the device to
+  // reset, no further code is executed.
+  //
+  HWREG(NVIC_APINT) = NVIC_APINT_VECTKEY | NVIC_APINT_SYSRESETREQ;
 
-    //
-    // The device should have reset, so this should never be reached.  Just in
-    // case, loop forever.
-    //
-    while(1)
-    {
-    }
+  //
+  // The device should have reset, so this should never be reached.  Just in
+  // case, loop forever.
+  //
+  while (1) {
+  }
 }
 
 //*****************************************************************************
@@ -1694,13 +1529,11 @@ SysCtlReset(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlSleep(void)
-{
-    //
-    // Wait for an interrupt.
-    //
-    CPUwfi();
+void SysCtlSleep(void) {
+  //
+  // Wait for an interrupt.
+  //
+  CPUwfi();
 }
 
 //*****************************************************************************
@@ -1717,23 +1550,21 @@ SysCtlSleep(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlDeepSleep(void)
-{
-    //
-    // Enable deep-sleep.
-    //
-    HWREG(NVIC_SYS_CTRL) |= NVIC_SYS_CTRL_SLEEPDEEP;
+void SysCtlDeepSleep(void) {
+  //
+  // Enable deep-sleep.
+  //
+  HWREG(NVIC_SYS_CTRL) |= NVIC_SYS_CTRL_SLEEPDEEP;
 
-    //
-    // Wait for an interrupt.
-    //
-    CPUwfi();
+  //
+  // Wait for an interrupt.
+  //
+  CPUwfi();
 
-    //
-    // Disable deep-sleep so that a future sleep works correctly.
-    //
-    HWREG(NVIC_SYS_CTRL) &= ~(NVIC_SYS_CTRL_SLEEPDEEP);
+  //
+  // Disable deep-sleep so that a future sleep works correctly.
+  //
+  HWREG(NVIC_SYS_CTRL) &= ~(NVIC_SYS_CTRL_SLEEPDEEP);
 }
 
 //*****************************************************************************
@@ -1751,13 +1582,11 @@ SysCtlDeepSleep(void)
 //! \return Returns the reason(s) for a reset.
 //
 //*****************************************************************************
-unsigned long
-SysCtlResetCauseGet(void)
-{
-    //
-    // Return the reset reasons.
-    //
-    return(HWREG(SYSCTL_RESC));
+unsigned long SysCtlResetCauseGet(void) {
+  //
+  // Return the reset reasons.
+  //
+  return (HWREG(SYSCTL_RESC));
 }
 
 //*****************************************************************************
@@ -1777,13 +1606,11 @@ SysCtlResetCauseGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlResetCauseClear(unsigned long ulCauses)
-{
-    //
-    // Clear the given reset reasons.
-    //
-    HWREG(SYSCTL_RESC) &= ~(ulCauses);
+void SysCtlResetCauseClear(unsigned long ulCauses) {
+  //
+  // Clear the given reset reasons.
+  //
+  HWREG(SYSCTL_RESC) &= ~(ulCauses);
 }
 
 //*****************************************************************************
@@ -1810,19 +1637,17 @@ SysCtlResetCauseClear(unsigned long ulCauses)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlBrownOutConfigSet(unsigned long ulConfig, unsigned long ulDelay)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(!(ulConfig & ~(SYSCTL_BOR_RESET | SYSCTL_BOR_RESAMPLE)));
-    ASSERT(ulDelay < 8192);
+void SysCtlBrownOutConfigSet(unsigned long ulConfig, unsigned long ulDelay) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(!(ulConfig & ~(SYSCTL_BOR_RESET | SYSCTL_BOR_RESAMPLE)));
+  ASSERT(ulDelay < 8192);
 
-    //
-    // Configure the brown-out reset control.
-    //
-    HWREG(SYSCTL_PBORCTL) = (ulDelay << SYSCTL_PBORCTL_BORTIM_S) | ulConfig;
+  //
+  // Configure the brown-out reset control.
+  //
+  HWREG(SYSCTL_PBORCTL) = (ulDelay << SYSCTL_PBORCTL_BORTIM_S) | ulConfig;
 }
 
 //*****************************************************************************
@@ -1841,30 +1666,26 @@ SysCtlBrownOutConfigSet(unsigned long ulConfig, unsigned long ulDelay)
 //
 //*****************************************************************************
 #if defined(ewarm) || defined(DOXYGEN)
-void
-SysCtlDelay(unsigned long ulCount)
-{
-    __asm("    subs    r0, #1\n"
-          "    bne.n   SysCtlDelay\n"
-          "    bx      lr");
+void SysCtlDelay(unsigned long ulCount) {
+  __asm(
+      "    subs    r0, #1\n"
+      "    bne.n   SysCtlDelay\n"
+      "    bx      lr");
 }
 #endif
 #if defined(codered) || defined(gcc) || defined(sourcerygxx)
-void __attribute__((naked))
-SysCtlDelay(unsigned long ulCount)
-{
-    __asm("    subs    r0, #1\n"
-          "    bne     SysCtlDelay\n"
-          "    bx      lr");
+void __attribute__((naked)) SysCtlDelay(unsigned long ulCount) {
+  __asm(
+      "    subs    r0, #1\n"
+      "    bne     SysCtlDelay\n"
+      "    bx      lr");
 }
 #endif
 #if defined(rvmdk) || defined(__ARMCC_VERSION)
-__asm void
-SysCtlDelay(unsigned long ulCount)
-{
-    subs    r0, #1;
-    bne     SysCtlDelay;
-    bx      lr;
+__asm void SysCtlDelay(unsigned long ulCount) {
+  subs r0, #1;
+  bne SysCtlDelay;
+  bx lr;
 }
 #endif
 //
@@ -1872,15 +1693,16 @@ SysCtlDelay(unsigned long ulCount)
 // compiler from doing funny things with the optimizer.
 //
 #if defined(ccs)
-    __asm("    .sect \".text:SysCtlDelay\"\n"
-          "    .clink\n"
-          "    .thumbfunc SysCtlDelay\n"
-          "    .thumb\n"
-          "    .global SysCtlDelay\n"
-          "SysCtlDelay:\n"
-          "    subs r0, #1\n"
-          "    bne.n SysCtlDelay\n"
-          "    bx lr\n");
+__asm(
+    "    .sect \".text:SysCtlDelay\"\n"
+    "    .clink\n"
+    "    .thumbfunc SysCtlDelay\n"
+    "    .thumb\n"
+    "    .global SysCtlDelay\n"
+    "SysCtlDelay:\n"
+    "    subs r0, #1\n"
+    "    bne.n SysCtlDelay\n"
+    "    bx lr\n");
 #endif
 
 //*****************************************************************************
@@ -1907,13 +1729,11 @@ SysCtlDelay(unsigned long ulCount)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlMOSCConfigSet(unsigned long ulConfig)
-{
-    //
-    // Configure the MOSC control.
-    //
-    HWREG(SYSCTL_MOSCCTL) = ulConfig;
+void SysCtlMOSCConfigSet(unsigned long ulConfig) {
+  //
+  // Configure the MOSC control.
+  //
+  HWREG(SYSCTL_MOSCCTL) = ulConfig;
 }
 
 //*****************************************************************************
@@ -1943,53 +1763,46 @@ SysCtlMOSCConfigSet(unsigned long ulConfig)
 //! \return Returns 1 if the calibration was successful and 0 if it failed.
 //
 //*****************************************************************************
-unsigned long
-SysCtlPIOSCCalibrate(unsigned long ulType)
-{
-    //
-    // Perform the requested calibration.  If performing user calibration, the
-    // UTEN bit must be set with one write, then the UT field in a second
-    // write, and the UPDATE bit in a final write.  For other calibration
-    // types, a single write to set UPDATE or CAL is all that is required.
-    //
-    if(ulType & (SYSCTL_PIOSCCAL_UTEN | SYSCTL_PIOSCCAL_UPDATE))
-    {
-        HWREG(SYSCTL_PIOSCCAL) = ulType & SYSCTL_PIOSCCAL_UTEN;
-        HWREG(SYSCTL_PIOSCCAL) =
-            ulType & (SYSCTL_PIOSCCAL_UTEN | SYSCTL_PIOSCCAL_UT_M);
-    }
-    HWREG(SYSCTL_PIOSCCAL) = ulType;
+unsigned long SysCtlPIOSCCalibrate(unsigned long ulType) {
+  //
+  // Perform the requested calibration.  If performing user calibration, the
+  // UTEN bit must be set with one write, then the UT field in a second
+  // write, and the UPDATE bit in a final write.  For other calibration
+  // types, a single write to set UPDATE or CAL is all that is required.
+  //
+  if (ulType & (SYSCTL_PIOSCCAL_UTEN | SYSCTL_PIOSCCAL_UPDATE)) {
+    HWREG(SYSCTL_PIOSCCAL) = ulType & SYSCTL_PIOSCCAL_UTEN;
+    HWREG(SYSCTL_PIOSCCAL) =
+        ulType & (SYSCTL_PIOSCCAL_UTEN | SYSCTL_PIOSCCAL_UT_M);
+  }
+  HWREG(SYSCTL_PIOSCCAL) = ulType;
 
+  //
+  // See if an automatic calibration was requested.
+  //
+  if (ulType & SYSCTL_PIOSCCAL_CAL) {
     //
-    // See if an automatic calibration was requested.
+    // Wait for the automatic calibration to complete.
     //
-    if(ulType & SYSCTL_PIOSCCAL_CAL)
-    {
-        //
-        // Wait for the automatic calibration to complete.
-        //
-        while((HWREG(SYSCTL_PIOSCSTAT) & SYSCTL_PIOSCSTAT_CR_M) == 0)
-        {
-        }
-
-        //
-        // If the automatic calibration failed, return an error.
-        //
-        if((HWREG(SYSCTL_PIOSCSTAT) & SYSCTL_PIOSCSTAT_CR_M) !=
-           SYSCTL_PIOSCSTAT_CRPASS)
-        {
-            return(0);
-        }
+    while ((HWREG(SYSCTL_PIOSCSTAT) & SYSCTL_PIOSCSTAT_CR_M) == 0) {
     }
 
     //
-    // The calibration was successful.
+    // If the automatic calibration failed, return an error.
     //
-    return(1);
+    if ((HWREG(SYSCTL_PIOSCSTAT) & SYSCTL_PIOSCSTAT_CR_M) !=
+        SYSCTL_PIOSCSTAT_CRPASS) {
+      return (0);
+    }
+  }
+
+  //
+  // The calibration was successful.
+  //
+  return (1);
 }
-    unsigned long ulSysDiv, ulOsc, ulOscSelect;
-    tBoolean bNewPLL;
-
+unsigned long ulSysDiv, ulOsc, ulOscSelect;
+tBoolean bNewPLL;
 
 //*****************************************************************************
 //
@@ -2063,193 +1876,177 @@ SysCtlPIOSCCalibrate(unsigned long ulType)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlClockSet(unsigned long ulConfig)
-{
-    unsigned long ulDelay, ulRCC, ulRCC2;
+void SysCtlClockSet(unsigned long ulConfig) {
+  unsigned long ulDelay, ulRCC, ulRCC2;
 
+  //
+  // See if this is a Sandstorm-class device and clocking features from newer
+  // devices were requested.
+  //
+  if (CLASS_IS_SANDSTORM && (ulConfig & SYSCTL_RCC2_USERCC2)) {
     //
-    // See if this is a Sandstorm-class device and clocking features from newer
-    // devices were requested.
+    // Return without changing the clocking because the requested
+    // configuration can not be achieved.
     //
-    if(CLASS_IS_SANDSTORM && (ulConfig & SYSCTL_RCC2_USERCC2))
-    {
-        //
-        // Return without changing the clocking because the requested
-        // configuration can not be achieved.
-        //
-        return;
-    }
+    return;
+  }
 
-    //
-    // Get the current value of the RCC and RCC2 registers.  If using a
-    // Sandstorm-class device, the RCC2 register reads back as zero and the
-    // writes to it from within this function are ignored.
-    //
-    ulRCC = HWREG(SYSCTL_RCC);
-    ulRCC2 = HWREG(SYSCTL_RCC2);
+  //
+  // Get the current value of the RCC and RCC2 registers.  If using a
+  // Sandstorm-class device, the RCC2 register reads back as zero and the
+  // writes to it from within this function are ignored.
+  //
+  ulRCC = HWREG(SYSCTL_RCC);
+  ulRCC2 = HWREG(SYSCTL_RCC2);
 
-    //
-    // Bypass the PLL and system clock dividers for now.
-    //
-    ulRCC |= SYSCTL_RCC_BYPASS;
-    ulRCC &= ~(SYSCTL_RCC_USESYSDIV);
-    ulRCC2 |= SYSCTL_RCC2_BYPASS2;
+  //
+  // Bypass the PLL and system clock dividers for now.
+  //
+  ulRCC |= SYSCTL_RCC_BYPASS;
+  ulRCC &= ~(SYSCTL_RCC_USESYSDIV);
+  ulRCC2 |= SYSCTL_RCC2_BYPASS2;
 
-    //
-    // Write the new RCC value.
-    //
-    HWREG(SYSCTL_RCC) = ulRCC;
-    HWREG(SYSCTL_RCC2) = ulRCC2;
+  //
+  // Write the new RCC value.
+  //
+  HWREG(SYSCTL_RCC) = ulRCC;
+  HWREG(SYSCTL_RCC2) = ulRCC2;
 
+  //
+  // See if either oscillator needs to be enabled.
+  //
+  if (((ulRCC & SYSCTL_RCC_IOSCDIS) && !(ulConfig & SYSCTL_RCC_IOSCDIS)) ||
+      ((ulRCC & SYSCTL_RCC_MOSCDIS) && !(ulConfig & SYSCTL_RCC_MOSCDIS))) {
     //
-    // See if either oscillator needs to be enabled.
+    // Make sure that the required oscillators are enabled.  For now, the
+    // previously enabled oscillators must be enabled along with the newly
+    // requested oscillators.
     //
-    if(((ulRCC & SYSCTL_RCC_IOSCDIS) && !(ulConfig & SYSCTL_RCC_IOSCDIS)) ||
-       ((ulRCC & SYSCTL_RCC_MOSCDIS) && !(ulConfig & SYSCTL_RCC_MOSCDIS)))
-    {
-        //
-        // Make sure that the required oscillators are enabled.  For now, the
-        // previously enabled oscillators must be enabled along with the newly
-        // requested oscillators.
-        //
-        ulRCC &= (~(SYSCTL_RCC_IOSCDIS | SYSCTL_RCC_MOSCDIS) |
-                  (ulConfig & (SYSCTL_RCC_IOSCDIS | SYSCTL_RCC_MOSCDIS)));
-
-        //
-        // Write the new RCC value.
-        //
-        HWREG(SYSCTL_RCC) = ulRCC;
-
-        //
-        // Wait for a bit, giving the oscillator time to stabilize.  The number
-        // of iterations is adjusted based on the current clock source; a
-        // smaller number of iterations is required for slower clock rates.
-        //
-        if(((ulRCC2 & SYSCTL_RCC2_USERCC2) &&
-            (((ulRCC2 & SYSCTL_RCC2_OSCSRC2_M) == SYSCTL_RCC2_OSCSRC2_30) ||
-             ((ulRCC2 & SYSCTL_RCC2_OSCSRC2_M) == SYSCTL_RCC2_OSCSRC2_32))) ||
-           (!(ulRCC2 & SYSCTL_RCC2_USERCC2) &&
-            ((ulRCC & SYSCTL_RCC_OSCSRC_M) == SYSCTL_RCC_OSCSRC_30)))
-        {
-            //
-            // Delay for 4096 iterations.
-            //
-            SysCtlDelay(4096);
-        }
-        else
-        {
-            //
-            // Delay for 524,288 iterations.
-            //
-            SysCtlDelay(524288);
-        }
-    }
-
-    //
-    // Set the new crystal value and oscillator source.  Because the OSCSRC2
-    // field in RCC2 overlaps the XTAL field in RCC, the OSCSRC field has a
-    // special encoding within ulConfig to avoid the overlap.
-    //
-    ulRCC &= ~(SYSCTL_RCC_XTAL_M | SYSCTL_RCC_OSCSRC_M);
-    ulRCC |= ulConfig & (SYSCTL_RCC_XTAL_M | SYSCTL_RCC_OSCSRC_M);
-    ulRCC2 &= ~(SYSCTL_RCC2_USERCC2 | SYSCTL_RCC2_OSCSRC2_M);
-    ulRCC2 |= ulConfig & (SYSCTL_RCC2_USERCC2 | SYSCTL_RCC_OSCSRC_M);
-    ulRCC2 |= (ulConfig & 0x00000008) << 3;
+    ulRCC &= (~(SYSCTL_RCC_IOSCDIS | SYSCTL_RCC_MOSCDIS) |
+              (ulConfig & (SYSCTL_RCC_IOSCDIS | SYSCTL_RCC_MOSCDIS)));
 
     //
     // Write the new RCC value.
     //
     HWREG(SYSCTL_RCC) = ulRCC;
+
+    //
+    // Wait for a bit, giving the oscillator time to stabilize.  The number
+    // of iterations is adjusted based on the current clock source; a
+    // smaller number of iterations is required for slower clock rates.
+    //
+    if (((ulRCC2 & SYSCTL_RCC2_USERCC2) &&
+         (((ulRCC2 & SYSCTL_RCC2_OSCSRC2_M) == SYSCTL_RCC2_OSCSRC2_30) ||
+          ((ulRCC2 & SYSCTL_RCC2_OSCSRC2_M) == SYSCTL_RCC2_OSCSRC2_32))) ||
+        (!(ulRCC2 & SYSCTL_RCC2_USERCC2) &&
+         ((ulRCC & SYSCTL_RCC_OSCSRC_M) == SYSCTL_RCC_OSCSRC_30))) {
+      //
+      // Delay for 4096 iterations.
+      //
+      SysCtlDelay(4096);
+    } else {
+      //
+      // Delay for 524,288 iterations.
+      //
+      SysCtlDelay(524288);
+    }
+  }
+
+  //
+  // Set the new crystal value and oscillator source.  Because the OSCSRC2
+  // field in RCC2 overlaps the XTAL field in RCC, the OSCSRC field has a
+  // special encoding within ulConfig to avoid the overlap.
+  //
+  ulRCC &= ~(SYSCTL_RCC_XTAL_M | SYSCTL_RCC_OSCSRC_M);
+  ulRCC |= ulConfig & (SYSCTL_RCC_XTAL_M | SYSCTL_RCC_OSCSRC_M);
+  ulRCC2 &= ~(SYSCTL_RCC2_USERCC2 | SYSCTL_RCC2_OSCSRC2_M);
+  ulRCC2 |= ulConfig & (SYSCTL_RCC2_USERCC2 | SYSCTL_RCC_OSCSRC_M);
+  ulRCC2 |= (ulConfig & 0x00000008) << 3;
+
+  //
+  // Write the new RCC value.
+  //
+  HWREG(SYSCTL_RCC) = ulRCC;
+  HWREG(SYSCTL_RCC2) = ulRCC2;
+
+  //
+  // Wait for a bit so that new crystal value and oscillator source can take
+  // effect.
+  //
+  SysCtlDelay(16);
+
+  //
+  // Set the PLL configuration.
+  //
+  ulRCC &= ~(SYSCTL_RCC_PWRDN | SYSCTL_RCC_OEN);
+  ulRCC |= ulConfig & (SYSCTL_RCC_PWRDN | SYSCTL_RCC_OEN);
+  ulRCC2 &= ~(SYSCTL_RCC2_PWRDN2);
+  ulRCC2 |= ulConfig & SYSCTL_RCC2_PWRDN2;
+
+  //
+  // Clear the PLL lock interrupt.
+  //
+  HWREG(SYSCTL_MISC) = SYSCTL_INT_PLL_LOCK;
+
+  //
+  // Write the new RCC value.
+  //
+  if (ulRCC2 & SYSCTL_RCC2_USERCC2) {
     HWREG(SYSCTL_RCC2) = ulRCC2;
-
-    //
-    // Wait for a bit so that new crystal value and oscillator source can take
-    // effect.
-    //
-    SysCtlDelay(16);
-
-    //
-    // Set the PLL configuration.
-    //
-    ulRCC &= ~(SYSCTL_RCC_PWRDN | SYSCTL_RCC_OEN);
-    ulRCC |= ulConfig & (SYSCTL_RCC_PWRDN | SYSCTL_RCC_OEN);
-    ulRCC2 &= ~(SYSCTL_RCC2_PWRDN2);
-    ulRCC2 |= ulConfig & SYSCTL_RCC2_PWRDN2;
-
-    //
-    // Clear the PLL lock interrupt.
-    //
-    HWREG(SYSCTL_MISC) = SYSCTL_INT_PLL_LOCK;
-
-    //
-    // Write the new RCC value.
-    //
-    if(ulRCC2 & SYSCTL_RCC2_USERCC2)
-    {
-        HWREG(SYSCTL_RCC2) = ulRCC2;
-        HWREG(SYSCTL_RCC) = ulRCC;
-    }
-    else
-    {
-        HWREG(SYSCTL_RCC) = ulRCC;
-        HWREG(SYSCTL_RCC2) = ulRCC2;
-    }
-
-    //
-    // Set the requested system divider and disable the appropriate
-    // oscillators.  This value is not written immediately.
-    //
-    ulRCC &= ~(SYSCTL_RCC_SYSDIV_M | SYSCTL_RCC_USESYSDIV |
-               SYSCTL_RCC_IOSCDIS | SYSCTL_RCC_MOSCDIS);
-    ulRCC |= ulConfig & (SYSCTL_RCC_SYSDIV_M | SYSCTL_RCC_USESYSDIV |
-                         SYSCTL_RCC_IOSCDIS | SYSCTL_RCC_MOSCDIS);
-    ulRCC2 &= ~(SYSCTL_RCC2_SYSDIV2_M);
-    ulRCC2 |= ulConfig & SYSCTL_RCC2_SYSDIV2_M;
-    if(ulConfig & SYSCTL_RCC2_DIV400)
-    {
-        ulRCC |= SYSCTL_RCC_USESYSDIV;
-        ulRCC2 &= ~(SYSCTL_RCC_USESYSDIV);
-        ulRCC2 |= ulConfig & (SYSCTL_RCC2_DIV400 | SYSCTL_RCC2_SYSDIV2LSB);
-    }
-    else
-    {
-        ulRCC2 &= ~(SYSCTL_RCC2_DIV400);
-    }
-
-    //
-    // See if the PLL output is being used to clock the system.
-    //
-    if(!(ulConfig & SYSCTL_RCC_BYPASS))
-    {
-        //
-        // Wait until the PLL has locked.
-        //
-        for(ulDelay = 32768; ulDelay > 0; ulDelay--)
-        {
-            if(HWREG(SYSCTL_RIS) & SYSCTL_INT_PLL_LOCK)
-            {
-                break;
-            }
-        }
-
-        //
-        // Enable use of the PLL.
-        //
-        ulRCC &= ~(SYSCTL_RCC_BYPASS);
-        ulRCC2 &= ~(SYSCTL_RCC2_BYPASS2);
-    }
-
-    //
-    // Write the final RCC value.
-    //
+    HWREG(SYSCTL_RCC) = ulRCC;
+  } else {
     HWREG(SYSCTL_RCC) = ulRCC;
     HWREG(SYSCTL_RCC2) = ulRCC2;
+  }
+
+  //
+  // Set the requested system divider and disable the appropriate
+  // oscillators.  This value is not written immediately.
+  //
+  ulRCC &= ~(SYSCTL_RCC_SYSDIV_M | SYSCTL_RCC_USESYSDIV | SYSCTL_RCC_IOSCDIS |
+             SYSCTL_RCC_MOSCDIS);
+  ulRCC |= ulConfig & (SYSCTL_RCC_SYSDIV_M | SYSCTL_RCC_USESYSDIV |
+                       SYSCTL_RCC_IOSCDIS | SYSCTL_RCC_MOSCDIS);
+  ulRCC2 &= ~(SYSCTL_RCC2_SYSDIV2_M);
+  ulRCC2 |= ulConfig & SYSCTL_RCC2_SYSDIV2_M;
+  if (ulConfig & SYSCTL_RCC2_DIV400) {
+    ulRCC |= SYSCTL_RCC_USESYSDIV;
+    ulRCC2 &= ~(SYSCTL_RCC_USESYSDIV);
+    ulRCC2 |= ulConfig & (SYSCTL_RCC2_DIV400 | SYSCTL_RCC2_SYSDIV2LSB);
+  } else {
+    ulRCC2 &= ~(SYSCTL_RCC2_DIV400);
+  }
+
+  //
+  // See if the PLL output is being used to clock the system.
+  //
+  if (!(ulConfig & SYSCTL_RCC_BYPASS)) {
+    //
+    // Wait until the PLL has locked.
+    //
+    for (ulDelay = 32768; ulDelay > 0; ulDelay--) {
+      if (HWREG(SYSCTL_RIS) & SYSCTL_INT_PLL_LOCK) {
+        break;
+      }
+    }
 
     //
-    // Delay for a little bit so that the system divider takes effect.
+    // Enable use of the PLL.
     //
-    SysCtlDelay(16);
+    ulRCC &= ~(SYSCTL_RCC_BYPASS);
+    ulRCC2 &= ~(SYSCTL_RCC2_BYPASS2);
+  }
+
+  //
+  // Write the final RCC value.
+  //
+  HWREG(SYSCTL_RCC) = ulRCC;
+  HWREG(SYSCTL_RCC2) = ulRCC2;
+
+  //
+  // Delay for a little bit so that the system divider takes effect.
+  //
+  SysCtlDelay(16);
 }
 
 //*****************************************************************************
@@ -2270,285 +2067,247 @@ SysCtlClockSet(unsigned long ulConfig)
 //! \return The processor clock rate.
 //
 //*****************************************************************************
-unsigned long
-SysCtlClockGet(void)
-{
-    unsigned long ulRCC, ulRCC2, ulPLL, ulClk;
-    unsigned long ulPLL1;
+unsigned long SysCtlClockGet(void) {
+  unsigned long ulRCC, ulRCC2, ulPLL, ulClk;
+  unsigned long ulPLL1;
 
+  //
+  // Read RCC and RCC2.  For Sandstorm-class devices (which do not have
+  // RCC2), the RCC2 read returns 0, indicating that RCC2 is
+  // disabled (because the SYSCTL_RCC2_USERCC2 bit is clear).
+  //
+  ulRCC = HWREG(SYSCTL_RCC);
+  ulRCC2 = HWREG(SYSCTL_RCC2);
+
+  //
+  // Get the base clock rate.
+  //
+  switch ((ulRCC2 & SYSCTL_RCC2_USERCC2) ? (ulRCC2 & SYSCTL_RCC2_OSCSRC2_M)
+                                         : (ulRCC & SYSCTL_RCC_OSCSRC_M)) {
     //
-    // Read RCC and RCC2.  For Sandstorm-class devices (which do not have
-    // RCC2), the RCC2 read returns 0, indicating that RCC2 is
-    // disabled (because the SYSCTL_RCC2_USERCC2 bit is clear).
+    // The main oscillator is the clock source.  Determine its rate from
+    // the crystal setting field.
     //
-    ulRCC = HWREG(SYSCTL_RCC);
-    ulRCC2 = HWREG(SYSCTL_RCC2);
-
-    //
-    // Get the base clock rate.
-    //
-    switch((ulRCC2 & SYSCTL_RCC2_USERCC2) ?
-           (ulRCC2 & SYSCTL_RCC2_OSCSRC2_M) :
-           (ulRCC & SYSCTL_RCC_OSCSRC_M))
-    {
-        //
-        // The main oscillator is the clock source.  Determine its rate from
-        // the crystal setting field.
-        //
-        case SYSCTL_RCC_OSCSRC_MAIN:
-        {
-            ulClk = g_pulXtals[(ulRCC & SYSCTL_RCC_XTAL_M) >>
-                               SYSCTL_RCC_XTAL_S];
-            break;
-        }
-
-        //
-        // The internal oscillator is the source clock.
-        //
-        case SYSCTL_RCC_OSCSRC_INT:
-        {
-            //
-            // See if this is a Sandstorm-class or Fury-class device.
-            //
-            if(CLASS_IS_SANDSTORM)
-            {
-                //
-                // The internal oscillator on a Sandstorm-class device is
-                // 15 MHz +/- 50%.
-                //
-                ulClk = 15000000;
-            }
-            else if((CLASS_IS_FURY && REVISION_IS_A2) ||
-                    (CLASS_IS_DUSTDEVIL && REVISION_IS_A0))
-            {
-                //
-                // The internal oscillator on a rev A2 Fury-class device and a
-                // Dustdevil-class device is 12 MHz +/- 30%.
-                //
-                ulClk = 12000000;
-            }
-            else
-            {
-                //
-                // The internal oscillator on all other devices is 16 MHz.
-                //
-                ulClk = 16000000;
-            }
-            break;
-        }
-
-        //
-        // The internal oscillator divided by four is the source clock.
-        //
-        case SYSCTL_RCC_OSCSRC_INT4:
-        {
-            //
-            // See if this is a Sandstorm-class or Fury-class device.
-            //
-            if(CLASS_IS_SANDSTORM)
-            {
-                //
-                // The internal oscillator on a Sandstorm-class device is
-                // 15 MHz +/- 50%.
-                //
-                ulClk = 15000000 / 4;
-            }
-            else if((CLASS_IS_FURY && REVISION_IS_A2) ||
-                    (CLASS_IS_DUSTDEVIL && REVISION_IS_A0))
-            {
-                //
-                // The internal oscillator on a rev A2 Fury-class device and a
-                // Dustdevil-class device is 12 MHz +/- 30%.
-                //
-                ulClk = 12000000 / 4;
-            }
-            else
-            {
-                //
-                // The internal oscillator on a Tempest-class device is 16 MHz.
-                //
-                ulClk = 16000000 / 4;
-            }
-            break;
-        }
-
-        //
-        // The internal 30-KHz oscillator is the source clock.
-        //
-        case SYSCTL_RCC_OSCSRC_30:
-        {
-            //
-            // The internal 30-KHz oscillator has an accuracy of +/- 30%.
-            //
-            ulClk = 30000;
-            break;
-        }
-
-        //
-        // The 4.194304-MHz clock from the hibernate module is the clock
-        // source.
-        //
-        case SYSCTL_RCC2_OSCSRC2_419:
-        {
-            ulClk = 4194304;
-            break;
-        }
-
-        //
-        // The 32.768-KHz clock from the hibernate module is the source clock.
-        //
-        case SYSCTL_RCC2_OSCSRC2_32:
-        {
-            ulClk = 32768;
-            break;
-        }
-
-        //
-        // An unknown setting, so return a zero clock (that is, an unknown
-        // clock rate).
-        //
-        default:
-        {
-            return(0);
-        }
+    case SYSCTL_RCC_OSCSRC_MAIN: {
+      ulClk = g_pulXtals[(ulRCC & SYSCTL_RCC_XTAL_M) >> SYSCTL_RCC_XTAL_S];
+      break;
     }
 
     //
-    // See if the PLL is being used.
+    // The internal oscillator is the source clock.
     //
-    if(((ulRCC2 & SYSCTL_RCC2_USERCC2) && !(ulRCC2 & SYSCTL_RCC2_BYPASS2)) ||
-       (!(ulRCC2 & SYSCTL_RCC2_USERCC2) && !(ulRCC & SYSCTL_RCC_BYPASS)))
-    {
+    case SYSCTL_RCC_OSCSRC_INT: {
+      //
+      // See if this is a Sandstorm-class or Fury-class device.
+      //
+      if (CLASS_IS_SANDSTORM) {
         //
-        // See if this is a Blizzard-class device.
+        // The internal oscillator on a Sandstorm-class device is
+        // 15 MHz +/- 50%.
         //
-        if(CLASS_IS_BLIZZARD)
-        {
-            //
-            // Read the two PLL frequency registers.  The formula for a
-            // Blizzard-class device is "(xtal * m) / ((q + 1) * (n + 1))".
-            //
-            ulPLL = HWREG(SYSCTL_PLLFREQ0);
-            ulPLL1 = HWREG(SYSCTL_PLLFREQ1);
-
-            //
-            // Divide the input clock by the dividers.
-            //
-            ulClk /= ((((ulPLL1 & SYSCTL_PLLFREQ1_Q_M) >>
-                        SYSCTL_PLLFREQ1_Q_S) + 1) *
-                      (((ulPLL1 & SYSCTL_PLLFREQ1_N_M) >>
-                        SYSCTL_PLLFREQ1_N_S) + 1) * 2);
-
-            //
-            // Multiply the clock by the multiplier, which is split into an
-            // integer part and a fractional part.
-            //
-            ulClk = ((ulClk * ((ulPLL & SYSCTL_PLLFREQ0_MINT_M) >>
-                               SYSCTL_PLLFREQ0_MINT_S)) +
-                     ((ulClk * ((ulPLL & SYSCTL_PLLFREQ0_MFRAC_M) >>
-                                SYSCTL_PLLFREQ0_MFRAC_S)) >> 10));
-        }
-
+        ulClk = 15000000;
+      } else if ((CLASS_IS_FURY && REVISION_IS_A2) ||
+                 (CLASS_IS_DUSTDEVIL && REVISION_IS_A0)) {
         //
-        // Older device classes used a different PLL.
+        // The internal oscillator on a rev A2 Fury-class device and a
+        // Dustdevil-class device is 12 MHz +/- 30%.
         //
-        else
-        {
-            //
-            // Get the PLL configuration.
-            //
-            ulPLL = HWREG(SYSCTL_PLLCFG);
-
-            //
-            // See if this is a Sandstorm-class or Fury-class device.
-            //
-            if(CLASS_IS_SANDSTORM)
-            {
-                //
-                // Compute the PLL output frequency based on its input
-                // frequency.  The formula for a Sandstorm-class devices is
-                // "(xtal * (f + 2)) / (r + 2)".
-                //
-                ulClk = ((ulClk * (((ulPLL & SYSCTL_PLLCFG_F_M) >>
-                                    SYSCTL_PLLCFG_F_S) + 2)) /
-                         (((ulPLL & SYSCTL_PLLCFG_R_M) >>
-                           SYSCTL_PLLCFG_R_S) + 2));
-            }
-            else
-            {
-                //
-                // Compute the PLL output frequency based on its input
-                // frequency.  The formula for a Fury-class device is
-                // "(xtal * f) / ((r + 1) * 2)".
-                //
-                ulClk = ((ulClk * ((ulPLL & SYSCTL_PLLCFG_F_M) >>
-                                   SYSCTL_PLLCFG_F_S)) /
-                         ((((ulPLL & SYSCTL_PLLCFG_R_M) >>
-                            SYSCTL_PLLCFG_R_S) + 1) * 2));
-            }
-
-            //
-            // See if the optional output divide by 2 is being used.
-            //
-            if(ulPLL & SYSCTL_PLLCFG_OD_2)
-            {
-                ulClk /= 2;
-            }
-
-            //
-            // See if the optional output divide by 4 is being used.
-            //
-            if(ulPLL & SYSCTL_PLLCFG_OD_4)
-            {
-                ulClk /= 4;
-            }
-        }
-
+        ulClk = 12000000;
+      } else {
         //
-        // Force the system divider to be enabled.  It is always used when
-        // using the PLL, but in some cases it does not read as being enabled.
+        // The internal oscillator on all other devices is 16 MHz.
         //
-        ulRCC |= SYSCTL_RCC_USESYSDIV;
+        ulClk = 16000000;
+      }
+      break;
     }
 
     //
-    // See if the system divider is being used.
+    // The internal oscillator divided by four is the source clock.
     //
-    if(ulRCC & SYSCTL_RCC_USESYSDIV)
-    {
+    case SYSCTL_RCC_OSCSRC_INT4: {
+      //
+      // See if this is a Sandstorm-class or Fury-class device.
+      //
+      if (CLASS_IS_SANDSTORM) {
         //
-        // Adjust the clock rate by the system clock divider.
+        // The internal oscillator on a Sandstorm-class device is
+        // 15 MHz +/- 50%.
         //
-        if(ulRCC2 & SYSCTL_RCC2_USERCC2)
-        {
-            if((ulRCC2 & SYSCTL_RCC2_DIV400) &&
-               (((ulRCC2 & SYSCTL_RCC2_USERCC2) &&
-                 !(ulRCC2 & SYSCTL_RCC2_BYPASS2)) ||
-                (!(ulRCC2 & SYSCTL_RCC2_USERCC2) &&
-                 !(ulRCC & SYSCTL_RCC_BYPASS))))
-
-            {
-                ulClk = ((ulClk * 2) / (((ulRCC2 & (SYSCTL_RCC2_SYSDIV2_M |
-                                                    SYSCTL_RCC2_SYSDIV2LSB)) >>
-                                         (SYSCTL_RCC2_SYSDIV2_S - 1)) + 1));
-            }
-            else
-            {
-                ulClk /= (((ulRCC2 & SYSCTL_RCC2_SYSDIV2_M) >>
-                           SYSCTL_RCC2_SYSDIV2_S) + 1);
-            }
-        }
-        else
-        {
-            ulClk /= (((ulRCC & SYSCTL_RCC_SYSDIV_M) >> SYSCTL_RCC_SYSDIV_S) +
-                      1);
-        }
+        ulClk = 15000000 / 4;
+      } else if ((CLASS_IS_FURY && REVISION_IS_A2) ||
+                 (CLASS_IS_DUSTDEVIL && REVISION_IS_A0)) {
+        //
+        // The internal oscillator on a rev A2 Fury-class device and a
+        // Dustdevil-class device is 12 MHz +/- 30%.
+        //
+        ulClk = 12000000 / 4;
+      } else {
+        //
+        // The internal oscillator on a Tempest-class device is 16 MHz.
+        //
+        ulClk = 16000000 / 4;
+      }
+      break;
     }
 
     //
-    // Return the computed clock rate.
+    // The internal 30-KHz oscillator is the source clock.
     //
-    return(ulClk);
+    case SYSCTL_RCC_OSCSRC_30: {
+      //
+      // The internal 30-KHz oscillator has an accuracy of +/- 30%.
+      //
+      ulClk = 30000;
+      break;
+    }
+
+    //
+    // The 4.194304-MHz clock from the hibernate module is the clock
+    // source.
+    //
+    case SYSCTL_RCC2_OSCSRC2_419: {
+      ulClk = 4194304;
+      break;
+    }
+
+    //
+    // The 32.768-KHz clock from the hibernate module is the source clock.
+    //
+    case SYSCTL_RCC2_OSCSRC2_32: {
+      ulClk = 32768;
+      break;
+    }
+
+    //
+    // An unknown setting, so return a zero clock (that is, an unknown
+    // clock rate).
+    //
+    default: {
+      return (0);
+    }
+  }
+
+  //
+  // See if the PLL is being used.
+  //
+  if (((ulRCC2 & SYSCTL_RCC2_USERCC2) && !(ulRCC2 & SYSCTL_RCC2_BYPASS2)) ||
+      (!(ulRCC2 & SYSCTL_RCC2_USERCC2) && !(ulRCC & SYSCTL_RCC_BYPASS))) {
+    //
+    // See if this is a Blizzard-class device.
+    //
+    if (CLASS_IS_BLIZZARD) {
+      //
+      // Read the two PLL frequency registers.  The formula for a
+      // Blizzard-class device is "(xtal * m) / ((q + 1) * (n + 1))".
+      //
+      ulPLL = HWREG(SYSCTL_PLLFREQ0);
+      ulPLL1 = HWREG(SYSCTL_PLLFREQ1);
+
+      //
+      // Divide the input clock by the dividers.
+      //
+      ulClk /=
+          ((((ulPLL1 & SYSCTL_PLLFREQ1_Q_M) >> SYSCTL_PLLFREQ1_Q_S) + 1) *
+           (((ulPLL1 & SYSCTL_PLLFREQ1_N_M) >> SYSCTL_PLLFREQ1_N_S) + 1) * 2);
+
+      //
+      // Multiply the clock by the multiplier, which is split into an
+      // integer part and a fractional part.
+      //
+      ulClk = ((ulClk *
+                ((ulPLL & SYSCTL_PLLFREQ0_MINT_M) >> SYSCTL_PLLFREQ0_MINT_S)) +
+               ((ulClk * ((ulPLL & SYSCTL_PLLFREQ0_MFRAC_M) >>
+                          SYSCTL_PLLFREQ0_MFRAC_S)) >>
+                10));
+    }
+
+    //
+    // Older device classes used a different PLL.
+    //
+    else {
+      //
+      // Get the PLL configuration.
+      //
+      ulPLL = HWREG(SYSCTL_PLLCFG);
+
+      //
+      // See if this is a Sandstorm-class or Fury-class device.
+      //
+      if (CLASS_IS_SANDSTORM) {
+        //
+        // Compute the PLL output frequency based on its input
+        // frequency.  The formula for a Sandstorm-class devices is
+        // "(xtal * (f + 2)) / (r + 2)".
+        //
+        ulClk = ((ulClk *
+                  (((ulPLL & SYSCTL_PLLCFG_F_M) >> SYSCTL_PLLCFG_F_S) + 2)) /
+                 (((ulPLL & SYSCTL_PLLCFG_R_M) >> SYSCTL_PLLCFG_R_S) + 2));
+      } else {
+        //
+        // Compute the PLL output frequency based on its input
+        // frequency.  The formula for a Fury-class device is
+        // "(xtal * f) / ((r + 1) * 2)".
+        //
+        ulClk =
+            ((ulClk * ((ulPLL & SYSCTL_PLLCFG_F_M) >> SYSCTL_PLLCFG_F_S)) /
+             ((((ulPLL & SYSCTL_PLLCFG_R_M) >> SYSCTL_PLLCFG_R_S) + 1) * 2));
+      }
+
+      //
+      // See if the optional output divide by 2 is being used.
+      //
+      if (ulPLL & SYSCTL_PLLCFG_OD_2) {
+        ulClk /= 2;
+      }
+
+      //
+      // See if the optional output divide by 4 is being used.
+      //
+      if (ulPLL & SYSCTL_PLLCFG_OD_4) {
+        ulClk /= 4;
+      }
+    }
+
+    //
+    // Force the system divider to be enabled.  It is always used when
+    // using the PLL, but in some cases it does not read as being enabled.
+    //
+    ulRCC |= SYSCTL_RCC_USESYSDIV;
+  }
+
+  //
+  // See if the system divider is being used.
+  //
+  if (ulRCC & SYSCTL_RCC_USESYSDIV) {
+    //
+    // Adjust the clock rate by the system clock divider.
+    //
+    if (ulRCC2 & SYSCTL_RCC2_USERCC2) {
+      if ((ulRCC2 & SYSCTL_RCC2_DIV400) &&
+          (((ulRCC2 & SYSCTL_RCC2_USERCC2) &&
+            !(ulRCC2 & SYSCTL_RCC2_BYPASS2)) ||
+           (!(ulRCC2 & SYSCTL_RCC2_USERCC2) && !(ulRCC & SYSCTL_RCC_BYPASS))))
+
+      {
+        ulClk =
+            ((ulClk * 2) /
+             (((ulRCC2 & (SYSCTL_RCC2_SYSDIV2_M | SYSCTL_RCC2_SYSDIV2LSB)) >>
+               (SYSCTL_RCC2_SYSDIV2_S - 1)) +
+              1));
+      } else {
+        ulClk /=
+            (((ulRCC2 & SYSCTL_RCC2_SYSDIV2_M) >> SYSCTL_RCC2_SYSDIV2_S) + 1);
+      }
+    } else {
+      ulClk /= (((ulRCC & SYSCTL_RCC_SYSDIV_M) >> SYSCTL_RCC_SYSDIV_S) + 1);
+    }
+  }
+
+  //
+  // Return the computed clock rate.
+  //
+  return (ulClk);
 }
 
 //*****************************************************************************
@@ -2586,13 +2345,11 @@ SysCtlClockGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlDeepSleepClockSet(unsigned long ulConfig)
-{
-    //
-    // Set the deep-sleep clock configuration.
-    //
-    HWREG(SYSCTL_DSLPCLKCFG) = ulConfig;
+void SysCtlDeepSleepClockSet(unsigned long ulConfig) {
+  //
+  // Set the deep-sleep clock configuration.
+  //
+  HWREG(SYSCTL_DSLPCLKCFG) = ulConfig;
 }
 
 //*****************************************************************************
@@ -2614,32 +2371,27 @@ SysCtlDeepSleepClockSet(unsigned long ulConfig)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPWMClockSet(unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulConfig == SYSCTL_PWMDIV_1) ||
-           (ulConfig == SYSCTL_PWMDIV_2) ||
-           (ulConfig == SYSCTL_PWMDIV_4) ||
-           (ulConfig == SYSCTL_PWMDIV_8) ||
-           (ulConfig == SYSCTL_PWMDIV_16) ||
-           (ulConfig == SYSCTL_PWMDIV_32) ||
-           (ulConfig == SYSCTL_PWMDIV_64));
+void SysCtlPWMClockSet(unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulConfig == SYSCTL_PWMDIV_1) || (ulConfig == SYSCTL_PWMDIV_2) ||
+         (ulConfig == SYSCTL_PWMDIV_4) || (ulConfig == SYSCTL_PWMDIV_8) ||
+         (ulConfig == SYSCTL_PWMDIV_16) || (ulConfig == SYSCTL_PWMDIV_32) ||
+         (ulConfig == SYSCTL_PWMDIV_64));
 
-    //
-    // Check that there is a PWM block on this part.
-    //
-    ASSERT(HWREG(SYSCTL_DC1) & SYSCTL_DC1_PWM0);
+  //
+  // Check that there is a PWM block on this part.
+  //
+  ASSERT(HWREG(SYSCTL_DC1) & SYSCTL_DC1_PWM0);
 
-    //
-    // Set the PWM clock configuration into the run-mode clock configuration
-    // register.
-    //
-    HWREG(SYSCTL_RCC) = ((HWREG(SYSCTL_RCC) &
-                          ~(SYSCTL_RCC_USEPWMDIV | SYSCTL_RCC_PWMDIV_M)) |
-                         ulConfig);
+  //
+  // Set the PWM clock configuration into the run-mode clock configuration
+  // register.
+  //
+  HWREG(SYSCTL_RCC) =
+      ((HWREG(SYSCTL_RCC) & ~(SYSCTL_RCC_USEPWMDIV | SYSCTL_RCC_PWMDIV_M)) |
+       ulConfig);
 }
 
 //*****************************************************************************
@@ -2654,33 +2406,27 @@ SysCtlPWMClockSet(unsigned long ulConfig)
 //! \b SYSCTL_PWMDIV_64.
 //
 //*****************************************************************************
-unsigned long
-SysCtlPWMClockGet(void)
-{
-    //
-    // Check that there is a PWM block on this part.
-    //
-    ASSERT(HWREG(SYSCTL_DC1) & SYSCTL_DC1_PWM0);
+unsigned long SysCtlPWMClockGet(void) {
+  //
+  // Check that there is a PWM block on this part.
+  //
+  ASSERT(HWREG(SYSCTL_DC1) & SYSCTL_DC1_PWM0);
 
+  //
+  // Return the current PWM clock configuration.  Make sure that
+  // SYSCTL_PWMDIV_1 is returned in all cases where the divider is disabled.
+  //
+  if (!(HWREG(SYSCTL_RCC) & SYSCTL_RCC_USEPWMDIV)) {
     //
-    // Return the current PWM clock configuration.  Make sure that
-    // SYSCTL_PWMDIV_1 is returned in all cases where the divider is disabled.
+    // The divider is not active so reflect this in the value we return.
     //
-    if(!(HWREG(SYSCTL_RCC) & SYSCTL_RCC_USEPWMDIV))
-    {
-        //
-        // The divider is not active so reflect this in the value we return.
-        //
-        return(SYSCTL_PWMDIV_1);
-    }
-    else
-    {
-        //
-        // The divider is active so directly return the masked register value.
-        //
-        return(HWREG(SYSCTL_RCC) &
-               (SYSCTL_RCC_USEPWMDIV | SYSCTL_RCC_PWMDIV_M));
-    }
+    return (SYSCTL_PWMDIV_1);
+  } else {
+    //
+    // The divider is active so directly return the masked register value.
+    //
+    return (HWREG(SYSCTL_RCC) & (SYSCTL_RCC_USEPWMDIV | SYSCTL_RCC_PWMDIV_M));
+  }
 }
 
 //*****************************************************************************
@@ -2699,24 +2445,22 @@ SysCtlPWMClockGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlADCSpeedSet(unsigned long ulSpeed)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulSpeed == SYSCTL_ADCSPEED_1MSPS) ||
-           (ulSpeed == SYSCTL_ADCSPEED_500KSPS) ||
-           (ulSpeed == SYSCTL_ADCSPEED_250KSPS) ||
-           (ulSpeed == SYSCTL_ADCSPEED_125KSPS));
+void SysCtlADCSpeedSet(unsigned long ulSpeed) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulSpeed == SYSCTL_ADCSPEED_1MSPS) ||
+         (ulSpeed == SYSCTL_ADCSPEED_500KSPS) ||
+         (ulSpeed == SYSCTL_ADCSPEED_250KSPS) ||
+         (ulSpeed == SYSCTL_ADCSPEED_125KSPS));
 
-    //
-    // Set the ADC speed in run and sleep mode.
-    //
-    HWREG(SYSCTL_RCGC0) = ((HWREG(SYSCTL_RCGC0) & ~(SYSCTL_RCGC0_ADCSPD_M)) |
-                           ulSpeed);
-    HWREG(SYSCTL_SCGC0) = ((HWREG(SYSCTL_SCGC0) & ~(SYSCTL_SCGC0_ADCSPD_M)) |
-                           ulSpeed);
+  //
+  // Set the ADC speed in run and sleep mode.
+  //
+  HWREG(SYSCTL_RCGC0) =
+      ((HWREG(SYSCTL_RCGC0) & ~(SYSCTL_RCGC0_ADCSPD_M)) | ulSpeed);
+  HWREG(SYSCTL_SCGC0) =
+      ((HWREG(SYSCTL_SCGC0) & ~(SYSCTL_SCGC0_ADCSPD_M)) | ulSpeed);
 }
 
 //*****************************************************************************
@@ -2730,13 +2474,11 @@ SysCtlADCSpeedSet(unsigned long ulSpeed)
 //! \b SYSCTL_ADCSPEED_250KSPS, or \b SYSCTL_ADCSPEED_125KSPS.
 //
 //*****************************************************************************
-unsigned long
-SysCtlADCSpeedGet(void)
-{
-    //
-    // Return the current ADC speed.
-    //
-    return(HWREG(SYSCTL_RCGC0) & SYSCTL_RCGC0_ADCSPD_M);
+unsigned long SysCtlADCSpeedGet(void) {
+  //
+  // Return the current ADC speed.
+  //
+  return (HWREG(SYSCTL_RCGC0) & SYSCTL_RCGC0_ADCSPD_M);
 }
 
 //*****************************************************************************
@@ -2760,21 +2502,16 @@ SysCtlADCSpeedGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlIOSCVerificationSet(tBoolean bEnable)
-{
-    //
-    // Enable or disable the internal oscillator verification timer as
-    // requested.
-    //
-    if(bEnable)
-    {
-        HWREG(SYSCTL_RCC) |= SYSCTL_RCC_IOSCVER;
-    }
-    else
-    {
-        HWREG(SYSCTL_RCC) &= ~(SYSCTL_RCC_IOSCVER);
-    }
+void SysCtlIOSCVerificationSet(tBoolean bEnable) {
+  //
+  // Enable or disable the internal oscillator verification timer as
+  // requested.
+  //
+  if (bEnable) {
+    HWREG(SYSCTL_RCC) |= SYSCTL_RCC_IOSCVER;
+  } else {
+    HWREG(SYSCTL_RCC) &= ~(SYSCTL_RCC_IOSCVER);
+  }
 }
 
 //*****************************************************************************
@@ -2798,20 +2535,15 @@ SysCtlIOSCVerificationSet(tBoolean bEnable)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlMOSCVerificationSet(tBoolean bEnable)
-{
-    //
-    // Enable or disable the main oscillator verification timer as requested.
-    //
-    if(bEnable)
-    {
-        HWREG(SYSCTL_RCC) |= SYSCTL_RCC_MOSCVER;
-    }
-    else
-    {
-        HWREG(SYSCTL_RCC) &= ~(SYSCTL_RCC_MOSCVER);
-    }
+void SysCtlMOSCVerificationSet(tBoolean bEnable) {
+  //
+  // Enable or disable the main oscillator verification timer as requested.
+  //
+  if (bEnable) {
+    HWREG(SYSCTL_RCC) |= SYSCTL_RCC_MOSCVER;
+  } else {
+    HWREG(SYSCTL_RCC) &= ~(SYSCTL_RCC_MOSCVER);
+  }
 }
 
 //*****************************************************************************
@@ -2834,20 +2566,15 @@ SysCtlMOSCVerificationSet(tBoolean bEnable)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlPLLVerificationSet(tBoolean bEnable)
-{
-    //
-    // Enable or disable the PLL verification timer as requested.
-    //
-    if(bEnable)
-    {
-        HWREG(SYSCTL_RCC) |= SYSCTL_RCC_PLLVER;
-    }
-    else
-    {
-        HWREG(SYSCTL_RCC) &= ~(SYSCTL_RCC_PLLVER);
-    }
+void SysCtlPLLVerificationSet(tBoolean bEnable) {
+  //
+  // Enable or disable the PLL verification timer as requested.
+  //
+  if (bEnable) {
+    HWREG(SYSCTL_RCC) |= SYSCTL_RCC_PLLVER;
+  } else {
+    HWREG(SYSCTL_RCC) &= ~(SYSCTL_RCC_PLLVER);
+  }
 }
 
 //*****************************************************************************
@@ -2863,18 +2590,16 @@ SysCtlPLLVerificationSet(tBoolean bEnable)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlClkVerificationClear(void)
-{
-    //
-    // Clear the clock verification.
-    //
-    HWREG(SYSCTL_CLKVCLR) = SYSCTL_CLKVCLR_VERCLR;
+void SysCtlClkVerificationClear(void) {
+  //
+  // Clear the clock verification.
+  //
+  HWREG(SYSCTL_CLKVCLR) = SYSCTL_CLKVCLR_VERCLR;
 
-    //
-    // The bit does not self-reset, so clear it.
-    //
-    HWREG(SYSCTL_CLKVCLR) = 0;
+  //
+  // The bit does not self-reset, so clear it.
+  //
+  HWREG(SYSCTL_CLKVCLR) = 0;
 }
 
 //*****************************************************************************
@@ -2898,26 +2623,24 @@ SysCtlClkVerificationClear(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlGPIOAHBEnable(unsigned long ulGPIOPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulGPIOPeripheral == SYSCTL_PERIPH_GPIOA) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOB) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOC) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOD) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOE) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOF) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOG) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOH) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOJ));
+void SysCtlGPIOAHBEnable(unsigned long ulGPIOPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulGPIOPeripheral == SYSCTL_PERIPH_GPIOA) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOB) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOC) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOD) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOE) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOF) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOG) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOH) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOJ));
 
-    //
-    // Enable this GPIO for AHB access.
-    //
-    HWREG(SYSCTL_GPIOHBCTL) |= ulGPIOPeripheral & 0xFFFF;
+  //
+  // Enable this GPIO for AHB access.
+  //
+  HWREG(SYSCTL_GPIOHBCTL) |= ulGPIOPeripheral & 0xFFFF;
 }
 
 //*****************************************************************************
@@ -2938,26 +2661,24 @@ SysCtlGPIOAHBEnable(unsigned long ulGPIOPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlGPIOAHBDisable(unsigned long ulGPIOPeripheral)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulGPIOPeripheral == SYSCTL_PERIPH_GPIOA) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOB) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOC) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOD) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOE) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOF) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOG) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOH) ||
-           (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOJ));
+void SysCtlGPIOAHBDisable(unsigned long ulGPIOPeripheral) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulGPIOPeripheral == SYSCTL_PERIPH_GPIOA) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOB) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOC) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOD) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOE) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOF) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOG) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOH) ||
+         (ulGPIOPeripheral == SYSCTL_PERIPH_GPIOJ));
 
-    //
-    // Disable this GPIO for AHB access.
-    //
-    HWREG(SYSCTL_GPIOHBCTL) &= ~(ulGPIOPeripheral & 0xFFFF);
+  //
+  // Disable this GPIO for AHB access.
+  //
+  HWREG(SYSCTL_GPIOHBCTL) &= ~(ulGPIOPeripheral & 0xFFFF);
 }
 
 //*****************************************************************************
@@ -2971,13 +2692,11 @@ SysCtlGPIOAHBDisable(unsigned long ulGPIOPeripheral)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlUSBPLLEnable(void)
-{
-    //
-    // Turn on the USB PLL.
-    //
-    HWREG(SYSCTL_RCC2) &= ~SYSCTL_RCC2_USBPWRDN;
+void SysCtlUSBPLLEnable(void) {
+  //
+  // Turn on the USB PLL.
+  //
+  HWREG(SYSCTL_RCC2) &= ~SYSCTL_RCC2_USBPWRDN;
 }
 
 //*****************************************************************************
@@ -2991,13 +2710,11 @@ SysCtlUSBPLLEnable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysCtlUSBPLLDisable(void)
-{
-    //
-    // Turn off the USB PLL.
-    //
-    HWREG(SYSCTL_RCC2) |= SYSCTL_RCC2_USBPWRDN;
+void SysCtlUSBPLLDisable(void) {
+  //
+  // Turn off the USB PLL.
+  //
+  HWREG(SYSCTL_RCC2) |= SYSCTL_RCC2_USBPWRDN;
 }
 
 //*****************************************************************************
@@ -3023,120 +2740,108 @@ SysCtlUSBPLLDisable(void)
 //! \return Returns the actual MCLK frequency.
 //
 //*****************************************************************************
-unsigned long
-SysCtlI2SMClkSet(unsigned long ulInputClock, unsigned long ulMClk)
-{
-    unsigned long ulDivInt, ulDivFrac, ulPLL;
+unsigned long SysCtlI2SMClkSet(unsigned long ulInputClock,
+                               unsigned long ulMClk) {
+  unsigned long ulDivInt, ulDivFrac, ulPLL;
+
+  //
+  // See if the I2S MCLK should be disabled.
+  //
+  if (ulMClk == 0) {
+    //
+    // Disable the I2S MCLK and return.
+    //
+    HWREG(SYSCTL_I2SMCLKCFG) = 0;
+    return (0);
+  }
+
+  //
+  // See if the input clock was specified.
+  //
+  if (ulInputClock == 0) {
+    //
+    // The input clock was not specified, so compute the output frequency
+    // of the PLL.  Get the current PLL configuration.
+    //
+    ulPLL = HWREG(SYSCTL_PLLCFG);
 
     //
-    // See if the I2S MCLK should be disabled.
+    // Get the frequency of the crystal in use.
     //
-    if(ulMClk == 0)
-    {
-        //
-        // Disable the I2S MCLK and return.
-        //
-        HWREG(SYSCTL_I2SMCLKCFG) = 0;
-        return(0);
+    ulInputClock = g_pulXtals[(HWREG(SYSCTL_RCC) & SYSCTL_RCC_XTAL_M) >>
+                              SYSCTL_RCC_XTAL_S];
+
+    //
+    // Calculate the PLL output frequency.
+    //
+    ulInputClock =
+        ((ulInputClock * ((ulPLL & SYSCTL_PLLCFG_F_M) >> SYSCTL_PLLCFG_F_S)) /
+         ((((ulPLL & SYSCTL_PLLCFG_R_M) >> SYSCTL_PLLCFG_R_S) + 1)));
+
+    //
+    // See if the optional output divide by 2 is being used.
+    //
+    if (ulPLL & SYSCTL_PLLCFG_OD_2) {
+      ulInputClock /= 2;
     }
 
     //
-    // See if the input clock was specified.
+    // See if the optional output divide by 4 is being used.
     //
-    if(ulInputClock == 0)
-    {
-        //
-        // The input clock was not specified, so compute the output frequency
-        // of the PLL.  Get the current PLL configuration.
-        //
-        ulPLL = HWREG(SYSCTL_PLLCFG);
-
-        //
-        // Get the frequency of the crystal in use.
-        //
-        ulInputClock = g_pulXtals[(HWREG(SYSCTL_RCC) & SYSCTL_RCC_XTAL_M) >>
-                                  SYSCTL_RCC_XTAL_S];
-
-        //
-        // Calculate the PLL output frequency.
-        //
-        ulInputClock = ((ulInputClock * ((ulPLL & SYSCTL_PLLCFG_F_M) >>
-                                         SYSCTL_PLLCFG_F_S)) /
-                        ((((ulPLL & SYSCTL_PLLCFG_R_M) >>
-                           SYSCTL_PLLCFG_R_S) + 1)));
-
-        //
-        // See if the optional output divide by 2 is being used.
-        //
-        if(ulPLL & SYSCTL_PLLCFG_OD_2)
-        {
-            ulInputClock /= 2;
-        }
-
-        //
-        // See if the optional output divide by 4 is being used.
-        //
-        if(ulPLL & SYSCTL_PLLCFG_OD_4)
-        {
-            ulInputClock /= 4;
-        }
+    if (ulPLL & SYSCTL_PLLCFG_OD_4) {
+      ulInputClock /= 4;
     }
+  }
 
-    //
-    // Verify that the requested MCLK frequency is attainable.
-    //
-    ASSERT(ulMClk < ulInputClock);
+  //
+  // Verify that the requested MCLK frequency is attainable.
+  //
+  ASSERT(ulMClk < ulInputClock);
 
-    //
-    // Add a rounding factor to the input clock, so that the MCLK frequency
-    // that is closest to the desire value is selected.
-    //
-    ulInputClock += (ulMClk / 32) - 1;
+  //
+  // Add a rounding factor to the input clock, so that the MCLK frequency
+  // that is closest to the desire value is selected.
+  //
+  ulInputClock += (ulMClk / 32) - 1;
 
-    //
-    // Compute the integer portion of the MCLK divider.
-    //
-    ulDivInt = ulInputClock / ulMClk;
+  //
+  // Compute the integer portion of the MCLK divider.
+  //
+  ulDivInt = ulInputClock / ulMClk;
 
+  //
+  // If the divisor is too large, then simply use the maximum divisor.
+  //
+  if (CLASS_IS_TEMPEST && REVISION_IS_B1 && (ulDivInt > 255)) {
+    ulDivInt = 255;
+    ulDivFrac = 15;
+  } else if (ulDivInt > 1023) {
+    ulDivInt = 1023;
+    ulDivFrac = 15;
+  } else {
     //
-    // If the divisor is too large, then simply use the maximum divisor.
+    // Compute the fractional portion of the MCLK divider.
     //
-    if(CLASS_IS_TEMPEST && REVISION_IS_B1 && (ulDivInt > 255))
-    {
-        ulDivInt = 255;
-        ulDivFrac = 15;
-    }
-    else if(ulDivInt > 1023)
-    {
-        ulDivInt = 1023;
-        ulDivFrac = 15;
-    }
-    else
-    {
-        //
-        // Compute the fractional portion of the MCLK divider.
-        //
-        ulDivFrac = ((ulInputClock - (ulDivInt * ulMClk)) * 16) / ulMClk;
-    }
+    ulDivFrac = ((ulInputClock - (ulDivInt * ulMClk)) * 16) / ulMClk;
+  }
 
-    //
-    // Set the divisor for the TX and RX MCLK generators and enable the clocks.
-    //
-    HWREG(SYSCTL_I2SMCLKCFG) = (SYSCTL_I2SMCLKCFG_RXEN |
-                                (ulDivInt << SYSCTL_I2SMCLKCFG_RXI_S) |
-                                (ulDivFrac << SYSCTL_I2SMCLKCFG_RXF_S) |
-                                SYSCTL_I2SMCLKCFG_TXEN |
-                                (ulDivInt << SYSCTL_I2SMCLKCFG_TXI_S) |
-                                (ulDivFrac << SYSCTL_I2SMCLKCFG_TXF_S));
+  //
+  // Set the divisor for the TX and RX MCLK generators and enable the clocks.
+  //
+  HWREG(SYSCTL_I2SMCLKCFG) =
+      (SYSCTL_I2SMCLKCFG_RXEN | (ulDivInt << SYSCTL_I2SMCLKCFG_RXI_S) |
+       (ulDivFrac << SYSCTL_I2SMCLKCFG_RXF_S) | SYSCTL_I2SMCLKCFG_TXEN |
+       (ulDivInt << SYSCTL_I2SMCLKCFG_TXI_S) |
+       (ulDivFrac << SYSCTL_I2SMCLKCFG_TXF_S));
 
-    //
-    // Return the actual MCLK frequency.
-    //
-    ulInputClock -= (ulMClk / 32) - 1;
-    ulDivInt = (ulDivInt * 16) + ulDivFrac;
-    ulMClk = (ulInputClock / ulDivInt) * 16;
-    ulMClk += ((ulInputClock - ((ulMClk / 16) * ulDivInt)) * 16) / ulDivInt;
-    return(ulMClk);
+  //
+  // Return the actual MCLK frequency.
+  //
+  ulInputClock -= (ulMClk / 32) - 1;
+  ulDivInt = (ulDivInt * 16) + ulDivFrac;
+  ulMClk = (ulInputClock / ulDivInt) * 16;
+  ulMClk += ((ulInputClock - ((ulMClk / 16) * ulDivInt)) * 16) / ulDivInt;
+  return (ulMClk);
 }
 
 //*****************************************************************************

@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2008-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,13 +44,14 @@
 //
 //*****************************************************************************
 
+#include "driverlib/i2s.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_i2s.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/i2s.h"
-#include "driverlib/interrupt.h"
 
 //*****************************************************************************
 //
@@ -65,23 +66,21 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-I2STxEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+void I2STxEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Enable the tx FIFO service request.
-    //
-    HWREG(ulBase + I2S_O_TXISM) = I2S_TXISM_FFM;
+  //
+  // Enable the tx FIFO service request.
+  //
+  HWREG(ulBase + I2S_O_TXISM) = I2S_TXISM_FFM;
 
-    //
-    // Read-modify-write the enable bit.
-    //
-    HWREG(ulBase + I2S_O_CFG) |= I2S_CFG_TXEN;
+  //
+  // Read-modify-write the enable bit.
+  //
+  HWREG(ulBase + I2S_O_CFG) |= I2S_CFG_TXEN;
 }
 
 //*****************************************************************************
@@ -97,18 +96,16 @@ I2STxEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2STxDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+void I2STxDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Read-modify-write the enable bit.
-    //
-    HWREG(ulBase + I2S_O_CFG) &= ~I2S_CFG_TXEN;
+  //
+  // Read-modify-write the enable bit.
+  //
+  HWREG(ulBase + I2S_O_CFG) &= ~I2S_CFG_TXEN;
 }
 
 //*****************************************************************************
@@ -143,25 +140,22 @@ I2STxDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2STxDataPut(unsigned long ulBase, unsigned long ulData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+void I2STxDataPut(unsigned long ulBase, unsigned long ulData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Wait until there is space.
-    //
-    while(HWREG(ulBase + I2S_O_TXLEV) >= 16)
-    {
-    }
+  //
+  // Wait until there is space.
+  //
+  while (HWREG(ulBase + I2S_O_TXLEV) >= 16) {
+  }
 
-    //
-    // Write the data to the I2S.
-    //
-    HWREG(ulBase + I2S_O_TXFIFO) = ulData;
+  //
+  // Write the data to the I2S.
+  //
+  HWREG(ulBase + I2S_O_TXFIFO) = ulData;
 }
 
 //*****************************************************************************
@@ -196,26 +190,21 @@ I2STxDataPut(unsigned long ulBase, unsigned long ulData)
 //! \return The number of elements written to the I2S transmit FIFO (1 or 0).
 //
 //*****************************************************************************
-long
-I2STxDataPutNonBlocking(unsigned long ulBase, unsigned long ulData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+long I2STxDataPutNonBlocking(unsigned long ulBase, unsigned long ulData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Check for space to write.
-    //
-    if(HWREG(ulBase + I2S_O_TXLEV) < 16)
-    {
-        HWREG(ulBase + I2S_O_TXFIFO) = ulData;
-        return(1);
-    }
-    else
-    {
-        return(0);
-    }
+  //
+  // Check for space to write.
+  //
+  if (HWREG(ulBase + I2S_O_TXLEV) < 16) {
+    HWREG(ulBase + I2S_O_TXFIFO) = ulData;
+    return (1);
+  } else {
+    return (0);
+  }
 }
 
 //*****************************************************************************
@@ -251,47 +240,42 @@ I2STxDataPutNonBlocking(unsigned long ulBase, unsigned long ulData)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2STxConfigSet(unsigned long ulBase, unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT((ulConfig & (I2S_CONFIG_FORMAT_MASK | I2S_CONFIG_MODE_MASK |
-                        I2S_CONFIG_EMPTY_MASK | I2S_CONFIG_CLK_MASK |
-                        I2S_CONFIG_SAMPLE_SIZE_MASK |
-                        I2S_CONFIG_WIRE_SIZE_MASK)) == ulConfig);
+void I2STxConfigSet(unsigned long ulBase, unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT((ulConfig & (I2S_CONFIG_FORMAT_MASK | I2S_CONFIG_MODE_MASK |
+                      I2S_CONFIG_EMPTY_MASK | I2S_CONFIG_CLK_MASK |
+                      I2S_CONFIG_SAMPLE_SIZE_MASK |
+                      I2S_CONFIG_WIRE_SIZE_MASK)) == ulConfig);
 
+  //
+  // Check to see if a compact mode is used.
+  //
+  if ((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_COMPACT_8) {
     //
-    // Check to see if a compact mode is used.
+    // If compact 8 mode is used, then need to adjust some bits
+    // before writing the config register.  Also set the FIFO
+    // config register for 8-bit compact samples.
     //
-    if((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_COMPACT_8)
-    {
-        //
-        // If compact 8 mode is used, then need to adjust some bits
-        // before writing the config register.  Also set the FIFO
-        // config register for 8-bit compact samples.
-        //
-        ulConfig &= ~I2S_CONFIG_MODE_MONO;
-        HWREG(ulBase + I2S_O_TXFIFOCFG) = I2S_TXFIFOCFG_CSS;
-    }
-    else
-    {
-        //
-        // If compact 8 mode is not used, then set the FIFO config
-        // register for 16 bit.  This setting is okay if a compact
-        // mode is not used.
-        //
-        HWREG(ulBase + I2S_O_TXFIFOCFG) = 0;
-    }
+    ulConfig &= ~I2S_CONFIG_MODE_MONO;
+    HWREG(ulBase + I2S_O_TXFIFOCFG) = I2S_TXFIFOCFG_CSS;
+  } else {
+    //
+    // If compact 8 mode is not used, then set the FIFO config
+    // register for 16 bit.  This setting is okay if a compact
+    // mode is not used.
+    //
+    HWREG(ulBase + I2S_O_TXFIFOCFG) = 0;
+  }
 
-    //
-    // Write the configuration register.  Because all the fields are
-    // specified by the configuration parameter, it is not necessary
-    // to do a read-modify-write.
-    //
-    HWREG(ulBase + I2S_O_TXCFG) = ulConfig;
+  //
+  // Write the configuration register.  Because all the fields are
+  // specified by the configuration parameter, it is not necessary
+  // to do a read-modify-write.
+  //
+  HWREG(ulBase + I2S_O_TXCFG) = ulConfig;
 }
 
 //*****************************************************************************
@@ -320,19 +304,17 @@ I2STxConfigSet(unsigned long ulBase, unsigned long ulConfig)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2STxFIFOLimitSet(unsigned long ulBase, unsigned long ulLevel)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT(ulLevel <= 16);
+void I2STxFIFOLimitSet(unsigned long ulBase, unsigned long ulLevel) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT(ulLevel <= 16);
 
-    //
-    // Write the FIFO limit
-    //
-    HWREG(ulBase + I2S_O_TXLIMIT) = ulLevel;
+  //
+  // Write the FIFO limit
+  //
+  HWREG(ulBase + I2S_O_TXLIMIT) = ulLevel;
 }
 
 //*****************************************************************************
@@ -348,18 +330,16 @@ I2STxFIFOLimitSet(unsigned long ulBase, unsigned long ulLevel)
 //! \return Returns the current value of the FIFO service request limit.
 //
 //*****************************************************************************
-unsigned long
-I2STxFIFOLimitGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+unsigned long I2STxFIFOLimitGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Read and return the FIFO limit
-    //
-    return(HWREG(ulBase + I2S_O_TXLIMIT));
+  //
+  // Read and return the FIFO limit
+  //
+  return (HWREG(ulBase + I2S_O_TXLIMIT));
 }
 
 //*****************************************************************************
@@ -382,18 +362,16 @@ I2STxFIFOLimitGet(unsigned long ulBase)
 //! normally an even number.
 //
 //*****************************************************************************
-unsigned long
-I2STxFIFOLevelGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+unsigned long I2STxFIFOLevelGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Read and return the transmit FIFO level.
-    //
-    return(HWREG(ulBase + I2S_O_TXLEV));
+  //
+  // Read and return the transmit FIFO level.
+  //
+  return (HWREG(ulBase + I2S_O_TXLEV));
 }
 
 //*****************************************************************************
@@ -409,23 +387,21 @@ I2STxFIFOLevelGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SRxEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+void I2SRxEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Enable the tx FIFO service request.
-    //
-    HWREG(ulBase + I2S_O_RXISM) = I2S_RXISM_FFM;
+  //
+  // Enable the tx FIFO service request.
+  //
+  HWREG(ulBase + I2S_O_RXISM) = I2S_RXISM_FFM;
 
-    //
-    // Read-modify-write the enable bit.
-    //
-    HWREG(ulBase + I2S_O_CFG) |= I2S_CFG_RXEN;
+  //
+  // Read-modify-write the enable bit.
+  //
+  HWREG(ulBase + I2S_O_CFG) |= I2S_CFG_RXEN;
 }
 
 //*****************************************************************************
@@ -441,18 +417,16 @@ I2SRxEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SRxDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+void I2SRxDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Read-modify-write the enable bit.
-    //
-    HWREG(ulBase + I2S_O_CFG) &= ~I2S_CFG_RXEN;
+  //
+  // Read-modify-write the enable bit.
+  //
+  HWREG(ulBase + I2S_O_CFG) &= ~I2S_CFG_RXEN;
 }
 
 //*****************************************************************************
@@ -486,25 +460,22 @@ I2SRxDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SRxDataGet(unsigned long ulBase, unsigned long *pulData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+void I2SRxDataGet(unsigned long ulBase, unsigned long *pulData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Wait until there is data available.
-    //
-    while(HWREG(ulBase + I2S_O_RXLEV) == 0)
-    {
-    }
+  //
+  // Wait until there is data available.
+  //
+  while (HWREG(ulBase + I2S_O_RXLEV) == 0) {
+  }
 
-    //
-    // Read data from the I2S receive FIFO.
-    //
-    *pulData = HWREG(ulBase + I2S_O_RXFIFO);
+  //
+  // Read data from the I2S receive FIFO.
+  //
+  *pulData = HWREG(ulBase + I2S_O_RXFIFO);
 }
 
 //*****************************************************************************
@@ -538,26 +509,21 @@ I2SRxDataGet(unsigned long ulBase, unsigned long *pulData)
 //! \return The number of elements read from the I2S receive FIFO (1 or 0).
 //
 //*****************************************************************************
-long
-I2SRxDataGetNonBlocking(unsigned long ulBase, unsigned long *pulData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+long I2SRxDataGetNonBlocking(unsigned long ulBase, unsigned long *pulData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Check for available samples.
-    //
-    if(HWREG(ulBase + I2S_O_RXLEV) != 0)
-    {
-        *pulData = HWREG(ulBase + I2S_O_RXFIFO);
-        return(1);
-    }
-    else
-    {
-        return(0);
-    }
+  //
+  // Check for available samples.
+  //
+  if (HWREG(ulBase + I2S_O_RXLEV) != 0) {
+    *pulData = HWREG(ulBase + I2S_O_RXFIFO);
+    return (1);
+  } else {
+    return (0);
+  }
 }
 
 //*****************************************************************************
@@ -590,51 +556,47 @@ I2SRxDataGetNonBlocking(unsigned long ulBase, unsigned long *pulData)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SRxConfigSet(unsigned long ulBase, unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT((ulConfig & (I2S_CONFIG_FORMAT_MASK | I2S_CONFIG_MODE_MASK |
-                        I2S_CONFIG_CLK_MASK | I2S_CONFIG_SAMPLE_SIZE_MASK |
-                        I2S_CONFIG_WIRE_SIZE_MASK)) == ulConfig);
+void I2SRxConfigSet(unsigned long ulBase, unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT((ulConfig & (I2S_CONFIG_FORMAT_MASK | I2S_CONFIG_MODE_MASK |
+                      I2S_CONFIG_CLK_MASK | I2S_CONFIG_SAMPLE_SIZE_MASK |
+                      I2S_CONFIG_WIRE_SIZE_MASK)) == ulConfig);
 
-    //
-    // Clear out any prior config of the RX FIFO config register.
-    //
-    HWREG(ulBase + I2S_O_RXFIFOCFG) = 0;
+  //
+  // Clear out any prior config of the RX FIFO config register.
+  //
+  HWREG(ulBase + I2S_O_RXFIFOCFG) = 0;
 
-    //
-    // If mono mode is used, then the FMM bit needs to be set.
-    //
-    if((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_MONO)
-    {
-        HWREG(ulBase + I2S_O_RXFIFOCFG) |= I2S_RXFIFOCFG_FMM;
-    }
+  //
+  // If mono mode is used, then the FMM bit needs to be set.
+  //
+  if ((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_MONO) {
+    HWREG(ulBase + I2S_O_RXFIFOCFG) |= I2S_RXFIFOCFG_FMM;
+  }
 
-    //
-    // If a compact mode is used, then the CSS bit needs to be set.
-    //
-    else if((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_COMPACT_8)
-    {
-        HWREG(ulBase + I2S_O_RXFIFOCFG) |= I2S_RXFIFOCFG_CSS;
-    }
+  //
+  // If a compact mode is used, then the CSS bit needs to be set.
+  //
+  else if ((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_COMPACT_8) {
+    HWREG(ulBase + I2S_O_RXFIFOCFG) |= I2S_RXFIFOCFG_CSS;
+  }
 
-    //
-    // The "mono" bits must be removed from the configuration word
-    // prior to writing to hardware, because the RX configuration register
-    // does not actually use these bits.
-    //
-    ulConfig &= ~I2S_CONFIG_MODE_MONO;
+  //
+  // The "mono" bits must be removed from the configuration word
+  // prior to writing to hardware, because the RX configuration register
+  // does not actually use these bits.
+  //
+  ulConfig &= ~I2S_CONFIG_MODE_MONO;
 
-    //
-    // Write the configuration register.  Because all the fields are
-    // specified by the configuration parameter, it is not necessary
-    // to do a read-modify-write.
-    //
-    HWREG(ulBase + I2S_O_RXCFG) = ulConfig;
+  //
+  // Write the configuration register.  Because all the fields are
+  // specified by the configuration parameter, it is not necessary
+  // to do a read-modify-write.
+  //
+  HWREG(ulBase + I2S_O_RXCFG) = ulConfig;
 }
 
 //*****************************************************************************
@@ -664,19 +626,17 @@ I2SRxConfigSet(unsigned long ulBase, unsigned long ulConfig)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SRxFIFOLimitSet(unsigned long ulBase, unsigned long ulLevel)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT(ulLevel <= 16);
+void I2SRxFIFOLimitSet(unsigned long ulBase, unsigned long ulLevel) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT(ulLevel <= 16);
 
-    //
-    // Write the FIFO limit
-    //
-    HWREG(ulBase + I2S_O_RXLIMIT) = ulLevel;
+  //
+  // Write the FIFO limit
+  //
+  HWREG(ulBase + I2S_O_RXLIMIT) = ulLevel;
 }
 
 //*****************************************************************************
@@ -692,19 +652,17 @@ I2SRxFIFOLimitSet(unsigned long ulBase, unsigned long ulLevel)
 //! \return Returns the current value of the FIFO service request limit.
 //
 //*****************************************************************************
-unsigned long
-I2SRxFIFOLimitGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+unsigned long I2SRxFIFOLimitGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Read and return the FIFO limit.  The lower bit is masked
-    // because it always reads as 1 and has no meaning.
-    //
-    return(HWREG(ulBase + I2S_O_RXLIMIT) & 0xFFFE);
+  //
+  // Read and return the FIFO limit.  The lower bit is masked
+  // because it always reads as 1 and has no meaning.
+  //
+  return (HWREG(ulBase + I2S_O_RXLIMIT) & 0xFFFE);
 }
 
 //*****************************************************************************
@@ -727,18 +685,16 @@ I2SRxFIFOLimitGet(unsigned long ulBase)
 //! normally an even number.
 //
 //*****************************************************************************
-unsigned long
-I2SRxFIFOLevelGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+unsigned long I2SRxFIFOLevelGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Read and return the receive FIFO level.
-    //
-    return(HWREG(ulBase + I2S_O_RXLEV));
+  //
+  // Read and return the receive FIFO level.
+  //
+  return (HWREG(ulBase + I2S_O_RXLEV));
 }
 
 //*****************************************************************************
@@ -755,28 +711,26 @@ I2SRxFIFOLevelGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2STxRxEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+void I2STxRxEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Enable the Tx FIFO service request.
-    //
-    HWREG(ulBase + I2S_O_TXISM) = I2S_TXISM_FFM;
+  //
+  // Enable the Tx FIFO service request.
+  //
+  HWREG(ulBase + I2S_O_TXISM) = I2S_TXISM_FFM;
 
-    //
-    // Enable the Rx FIFO service request.
-    //
-    HWREG(ulBase + I2S_O_RXISM) = I2S_RXISM_FFM;
+  //
+  // Enable the Rx FIFO service request.
+  //
+  HWREG(ulBase + I2S_O_RXISM) = I2S_RXISM_FFM;
 
-    //
-    // Enable the transmit and receive modules.
-    //
-    HWREG(ulBase + I2S_O_CFG) |= I2S_CFG_TXEN | I2S_CFG_RXEN;
+  //
+  // Enable the transmit and receive modules.
+  //
+  HWREG(ulBase + I2S_O_CFG) |= I2S_CFG_TXEN | I2S_CFG_RXEN;
 }
 
 //*****************************************************************************
@@ -792,18 +746,16 @@ I2STxRxEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2STxRxDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+void I2STxRxDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Disable the transmit and receive modules.
-    //
-    HWREG(ulBase + I2S_O_CFG) &= ~(I2S_CFG_TXEN | I2S_CFG_RXEN);
+  //
+  // Disable the transmit and receive modules.
+  //
+  HWREG(ulBase + I2S_O_CFG) &= ~(I2S_CFG_TXEN | I2S_CFG_RXEN);
 }
 
 //*****************************************************************************
@@ -839,49 +791,45 @@ I2STxRxDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2STxRxConfigSet(unsigned long ulBase, unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT((ulConfig & (I2S_CONFIG_FORMAT_MASK | I2S_CONFIG_MODE_MASK |
-                        I2S_CONFIG_EMPTY_MASK | I2S_CONFIG_CLK_MASK |
-                        I2S_CONFIG_SAMPLE_SIZE_MASK |
-                        I2S_CONFIG_WIRE_SIZE_MASK)) == ulConfig);
+void I2STxRxConfigSet(unsigned long ulBase, unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT((ulConfig & (I2S_CONFIG_FORMAT_MASK | I2S_CONFIG_MODE_MASK |
+                      I2S_CONFIG_EMPTY_MASK | I2S_CONFIG_CLK_MASK |
+                      I2S_CONFIG_SAMPLE_SIZE_MASK |
+                      I2S_CONFIG_WIRE_SIZE_MASK)) == ulConfig);
 
-    //
-    // Clear out any prior configuration of the FIFO config registers.
-    //
-    HWREG(ulBase + I2S_O_TXFIFOCFG) = 0;
-    HWREG(ulBase + I2S_O_RXFIFOCFG) = 0;
+  //
+  // Clear out any prior configuration of the FIFO config registers.
+  //
+  HWREG(ulBase + I2S_O_TXFIFOCFG) = 0;
+  HWREG(ulBase + I2S_O_RXFIFOCFG) = 0;
 
-    //
-    // If mono mode is used, then the FMM bit needs to be set.
-    //
-    if((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_MONO)
-    {
-        HWREG(ulBase + I2S_O_RXFIFOCFG) |= I2S_RXFIFOCFG_FMM;
-        ulConfig &= ~(I2S_CONFIG_MODE_MONO);
-    }
+  //
+  // If mono mode is used, then the FMM bit needs to be set.
+  //
+  if ((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_MONO) {
+    HWREG(ulBase + I2S_O_RXFIFOCFG) |= I2S_RXFIFOCFG_FMM;
+    ulConfig &= ~(I2S_CONFIG_MODE_MONO);
+  }
 
-    //
-    // If a compact mode is used, then the CSS bit needs to be set.
-    //
-    if((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_COMPACT_8)
-    {
-        HWREG(ulBase + I2S_O_TXFIFOCFG) |= I2S_TXFIFOCFG_CSS;
-        HWREG(ulBase + I2S_O_RXFIFOCFG) |= I2S_RXFIFOCFG_CSS;
-    }
+  //
+  // If a compact mode is used, then the CSS bit needs to be set.
+  //
+  if ((ulConfig & I2S_CONFIG_MODE_MASK) == I2S_CONFIG_MODE_COMPACT_8) {
+    HWREG(ulBase + I2S_O_TXFIFOCFG) |= I2S_TXFIFOCFG_CSS;
+    HWREG(ulBase + I2S_O_RXFIFOCFG) |= I2S_RXFIFOCFG_CSS;
+  }
 
-    //
-    // Write the configuration register.  Because all the fields are specified
-    // by the configuration parameter, it is not necessary to do a
-    // read-modify-write.
-    //
-    HWREG(ulBase + I2S_O_TXCFG) = ulConfig;
-    HWREG(ulBase + I2S_O_RXCFG) = ulConfig;
+  //
+  // Write the configuration register.  Because all the fields are specified
+  // by the configuration parameter, it is not necessary to do a
+  // read-modify-write.
+  //
+  HWREG(ulBase + I2S_O_TXCFG) = ulConfig;
+  HWREG(ulBase + I2S_O_RXCFG) = ulConfig;
 }
 
 //*****************************************************************************
@@ -904,23 +852,20 @@ I2STxRxConfigSet(unsigned long ulBase, unsigned long ulConfig)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SMasterClockSelect(unsigned long ulBase, unsigned long ulMClock)
-{
-    unsigned long ulConfig;
+void I2SMasterClockSelect(unsigned long ulBase, unsigned long ulMClock) {
+  unsigned long ulConfig;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT((ulMClock & (I2S_TX_MCLK_EXT | I2S_RX_MCLK_EXT)) == ulMClock);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT((ulMClock & (I2S_TX_MCLK_EXT | I2S_RX_MCLK_EXT)) == ulMClock);
 
-    //
-    // Set the clock selection bits in the configuation word.
-    //
-    ulConfig = HWREG(ulBase + I2S_O_CFG) &
-                   ~(I2S_TX_MCLK_EXT | I2S_RX_MCLK_EXT);
-    HWREG(ulBase + I2S_O_CFG) = ulConfig | ulMClock;
+  //
+  // Set the clock selection bits in the configuation word.
+  //
+  ulConfig = HWREG(ulBase + I2S_O_CFG) & ~(I2S_TX_MCLK_EXT | I2S_RX_MCLK_EXT);
+  HWREG(ulBase + I2S_O_CFG) = ulConfig | ulMClock;
 }
 
 //*****************************************************************************
@@ -942,20 +887,18 @@ I2SMasterClockSelect(unsigned long ulBase, unsigned long ulMClock)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT((ulIntFlags & (I2S_INT_RXERR | I2S_INT_RXREQ |
-                          I2S_INT_TXERR | I2S_INT_TXREQ)) == ulIntFlags);
+void I2SIntEnable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT((ulIntFlags & (I2S_INT_RXERR | I2S_INT_RXREQ | I2S_INT_TXERR |
+                        I2S_INT_TXREQ)) == ulIntFlags);
 
-    //
-    // Enable the specified interrupts.
-    //
-    HWREG(ulBase + I2S_O_IM) |= ulIntFlags;
+  //
+  // Enable the specified interrupts.
+  //
+  HWREG(ulBase + I2S_O_IM) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -973,20 +916,18 @@ I2SIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT((ulIntFlags & (I2S_INT_RXERR | I2S_INT_RXREQ |
-                          I2S_INT_TXERR | I2S_INT_TXREQ)) == ulIntFlags);
+void I2SIntDisable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT((ulIntFlags & (I2S_INT_RXERR | I2S_INT_RXREQ | I2S_INT_TXERR |
+                        I2S_INT_TXREQ)) == ulIntFlags);
 
-    //
-    // Enable the specified interrupts.
-    //
-    HWREG(ulBase + I2S_O_IM) &= ~ulIntFlags;
+  //
+  // Enable the specified interrupts.
+  //
+  HWREG(ulBase + I2S_O_IM) &= ~ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1005,26 +946,21 @@ I2SIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \b I2S_INT_TXERR, or \b I2S_INT_TXREQ
 //
 //*****************************************************************************
-unsigned long
-I2SIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+unsigned long I2SIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(ulBase + I2S_O_MIS));
-    }
-    else
-    {
-        return(HWREG(ulBase + I2S_O_RIS));
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(ulBase + I2S_O_MIS));
+  } else {
+    return (HWREG(ulBase + I2S_O_RIS));
+  }
 }
 
 //*****************************************************************************
@@ -1052,20 +988,18 @@ I2SIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SIntClear(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT((ulIntFlags & (I2S_INT_RXERR | I2S_INT_RXREQ |
-                          I2S_INT_TXERR | I2S_INT_TXREQ)) == ulIntFlags);
+void I2SIntClear(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT((ulIntFlags & (I2S_INT_RXERR | I2S_INT_RXREQ | I2S_INT_TXERR |
+                        I2S_INT_TXREQ)) == ulIntFlags);
 
-    //
-    // Clear the requested interrupt sources.
-    //
-    HWREG(ulBase + I2S_O_IC) = ulIntFlags;
+  //
+  // Clear the requested interrupt sources.
+  //
+  HWREG(ulBase + I2S_O_IC) = ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1087,24 +1021,22 @@ I2SIntClear(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
-    ASSERT(pfnHandler);
+void I2SIntRegister(unsigned long ulBase, void (*pfnHandler)(void)) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
+  ASSERT(pfnHandler);
 
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(INT_I2S0, pfnHandler);
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(INT_I2S0, pfnHandler);
 
-    //
-    // Enable the I2S interface interrupt.
-    //
-    IntEnable(INT_I2S0);
+  //
+  // Enable the I2S interface interrupt.
+  //
+  IntEnable(INT_I2S0);
 }
 
 //*****************************************************************************
@@ -1122,23 +1054,21 @@ I2SIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-I2SIntUnregister(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == I2S0_BASE);
+void I2SIntUnregister(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == I2S0_BASE);
 
-    //
-    // Disable the I2S interface interrupt.
-    //
-    IntDisable(INT_I2S0);
+  //
+  // Disable the I2S interface interrupt.
+  //
+  IntDisable(INT_I2S0);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_I2S0);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_I2S0);
 }
 
 //*****************************************************************************

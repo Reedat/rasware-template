@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,14 +44,15 @@
 //
 //*****************************************************************************
 
-#include "inc/hw_ints.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_lpc.h"
-#include "inc/hw_sysctl.h"
-#include "inc/hw_types.h"
+#include "driverlib/lpc.h"
+
 #include "driverlib/debug.h"
 #include "driverlib/interrupt.h"
-#include "driverlib/lpc.h"
+#include "inc/hw_ints.h"
+#include "inc/hw_lpc.h"
+#include "inc/hw_memmap.h"
+#include "inc/hw_sysctl.h"
+#include "inc/hw_types.h"
 
 //*****************************************************************************
 //
@@ -68,19 +69,13 @@
 //
 //*****************************************************************************
 #ifdef DEBUG
-static tBoolean
-LPCChannelValid(unsigned long ulChannel)
-{
-    return((ulChannel == LPC_CHAN_CH0) ||
-           (ulChannel == LPC_CHAN_CH1) ||
-           (ulChannel == LPC_CHAN_CH2) ||
-           (ulChannel == LPC_CHAN_CH3) ||
-           (ulChannel == LPC_CHAN_CH4) ||
-           (ulChannel == LPC_CHAN_CH5) ||
-           (ulChannel == LPC_CHAN_CH6) ||
-           (ulChannel == LPC_CHAN_CH7));
+static tBoolean LPCChannelValid(unsigned long ulChannel) {
+  return ((ulChannel == LPC_CHAN_CH0) || (ulChannel == LPC_CHAN_CH1) ||
+          (ulChannel == LPC_CHAN_CH2) || (ulChannel == LPC_CHAN_CH3) ||
+          (ulChannel == LPC_CHAN_CH4) || (ulChannel == LPC_CHAN_CH5) ||
+          (ulChannel == LPC_CHAN_CH6) || (ulChannel == LPC_CHAN_CH7));
 }
-#endif // #ifdef DEBUG
+#endif  // #ifdef DEBUG
 
 //*****************************************************************************
 //
@@ -99,24 +94,22 @@ LPCChannelValid(unsigned long ulChannel)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCConfigSet(unsigned long ulBase, unsigned long ulConfig)
-{
-    unsigned long ulTemp;
+void LPCConfigSet(unsigned long ulBase, unsigned long ulConfig) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulConfig & ~(LPC_CFG_WAKE)) == 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulConfig & ~(LPC_CFG_WAKE)) == 0);
 
-    //
-    // Configure the appropriate LPC Control Register fields.
-    //
-    ulTemp = HWREG(ulBase + LPC_O_CTL);
-    ulTemp &= ~LPC_CTL_WAKE;
-    ulTemp |= (ulConfig & LPC_CTL_WAKE);
-    HWREG(ulBase + LPC_O_CTL) = ulTemp;
+  //
+  // Configure the appropriate LPC Control Register fields.
+  //
+  ulTemp = HWREG(ulBase + LPC_O_CTL);
+  ulTemp &= ~LPC_CTL_WAKE;
+  ulTemp |= (ulConfig & LPC_CTL_WAKE);
+  HWREG(ulBase + LPC_O_CTL) = ulTemp;
 }
 
 //*****************************************************************************
@@ -134,18 +127,16 @@ LPCConfigSet(unsigned long ulBase, unsigned long ulConfig)
 //! \return Returns the bit-mapped LPC module configuration value.
 //
 //*****************************************************************************
-unsigned long
-LPCConfigGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+unsigned long LPCConfigGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Return the configuration value
-    //
-    return((HWREG(ulBase + LPC_O_CTL) & LPC_CTL_WAKE));
+  //
+  // Return the configuration value
+  //
+  return ((HWREG(ulBase + LPC_O_CTL) & LPC_CTL_WAKE));
 }
 
 //*****************************************************************************
@@ -163,20 +154,18 @@ LPCConfigGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCStatusBlockAddressSet(unsigned long ulBase, unsigned long ulAddress,
-                         tBoolean bEnabled)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulAddress & ~0xFFFFFFFE) == 0);
+void LPCStatusBlockAddressSet(unsigned long ulBase, unsigned long ulAddress,
+                              tBoolean bEnabled) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulAddress & ~0xFFFFFFFE) == 0);
 
-    //
-    // Set (and optionally enable) the Status Block Address
-    //
-    HWREG(ulBase + LPC_O_STSADDR) = (ulAddress | (bEnabled ? 1 : 0));
+  //
+  // Set (and optionally enable) the Status Block Address
+  //
+  HWREG(ulBase + LPC_O_STSADDR) = (ulAddress | (bEnabled ? 1 : 0));
 }
 
 //*****************************************************************************
@@ -191,18 +180,16 @@ LPCStatusBlockAddressSet(unsigned long ulBase, unsigned long ulAddress,
 //! \return None.
 //
 //*****************************************************************************
-unsigned
-LPCStatusBlockAddressGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+unsigned LPCStatusBlockAddressGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Return the Status Block Address, including the enable bit.
-    //
-    return(HWREG(ulBase + LPC_O_STSADDR));
+  //
+  // Return the Status Block Address, including the enable bit.
+  //
+  return (HWREG(ulBase + LPC_O_STSADDR));
 }
 
 //*****************************************************************************
@@ -220,42 +207,38 @@ LPCStatusBlockAddressGet(unsigned long ulBase)
 //! \return Returns the contents of the LPC Status register.
 //
 //*****************************************************************************
-unsigned long
-LPCStatusGet(unsigned long ulBase, unsigned long *pulCount,
-             unsigned long *pulPoolSize)
-{
-    unsigned long ulStatus;
+unsigned long LPCStatusGet(unsigned long ulBase, unsigned long *pulCount,
+                           unsigned long *pulPoolSize) {
+  unsigned long ulStatus;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Get a snapshot of the status register.
-    //
-    ulStatus = HWREG(ulBase + LPC_O_STS);
+  //
+  // Get a snapshot of the status register.
+  //
+  ulStatus = HWREG(ulBase + LPC_O_STS);
 
-    //
-    // Extract the channel count from the status, including COMx channel.
-    //
-    if(pulCount)
-    {
-        *pulCount = (((ulStatus & LPC_STS_CHCNT_M) >> LPC_STS_CHCNT_S) + 1);
-    }
+  //
+  // Extract the channel count from the status, including COMx channel.
+  //
+  if (pulCount) {
+    *pulCount = (((ulStatus & LPC_STS_CHCNT_M) >> LPC_STS_CHCNT_S) + 1);
+  }
 
-    //
-    // Extract/Calculate the register pool size.
-    //
-    if(pulPoolSize)
-    {
-        *pulPoolSize = (((ulStatus & LPC_STS_POOLSZ_M) >> 16) * 256);
-    }
+  //
+  // Extract/Calculate the register pool size.
+  //
+  if (pulPoolSize) {
+    *pulPoolSize = (((ulStatus & LPC_STS_POOLSZ_M) >> 16) * 256);
+  }
 
-    //
-    // Return the raw status.
-    //
-    return(ulStatus);
+  //
+  // Return the raw status.
+  //
+  return (ulStatus);
 }
 
 //*****************************************************************************
@@ -273,33 +256,30 @@ LPCStatusGet(unsigned long ulBase, unsigned long *pulCount,
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCSCIAssert(unsigned long ulBase, unsigned long ulCount)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(ulCount <= 3);
+void LPCSCIAssert(unsigned long ulBase, unsigned long ulCount) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(ulCount <= 3);
 
-    //
-    // Wait for any previous pulse to be completed, by checking the SCI bit
-    // (which is a self-clearing bit that is used to generate the pulse).
-    //
-    while(HWREG(ulBase + LPC_O_CTL) & LPC_CTL_SCI)
-    {
-    }
+  //
+  // Wait for any previous pulse to be completed, by checking the SCI bit
+  // (which is a self-clearing bit that is used to generate the pulse).
+  //
+  while (HWREG(ulBase + LPC_O_CTL) & LPC_CTL_SCI) {
+  }
 
-    //
-    // Set the count value first, prior to enabling the pulse.
-    //
-    HWREG(ulBase + LPC_O_CTL) &= ~LPC_CTL_SCICNT_M;
-    HWREG(ulBase + LPC_O_CTL) |= (ulCount << 10);
+  //
+  // Set the count value first, prior to enabling the pulse.
+  //
+  HWREG(ulBase + LPC_O_CTL) &= ~LPC_CTL_SCICNT_M;
+  HWREG(ulBase + LPC_O_CTL) |= (ulCount << 10);
 
-    //
-    // Now, generate the pulse by setting the SCI bit.
-    //
-    HWREG(ulBase + LPC_O_CTL) |= LPC_CTL_SCI;
+  //
+  // Now, generate the pulse by setting the SCI bit.
+  //
+  HWREG(ulBase + LPC_O_CTL) |= LPC_CTL_SCI;
 }
 
 //*****************************************************************************
@@ -320,37 +300,30 @@ LPCSCIAssert(unsigned long ulBase, unsigned long ulCount)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCIRQConfig(unsigned long ulBase, tBoolean bIRQPulse, tBoolean bIRQOnChange)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+void LPCIRQConfig(unsigned long ulBase, tBoolean bIRQPulse,
+                  tBoolean bIRQOnChange) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Setup IRQ pulse configuration.
-    //
-    if(bIRQPulse)
-    {
-        HWREG(ulBase + LPC_O_IRQCTL) |= LPC_IRQCTL_PULSE;
-    }
-    else
-    {
-        HWREG(ulBase + LPC_O_IRQCTL) &= ~LPC_IRQCTL_PULSE;
-    }
+  //
+  // Setup IRQ pulse configuration.
+  //
+  if (bIRQPulse) {
+    HWREG(ulBase + LPC_O_IRQCTL) |= LPC_IRQCTL_PULSE;
+  } else {
+    HWREG(ulBase + LPC_O_IRQCTL) &= ~LPC_IRQCTL_PULSE;
+  }
 
-    //
-    // Setup IRQ on-change configuration.
-    //
-    if(bIRQOnChange)
-    {
-        HWREG(ulBase + LPC_O_IRQCTL) |= LPC_IRQCTL_ONCHG;
-    }
-    else
-    {
-        HWREG(ulBase + LPC_O_IRQCTL) &= ~LPC_IRQCTL_ONCHG;
-    }
+  //
+  // Setup IRQ on-change configuration.
+  //
+  if (bIRQOnChange) {
+    HWREG(ulBase + LPC_O_IRQCTL) |= LPC_IRQCTL_ONCHG;
+  } else {
+    HWREG(ulBase + LPC_O_IRQCTL) &= ~LPC_IRQCTL_ONCHG;
+  }
 }
 
 //*****************************************************************************
@@ -371,24 +344,22 @@ LPCIRQConfig(unsigned long ulBase, tBoolean bIRQPulse, tBoolean bIRQOnChange)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCIRQSet(unsigned long ulBase, unsigned long ulIRQ)
-{
-    unsigned long ulTemp;
+void LPCIRQSet(unsigned long ulBase, unsigned long ulIRQ) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Get the current IRQ configuration, mask off the bits that we are to
-    // be operating on, set/clear them as appropriate, then rewrite the
-    // register.
-    //
-    ulTemp = HWREG(ulBase + LPC_O_IRQCTL);
-    ulTemp |= (ulIRQ & 0xFFFF0000);
-    HWREG(ulBase + LPC_O_IRQCTL) = ulTemp;
+  //
+  // Get the current IRQ configuration, mask off the bits that we are to
+  // be operating on, set/clear them as appropriate, then rewrite the
+  // register.
+  //
+  ulTemp = HWREG(ulBase + LPC_O_IRQCTL);
+  ulTemp |= (ulIRQ & 0xFFFF0000);
+  HWREG(ulBase + LPC_O_IRQCTL) = ulTemp;
 }
 
 //*****************************************************************************
@@ -409,24 +380,22 @@ LPCIRQSet(unsigned long ulBase, unsigned long ulIRQ)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCIRQClear(unsigned long ulBase, unsigned long ulIRQ)
-{
-    unsigned long ulTemp;
+void LPCIRQClear(unsigned long ulBase, unsigned long ulIRQ) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Get the current IRQ configuration, mask off the bits that we are to
-    // be operating on, set/clear them as appropriate, then rewrite the
-    // register.
-    //
-    ulTemp = HWREG(ulBase + LPC_O_IRQCTL);
-    ulTemp &= ~(ulIRQ & 0xFFFF0000);
-    HWREG(ulBase + LPC_O_IRQCTL) = ulTemp;
+  //
+  // Get the current IRQ configuration, mask off the bits that we are to
+  // be operating on, set/clear them as appropriate, then rewrite the
+  // register.
+  //
+  ulTemp = HWREG(ulBase + LPC_O_IRQCTL);
+  ulTemp &= ~(ulIRQ & 0xFFFF0000);
+  HWREG(ulBase + LPC_O_IRQCTL) = ulTemp;
 }
 
 //*****************************************************************************
@@ -445,18 +414,16 @@ LPCIRQClear(unsigned long ulBase, unsigned long ulIRQ)
 //! \return None.
 //
 //*****************************************************************************
-unsigned long
-LPCIRQGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+unsigned long LPCIRQGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Simply read the registers and return the values.
-    //
-    return(HWREG(ulBase + LPC_O_IRQST));
+  //
+  // Simply read the registers and return the values.
+  //
+  return (HWREG(ulBase + LPC_O_IRQST));
 }
 
 //*****************************************************************************
@@ -471,18 +438,16 @@ LPCIRQGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCIRQSend(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+void LPCIRQSend(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Set the bit to force the sending of an SIRQ frame.
-    //
-    HWREG(ulBase + LPC_O_IRQCTL) |= LPC_IRQCTL_SND;
+  //
+  // Set the bit to force the sending of an SIRQ frame.
+  //
+  HWREG(ulBase + LPC_O_IRQCTL) |= LPC_IRQCTL_SND;
 }
 
 //*****************************************************************************
@@ -505,24 +470,22 @@ LPCIRQSend(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(pfnHandler != 0);
+void LPCIntRegister(unsigned long ulBase, void (*pfnHandler)(void)) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(pfnHandler != 0);
 
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(INT_LPC0, pfnHandler);
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(INT_LPC0, pfnHandler);
 
-    //
-    // Enable the LPC interrupt.
-    //
-    IntEnable(INT_LPC0);
+  //
+  // Enable the LPC interrupt.
+  //
+  IntEnable(INT_LPC0);
 }
 
 //*****************************************************************************
@@ -541,23 +504,21 @@ LPCIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCIntUnregister(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+void LPCIntUnregister(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Disable the LPC interrupt.
-    //
-    IntDisable(INT_LPC0);
+  //
+  // Disable the LPC interrupt.
+  //
+  IntDisable(INT_LPC0);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_LPC0);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_LPC0);
 }
 
 //*****************************************************************************
@@ -582,18 +543,16 @@ LPCIntUnregister(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+void LPCIntEnable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Get the current mask value.
-    //
-    HWREG(ulBase + LPC_O_IM) |= ulIntFlags;
+  //
+  // Get the current mask value.
+  //
+  HWREG(ulBase + LPC_O_IM) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -613,18 +572,16 @@ LPCIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+void LPCIntDisable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Disable the specified interrupts.
-    //
-    HWREG(ulBase + LPC_O_IM) &= ~ulIntFlags;
+  //
+  // Disable the specified interrupts.
+  //
+  HWREG(ulBase + LPC_O_IM) &= ~ulIntFlags;
 }
 
 //*****************************************************************************
@@ -648,26 +605,21 @@ LPCIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return The current interrupt status.
 //
 //*****************************************************************************
-unsigned long
-LPCIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+unsigned long LPCIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(ulBase + LPC_O_MIS));
-    }
-    else
-    {
-        return(HWREG(ulBase + LPC_O_RIS));
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(ulBase + LPC_O_MIS));
+  } else {
+    return (HWREG(ulBase + LPC_O_RIS));
+  }
 }
 
 //*****************************************************************************
@@ -696,18 +648,16 @@ LPCIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCIntClear(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+void LPCIntClear(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Clear the requested interrupt sources.
-    //
-    HWREG(ulBase + LPC_O_IC) = ulIntFlags;
+  //
+  // Clear the requested interrupt sources.
+  //
+  HWREG(ulBase + LPC_O_IC) = ulIntFlags;
 }
 
 //*****************************************************************************
@@ -727,19 +677,17 @@ LPCIntClear(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCChannelEnable(unsigned long ulBase, unsigned long ulChannel)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
+void LPCChannelEnable(unsigned long ulBase, unsigned long ulChannel) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
 
-    //
-    // Enable the specified channel.
-    //
-    HWREG(ulBase + LPC_O_CTL) |= (1 << ulChannel);
+  //
+  // Enable the specified channel.
+  //
+  HWREG(ulBase + LPC_O_CTL) |= (1 << ulChannel);
 }
 
 //*****************************************************************************
@@ -757,19 +705,17 @@ LPCChannelEnable(unsigned long ulBase, unsigned long ulChannel)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCChannelDisable(unsigned long ulBase, unsigned long ulChannel)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
+void LPCChannelDisable(unsigned long ulBase, unsigned long ulChannel) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
 
-    //
-    // Disable the specified channel.
-    //
-    HWREG(ulBase + LPC_O_CTL) &= ~(1 << ulChannel);
+  //
+  // Disable the specified channel.
+  //
+  HWREG(ulBase + LPC_O_CTL) &= ~(1 << ulChannel);
 }
 
 //*****************************************************************************
@@ -789,39 +735,36 @@ LPCChannelDisable(unsigned long ulBase, unsigned long ulChannel)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCChannelConfigEPSet(unsigned long ulBase, unsigned long ulChannel,
-                      unsigned long ulConfig, unsigned long ulAddress,
-                      unsigned long ulOffset)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
-    ASSERT((ulConfig & ~(LPC_CH0CTL_IRQSEL1_M | LPC_CH0CTL_IRQSEL0_M |
-                         LPC_CH0CTL_IRQEN1 | LPC_CH0CTL_IRQEN0_M)) == 0);
-    ASSERT((ulOffset & 3) == 0);
-    ASSERT(ulOffset < ((((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >>
-              16) * 256) - 4));
+void LPCChannelConfigEPSet(unsigned long ulBase, unsigned long ulChannel,
+                           unsigned long ulConfig, unsigned long ulAddress,
+                           unsigned long ulOffset) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
+  ASSERT((ulConfig & ~(LPC_CH0CTL_IRQSEL1_M | LPC_CH0CTL_IRQSEL0_M |
+                       LPC_CH0CTL_IRQEN1 | LPC_CH0CTL_IRQEN0_M)) == 0);
+  ASSERT((ulOffset & 3) == 0);
+  ASSERT(ulOffset <
+         ((((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >> 16) * 256) - 4));
 
-    //
-    // Convert the byte offset address into a half-word
-    // offset address and add into the control word.
-    //
-    ulConfig |= (((ulOffset >> 1) << LPC_CH0CTL_OFFSET_S) &
-                 LPC_CH0CTL_OFFSET_M);
+  //
+  // Convert the byte offset address into a half-word
+  // offset address and add into the control word.
+  //
+  ulConfig |= (((ulOffset >> 1) << LPC_CH0CTL_OFFSET_S) & LPC_CH0CTL_OFFSET_M);
 
-    //
-    // Write the final control value into the control word for
-    // the channel.
-    //
-    HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10)) = ulConfig;
+  //
+  // Write the final control value into the control word for
+  // the channel.
+  //
+  HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10)) = ulConfig;
 
-    //
-    // Setup the IO and/or MEM address to match for this channel.
-    //
-    HWREG(ulBase + LPC_O_CH0ADR + (ulChannel * 0x10)) = ulAddress;
+  //
+  // Setup the IO and/or MEM address to match for this channel.
+  //
+  HWREG(ulBase + LPC_O_CH0ADR + (ulChannel * 0x10)) = ulAddress;
 }
 
 //*****************************************************************************
@@ -841,47 +784,43 @@ LPCChannelConfigEPSet(unsigned long ulBase, unsigned long ulChannel,
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCChannelConfigMBSet(unsigned long ulBase, unsigned long ulChannel,
-                      unsigned long ulConfig, unsigned long ulAddress,
-                      unsigned long ulOffset)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
-    ASSERT((ulConfig & ~(LPC_CH0CTL_IRQSEL1_M | LPC_CH0CTL_IRQSEL1_M |
-                         LPC_CH0CTL_IRQSEL0_M |
-                         LPC_CH0CTL_IRQEN2 | LPC_CH0CTL_IRQEN1 |
-                         LPC_CH0CTL_IRQEN0_M |
-                         LPC_CH0CTL_ARBDIS | LPC_CH0CTL_AMASK_M)) == 0);
-    ASSERT((ulOffset & 3) == 0);
-    ASSERT(ulOffset < ((((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >>
-              16) * 256) - 4));
+void LPCChannelConfigMBSet(unsigned long ulBase, unsigned long ulChannel,
+                           unsigned long ulConfig, unsigned long ulAddress,
+                           unsigned long ulOffset) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
+  ASSERT((ulConfig &
+          ~(LPC_CH0CTL_IRQSEL1_M | LPC_CH0CTL_IRQSEL1_M | LPC_CH0CTL_IRQSEL0_M |
+            LPC_CH0CTL_IRQEN2 | LPC_CH0CTL_IRQEN1 | LPC_CH0CTL_IRQEN0_M |
+            LPC_CH0CTL_ARBDIS | LPC_CH0CTL_AMASK_M)) == 0);
+  ASSERT((ulOffset & 3) == 0);
+  ASSERT(ulOffset <
+         ((((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >> 16) * 256) - 4));
 
-    //
-    // Convert the byte offset address into a half-word
-    // offset address and add into the control word.
-    //
-    ulConfig |= (((ulOffset >> 1) << LPC_CH0CTL_OFFSET_S) &
-                 LPC_CH0CTL_OFFSET_M);
+  //
+  // Convert the byte offset address into a half-word
+  // offset address and add into the control word.
+  //
+  ulConfig |= (((ulOffset >> 1) << LPC_CH0CTL_OFFSET_S) & LPC_CH0CTL_OFFSET_M);
 
-    //
-    // Set the configuration bit that enables Mailbox mode.
-    //
-    ulConfig |= LPC_CH0CTL_TYPE;
+  //
+  // Set the configuration bit that enables Mailbox mode.
+  //
+  ulConfig |= LPC_CH0CTL_TYPE;
 
-    //
-    // Write the final control value into the control word for
-    // the channel.
-    //
-    HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10)) = ulConfig;
+  //
+  // Write the final control value into the control word for
+  // the channel.
+  //
+  HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10)) = ulConfig;
 
-    //
-    // Setup the IO and/or MEM address to match for this channel.
-    //
-    HWREG(ulBase + LPC_O_CH0ADR + (ulChannel * 0x10)) = ulAddress;
+  //
+  // Setup the IO and/or MEM address to match for this channel.
+  //
+  HWREG(ulBase + LPC_O_CH0ADR + (ulChannel * 0x10)) = ulAddress;
 }
 
 //*****************************************************************************
@@ -902,53 +841,50 @@ LPCChannelConfigMBSet(unsigned long ulBase, unsigned long ulChannel,
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCChannelConfigCOMxSet(unsigned long ulBase, unsigned long ulChannel,
-                        unsigned long ulConfig, unsigned long ulAddress,
-                        unsigned long ulOffset, unsigned long ulCOMxMode)
-{
-    unsigned long ulTemp;
+void LPCChannelConfigCOMxSet(unsigned long ulBase, unsigned long ulChannel,
+                             unsigned long ulConfig, unsigned long ulAddress,
+                             unsigned long ulOffset, unsigned long ulCOMxMode) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
-    ASSERT(ulChannel == LPC_CHAN_COMx);
-    ASSERT((ulConfig & ~(LPC_CH7CTL_IRQSEL1_M | LPC_CH7CTL_IRQSEL0_M |
-                         LPC_CH7CTL_CX | LPC_CH7CTL_IRQEN1 |
-                         LPC_CH7CTL_IRQEN0_M)) == 0);
-    ASSERT((ulOffset & 3) == 0);
-    ASSERT(ulOffset < ((((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >>
-              16) * 256) - 4));
-    ASSERT((ulCOMxMode & ~LPC_DMACX_CXACT_M) == 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
+  ASSERT(ulChannel == LPC_CHAN_COMx);
+  ASSERT((ulConfig &
+          ~(LPC_CH7CTL_IRQSEL1_M | LPC_CH7CTL_IRQSEL0_M | LPC_CH7CTL_CX |
+            LPC_CH7CTL_IRQEN1 | LPC_CH7CTL_IRQEN0_M)) == 0);
+  ASSERT((ulOffset & 3) == 0);
+  ASSERT(ulOffset <
+         ((((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >> 16) * 256) - 4));
+  ASSERT((ulCOMxMode & ~LPC_DMACX_CXACT_M) == 0);
 
-    //
-    // Convert the byte offset address into a half-word
-    // offset address and add into the control word.
-    //
-    ulConfig |= (((ulOffset >> 1) << LPC_CH0CTL_OFFSET_S) &
-                 LPC_CH0CTL_OFFSET_M);
+  //
+  // Convert the byte offset address into a half-word
+  // offset address and add into the control word.
+  //
+  ulConfig |= (((ulOffset >> 1) << LPC_CH0CTL_OFFSET_S) & LPC_CH0CTL_OFFSET_M);
 
-    //
-    // Write the final control value into the control word for
-    // the channel.
-    //
-    HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10)) = ulConfig;
+  //
+  // Write the final control value into the control word for
+  // the channel.
+  //
+  HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10)) = ulConfig;
 
-    //
-    // Setup the IO and/or MEM address to match for this channel.
-    //
-    HWREG(ulBase + LPC_O_CH0ADR + (ulChannel * 0x10)) = ulAddress;
+  //
+  // Setup the IO and/or MEM address to match for this channel.
+  //
+  HWREG(ulBase + LPC_O_CH0ADR + (ulChannel * 0x10)) = ulAddress;
 
-    //
-    // Configure the COMx Mode for this channel.
-    //
-    ulTemp = HWREG(ulBase + LPC_O_DMACX);
-    ulTemp &= ~LPC_DMACX_CXACT_M;
-    ulTemp |= ulCOMxMode;
-    ulTemp |= LPC_DMACX_COMX;
-    HWREG(ulBase + LPC_O_DMACX) = ulTemp;
+  //
+  // Configure the COMx Mode for this channel.
+  //
+  ulTemp = HWREG(ulBase + LPC_O_DMACX);
+  ulTemp &= ~LPC_DMACX_CXACT_M;
+  ulTemp |= ulCOMxMode;
+  ulTemp |= LPC_DMACX_COMX;
+  HWREG(ulBase + LPC_O_DMACX) = ulTemp;
 }
 
 //*****************************************************************************
@@ -967,53 +903,49 @@ LPCChannelConfigCOMxSet(unsigned long ulBase, unsigned long ulChannel,
 //! \return Returns the bit-mapped channel control register value.
 //
 //*****************************************************************************
-unsigned long
-LPCChannelConfigGet(unsigned long ulBase, unsigned long ulChannel,
-                    unsigned long *pulAddress, unsigned long *pulOffset,
-                    unsigned long *pulCOMxMode)
-{
-    unsigned long ulConfig;
+unsigned long LPCChannelConfigGet(unsigned long ulBase, unsigned long ulChannel,
+                                  unsigned long *pulAddress,
+                                  unsigned long *pulOffset,
+                                  unsigned long *pulCOMxMode) {
+  unsigned long ulConfig;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
 
-    //
-    // Read the channel control register.
-    //
-    ulConfig = HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10));
+  //
+  // Read the channel control register.
+  //
+  ulConfig = HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10));
 
-    //
-    // Get the buffer pool offset value.
-    //
-    if(pulOffset)
-    {
-        *pulOffset = ((ulConfig & LPC_CH0CTL_OFFSET_M) >>
-                      (LPC_CH0CTL_OFFSET_S - 1));
-    }
+  //
+  // Get the buffer pool offset value.
+  //
+  if (pulOffset) {
+    *pulOffset =
+        ((ulConfig & LPC_CH0CTL_OFFSET_M) >> (LPC_CH0CTL_OFFSET_S - 1));
+  }
 
-    //
-    // Get the IO/Memory address that this endpoint responds to.
-    //
-    if(pulAddress)
-    {
-        *pulAddress = HWREG(ulBase + LPC_O_CH0ADR + (ulChannel * 0x10));
-    }
+  //
+  // Get the IO/Memory address that this endpoint responds to.
+  //
+  if (pulAddress) {
+    *pulAddress = HWREG(ulBase + LPC_O_CH0ADR + (ulChannel * 0x10));
+  }
 
-    //
-    // Configure the COMx Mode for this channel.
-    //
-    if(pulCOMxMode && (ulChannel == LPC_CHAN_COMx))
-    {
-        *pulCOMxMode = (HWREG(ulBase + LPC_O_DMACX) & 0x00070000);
-    }
+  //
+  // Configure the COMx Mode for this channel.
+  //
+  if (pulCOMxMode && (ulChannel == LPC_CHAN_COMx)) {
+    *pulCOMxMode = (HWREG(ulBase + LPC_O_DMACX) & 0x00070000);
+  }
 
-    //
-    // Return the raw config value.
-    //
-    return(ulConfig);
+  //
+  // Return the raw config value.
+  //
+  return (ulConfig);
 }
 
 //*****************************************************************************
@@ -1029,39 +961,37 @@ LPCChannelConfigGet(unsigned long ulBase, unsigned long ulChannel,
 //! \return Returns the absolute base address of the channel pool.
 //
 //*****************************************************************************
-unsigned long
-LPCChannelPoolAddressGet(unsigned long ulBase, unsigned long ulChannel)
-{
-    unsigned long ulAddress;
+unsigned long LPCChannelPoolAddressGet(unsigned long ulBase,
+                                       unsigned long ulChannel) {
+  unsigned long ulAddress;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
 
-    //
-    // Read the channel control register.
-    //
-    ulAddress = HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10));
+  //
+  // Read the channel control register.
+  //
+  ulAddress = HWREG(ulBase + LPC_O_CH0CTL + (ulChannel * 0x10));
 
-    //
-    // Mask off the channel offset portion and shift it into a byte
-    // offset (stored as half-word offset).
-    //
-    ulAddress = ((ulAddress & LPC_CH0CTL_OFFSET_M) >>
-                 (LPC_CH0CTL_OFFSET_S - 1));
+  //
+  // Mask off the channel offset portion and shift it into a byte
+  // offset (stored as half-word offset).
+  //
+  ulAddress = ((ulAddress & LPC_CH0CTL_OFFSET_M) >> (LPC_CH0CTL_OFFSET_S - 1));
 
-    //
-    // Add the LPC and Buffer Pool base address to get the final
-    // address to return.
-    //
-    ulAddress += (ulBase + LPC_O_POOL);
+  //
+  // Add the LPC and Buffer Pool base address to get the final
+  // address to return.
+  //
+  ulAddress += (ulBase + LPC_O_POOL);
 
-    //
-    // Return the address to the calling routine.
-    //
-    return(ulAddress);
+  //
+  // Return the address to the calling routine.
+  //
+  return (ulAddress);
 }
 
 //*****************************************************************************
@@ -1077,19 +1007,18 @@ LPCChannelPoolAddressGet(unsigned long ulBase, unsigned long ulChannel)
 //! \return content of the channel status register.
 //
 //*****************************************************************************
-unsigned long
-LPCChannelStatusGet(unsigned long ulBase, unsigned long ulChannel)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
+unsigned long LPCChannelStatusGet(unsigned long ulBase,
+                                  unsigned long ulChannel) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
 
-    //
-    // Read the half-word status from the LPC Channel
-    //
-    return (HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10)));
+  //
+  // Read the half-word status from the LPC Channel
+  //
+  return (HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10)));
 }
 
 //*****************************************************************************
@@ -1106,26 +1035,24 @@ LPCChannelStatusGet(unsigned long ulBase, unsigned long ulChannel)
 //! \return None
 //
 //*****************************************************************************
-void
-LPCChannelStatusSet(unsigned long ulBase, unsigned long ulChannel,
-                    unsigned long ulStatus)
-{
-    unsigned long ulTemp;
+void LPCChannelStatusSet(unsigned long ulBase, unsigned long ulChannel,
+                         unsigned long ulStatus) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
-    ASSERT((ulStatus & (~LPC_CH0ST_USER_M)) == 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
+  ASSERT((ulStatus & (~LPC_CH0ST_USER_M)) == 0);
 
-    //
-    // Read the status from the LPC Channel, and set new values for
-    // the user bits.
-    //
-    ulTemp = HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10));
-    ulTemp |= ulStatus;
-    HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10)) = ulTemp;
+  //
+  // Read the status from the LPC Channel, and set new values for
+  // the user bits.
+  //
+  ulTemp = HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10));
+  ulTemp |= ulStatus;
+  HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10)) = ulTemp;
 }
 
 //*****************************************************************************
@@ -1142,26 +1069,24 @@ LPCChannelStatusSet(unsigned long ulBase, unsigned long ulChannel,
 //! \return None
 //
 //*****************************************************************************
-void
-LPCChannelStatusClear(unsigned long ulBase, unsigned long ulChannel,
-                      unsigned long ulStatus)
-{
-    unsigned long ulTemp;
+void LPCChannelStatusClear(unsigned long ulBase, unsigned long ulChannel,
+                           unsigned long ulStatus) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(LPCChannelValid(ulChannel));
-    ASSERT((ulStatus & (~LPC_CH0ST_USER_M)) == 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(LPCChannelValid(ulChannel));
+  ASSERT((ulStatus & (~LPC_CH0ST_USER_M)) == 0);
 
-    //
-    // Read the status from the LPC Channel, and set new values for
-    // the user bits.
-    //
-    ulTemp = HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10));
-    ulTemp &= ~ulStatus;
-    HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10)) = ulTemp;
+  //
+  // Read the status from the LPC Channel, and set new values for
+  // the user bits.
+  //
+  ulTemp = HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10));
+  ulTemp &= ~ulStatus;
+  HWREG(ulBase + LPC_O_CH0ST + (ulChannel * 0x10)) = ulTemp;
 }
 
 //*****************************************************************************
@@ -1178,30 +1103,28 @@ LPCChannelStatusClear(unsigned long ulBase, unsigned long ulChannel,
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCChannelDMAConfigSet(unsigned long ulBase, unsigned long ulConfig,
-                       unsigned long ulMask)
-{
-    unsigned long ulTemp;
+void LPCChannelDMAConfigSet(unsigned long ulBase, unsigned long ulConfig,
+                            unsigned long ulMask) {
+  unsigned long ulTemp;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulConfig & ~0x000000FF) == 0);
-    ASSERT((ulConfig & 0x00000003) != 0x00000003);
-    ASSERT((ulConfig & 0x0000000C) != 0x0000000C);
-    ASSERT((ulConfig & 0x00000030) != 0x00000030);
-    ASSERT((ulConfig & 0x000000C0) != 0x000000C0);
-    ASSERT((ulMask & ~0x000000FF) == 0);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulConfig & ~0x000000FF) == 0);
+  ASSERT((ulConfig & 0x00000003) != 0x00000003);
+  ASSERT((ulConfig & 0x0000000C) != 0x0000000C);
+  ASSERT((ulConfig & 0x00000030) != 0x00000030);
+  ASSERT((ulConfig & 0x000000C0) != 0x000000C0);
+  ASSERT((ulMask & ~0x000000FF) == 0);
 
-    //
-    // Get the current mask value.
-    //
-    ulTemp = HWREG(ulBase + LPC_O_DMACX);
-    ulTemp &= ~ulMask;
-    ulTemp |= (ulConfig & ulMask);
-    HWREG(ulBase + LPC_O_DMACX) = ulTemp;
+  //
+  // Get the current mask value.
+  //
+  ulTemp = HWREG(ulBase + LPC_O_DMACX);
+  ulTemp &= ~ulMask;
+  ulTemp |= (ulConfig & ulMask);
+  HWREG(ulBase + LPC_O_DMACX) = ulTemp;
 }
 
 //*****************************************************************************
@@ -1215,18 +1138,16 @@ LPCChannelDMAConfigSet(unsigned long ulBase, unsigned long ulConfig,
 //! \return Returns the bit-mapped DMA channel configuration.
 //
 //*****************************************************************************
-unsigned long
-LPCChannelDMAConfigGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+unsigned long LPCChannelDMAConfigGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Get the current mask value.
-    //
-    return(HWREG(ulBase + LPC_O_DMACX) & 0x000000FF);
+  //
+  // Get the current mask value.
+  //
+  return (HWREG(ulBase + LPC_O_DMACX) & 0x000000FF);
 }
 
 //*****************************************************************************
@@ -1242,20 +1163,18 @@ LPCChannelDMAConfigGet(unsigned long ulBase)
 //! \return Returns the byte read from the pool memory.
 //
 //*****************************************************************************
-unsigned char
-LPCByteRead(unsigned long ulBase, unsigned long ulOffset)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(ulOffset < (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >>
-                        16) * 256));
+unsigned char LPCByteRead(unsigned long ulBase, unsigned long ulOffset) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(ulOffset <
+         (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >> 16) * 256));
 
-    //
-    // Return the byte from the LPC Buffer Pool.
-    //
-    return(HWREGB(ulBase + LPC_O_POOL + ulOffset));
+  //
+  // Return the byte from the LPC Buffer Pool.
+  //
+  return (HWREGB(ulBase + LPC_O_POOL + ulOffset));
 }
 
 //*****************************************************************************
@@ -1272,21 +1191,19 @@ LPCByteRead(unsigned long ulBase, unsigned long ulOffset)
 //! \return None
 //
 //*****************************************************************************
-void
-LPCByteWrite(unsigned long ulBase, unsigned long ulOffset,
-             unsigned char ucData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT(ulOffset < (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >>
-                        16) * 256));
+void LPCByteWrite(unsigned long ulBase, unsigned long ulOffset,
+                  unsigned char ucData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT(ulOffset <
+         (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >> 16) * 256));
 
-    //
-    // Write the byte to the LPC Buffer Pool.
-    //
-    HWREGB(ulBase + LPC_O_POOL + ulOffset) = ucData;
+  //
+  // Write the byte to the LPC Buffer Pool.
+  //
+  HWREGB(ulBase + LPC_O_POOL + ulOffset) = ucData;
 }
 
 //*****************************************************************************
@@ -1303,21 +1220,19 @@ LPCByteWrite(unsigned long ulBase, unsigned long ulOffset,
 //! \return Returns the half-word read from the pool memory.
 //
 //*****************************************************************************
-unsigned short
-LPCHalfWordRead(unsigned long ulBase, unsigned long ulOffset)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulOffset & 1) == 0);
-    ASSERT(ulOffset < (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >>
-                        16) * 256));
+unsigned short LPCHalfWordRead(unsigned long ulBase, unsigned long ulOffset) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulOffset & 1) == 0);
+  ASSERT(ulOffset <
+         (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >> 16) * 256));
 
-    //
-    // Return the half-word from the LPC Buffer Pool.
-    //
-    return(HWREGH(ulBase + LPC_O_POOL + ulOffset));
+  //
+  // Return the half-word from the LPC Buffer Pool.
+  //
+  return (HWREGH(ulBase + LPC_O_POOL + ulOffset));
 }
 
 //*****************************************************************************
@@ -1335,22 +1250,20 @@ LPCHalfWordRead(unsigned long ulBase, unsigned long ulOffset)
 //! \return None
 //
 //*****************************************************************************
-void
-LPCHalfWordWrite(unsigned long ulBase, unsigned long ulOffset,
-                 unsigned short usData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulOffset & 1) == 0);
-    ASSERT(ulOffset < (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >>
-                        16) * 256));
+void LPCHalfWordWrite(unsigned long ulBase, unsigned long ulOffset,
+                      unsigned short usData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulOffset & 1) == 0);
+  ASSERT(ulOffset <
+         (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >> 16) * 256));
 
-    //
-    // Write the half-word to the LPC Buffer Pool.
-    //
-    HWREGH(ulBase + LPC_O_POOL + ulOffset) = usData;
+  //
+  // Write the half-word to the LPC Buffer Pool.
+  //
+  HWREGH(ulBase + LPC_O_POOL + ulOffset) = usData;
 }
 
 //*****************************************************************************
@@ -1367,21 +1280,19 @@ LPCHalfWordWrite(unsigned long ulBase, unsigned long ulOffset,
 //! \return Returns the word read from the pool memory.
 //
 //*****************************************************************************
-unsigned long
-LPCWordRead(unsigned long ulBase, unsigned long ulOffset)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulOffset & 3) == 0);
-    ASSERT(ulOffset < (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >>
-                        16) * 256));
+unsigned long LPCWordRead(unsigned long ulBase, unsigned long ulOffset) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulOffset & 3) == 0);
+  ASSERT(ulOffset <
+         (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >> 16) * 256));
 
-    //
-    // Return the word from the LPC Buffer Pool.
-    //
-    return(HWREG(ulBase + LPC_O_POOL + ulOffset));
+  //
+  // Return the word from the LPC Buffer Pool.
+  //
+  return (HWREG(ulBase + LPC_O_POOL + ulOffset));
 }
 
 //*****************************************************************************
@@ -1399,22 +1310,20 @@ LPCWordRead(unsigned long ulBase, unsigned long ulOffset)
 //! \return None
 //
 //*****************************************************************************
-void
-LPCWordWrite(unsigned long ulBase, unsigned long ulOffset,
-             unsigned long ulData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulOffset & 1) == 0);
-    ASSERT(ulOffset < (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >>
-                        16) * 256));
+void LPCWordWrite(unsigned long ulBase, unsigned long ulOffset,
+                  unsigned long ulData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulOffset & 1) == 0);
+  ASSERT(ulOffset <
+         (((HWREG(ulBase + LPC_O_STS) & LPC_STS_POOLSZ_M) >> 16) * 256));
 
-    //
-    // Write the word to the LPC Buffer Pool.
-    //
-    HWREG(ulBase + LPC_O_POOL + ulOffset) = ulData;
+  //
+  // Write the word to the LPC Buffer Pool.
+  //
+  HWREG(ulBase + LPC_O_POOL + ulOffset) = ulData;
 }
 
 //*****************************************************************************
@@ -1430,20 +1339,18 @@ LPCWordWrite(unsigned long ulBase, unsigned long ulOffset,
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCCOMxIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulIntFlags & ~(LPC_DMACX_CXEM | LPC_DMACX_CXTXEM |
-                           LPC_DMACX_CXRXEM)) == 0);
+void LPCCOMxIntEnable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulIntFlags &
+          ~(LPC_DMACX_CXEM | LPC_DMACX_CXTXEM | LPC_DMACX_CXRXEM)) == 0);
 
-    //
-    // Get the current mask value.
-    //
-    HWREG(ulBase + LPC_O_DMACX) |= ulIntFlags;
+  //
+  // Get the current mask value.
+  //
+  HWREG(ulBase + LPC_O_DMACX) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1459,20 +1366,18 @@ LPCCOMxIntEnable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCCOMxIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulIntFlags & ~(LPC_DMACX_CXEM | LPC_DMACX_CXTXEM |
-                           LPC_DMACX_CXRXEM)) == 0);
+void LPCCOMxIntDisable(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulIntFlags &
+          ~(LPC_DMACX_CXEM | LPC_DMACX_CXTXEM | LPC_DMACX_CXRXEM)) == 0);
 
-    //
-    // Disable the specified interrupts.
-    //
-    HWREG(ulBase + LPC_O_DMACX) &= ~ulIntFlags;
+  //
+  // Disable the specified interrupts.
+  //
+  HWREG(ulBase + LPC_O_DMACX) &= ~ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1488,27 +1393,23 @@ LPCCOMxIntDisable(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return The current interrupt status.
 //
 //*****************************************************************************
-unsigned long
-LPCCOMxIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    unsigned long ulStatus;
+unsigned long LPCCOMxIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  unsigned long ulStatus;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    ulStatus = HWREG(ulBase + LPC_O_DMACX);
-    if(bMasked)
-    {
-        ulStatus = ulStatus & (ulStatus << 4);
-    }
-    return(ulStatus & (LPC_DMACX_CXRES | LPC_DMACX_CXTXRES |
-                           LPC_DMACX_CXRXRES));
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  ulStatus = HWREG(ulBase + LPC_O_DMACX);
+  if (bMasked) {
+    ulStatus = ulStatus & (ulStatus << 4);
+  }
+  return (ulStatus & (LPC_DMACX_CXRES | LPC_DMACX_CXTXRES | LPC_DMACX_CXRXRES));
 }
 
 //*****************************************************************************
@@ -1524,20 +1425,18 @@ LPCCOMxIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-LPCCOMxIntClear(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == LPC0_BASE);
-    ASSERT((ulIntFlags & ~(LPC_DMACX_CXRES | LPC_DMACX_CXTXRES |
-                           LPC_DMACX_CXRXRES)) == 0);
+void LPCCOMxIntClear(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == LPC0_BASE);
+  ASSERT((ulIntFlags &
+          ~(LPC_DMACX_CXRES | LPC_DMACX_CXTXRES | LPC_DMACX_CXRXRES)) == 0);
 
-    //
-    // Clear the requested interrupt sources.
-    //
-    HWREG(ulBase + LPC_O_DMACX) |= ulIntFlags;
+  //
+  // Clear the requested interrupt sources.
+  //
+  HWREG(ulBase + LPC_O_DMACX) |= ulIntFlags;
 }
 
 //*****************************************************************************

@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2005-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,13 +44,14 @@
 //
 //*****************************************************************************
 
+#include "driverlib/comp.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_comp.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
-#include "driverlib/comp.h"
-#include "driverlib/debug.h"
-#include "driverlib/interrupt.h"
 
 //*****************************************************************************
 //
@@ -109,20 +110,18 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-ComparatorConfigure(unsigned long ulBase, unsigned long ulComp,
-                    unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == COMP_BASE);
-    ASSERT(ulComp < 3);
+void ComparatorConfigure(unsigned long ulBase, unsigned long ulComp,
+                         unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == COMP_BASE);
+  ASSERT(ulComp < 3);
 
-    //
-    // Configure this comparator.
-    //
-    HWREG(ulBase + (ulComp * 0x20) + COMP_O_ACCTL0) = ulConfig;
+  //
+  // Configure this comparator.
+  //
+  HWREG(ulBase + (ulComp * 0x20) + COMP_O_ACCTL0) = ulConfig;
 }
 
 //*****************************************************************************
@@ -168,18 +167,16 @@ ComparatorConfigure(unsigned long ulBase, unsigned long ulComp,
 //! \return None.
 //
 //*****************************************************************************
-void
-ComparatorRefSet(unsigned long ulBase, unsigned long ulRef)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == COMP_BASE);
+void ComparatorRefSet(unsigned long ulBase, unsigned long ulRef) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == COMP_BASE);
 
-    //
-    // Set the voltage reference voltage as requested.
-    //
-    HWREG(ulBase + COMP_O_ACREFCTL) = ulRef;
+  //
+  // Set the voltage reference voltage as requested.
+  //
+  HWREG(ulBase + COMP_O_ACREFCTL) = ulRef;
 }
 
 //*****************************************************************************
@@ -195,27 +192,22 @@ ComparatorRefSet(unsigned long ulBase, unsigned long ulRef)
 //! the comparator output is low.
 //
 //*****************************************************************************
-tBoolean
-ComparatorValueGet(unsigned long ulBase, unsigned long ulComp)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == COMP_BASE);
-    ASSERT(ulComp < 3);
+tBoolean ComparatorValueGet(unsigned long ulBase, unsigned long ulComp) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == COMP_BASE);
+  ASSERT(ulComp < 3);
 
-    //
-    // Return the appropriate value based on the comparator's present output
-    // value.
-    //
-    if(HWREG(ulBase + (ulComp * 0x20) + COMP_O_ACSTAT0) & COMP_ACSTAT0_OVAL)
-    {
-        return(true);
-    }
-    else
-    {
-        return(false);
-    }
+  //
+  // Return the appropriate value based on the comparator's present output
+  // value.
+  //
+  if (HWREG(ulBase + (ulComp * 0x20) + COMP_O_ACSTAT0) & COMP_ACSTAT0_OVAL) {
+    return (true);
+  } else {
+    return (false);
+  }
 }
 
 //*****************************************************************************
@@ -227,9 +219,9 @@ ComparatorValueGet(unsigned long ulBase, unsigned long ulComp)
 //! \param pfnHandler is a pointer to the function to be called when the
 //! comparator interrupt occurs.
 //!
-//! This function sets the handler to be called when the comparator interrupt occurs
-//! and enables the interrupt in the interrupt controller.  It is the interrupt
-//! handler's responsibility to clear the interrupt source via
+//! This function sets the handler to be called when the comparator interrupt
+//! occurs and enables the interrupt in the interrupt controller.  It is the
+//! interrupt handler's responsibility to clear the interrupt source via
 //! ComparatorIntClear().
 //!
 //! \sa IntRegister() for important information about registering interrupt
@@ -238,30 +230,28 @@ ComparatorValueGet(unsigned long ulBase, unsigned long ulComp)
 //! \return None.
 //
 //*****************************************************************************
-void
-ComparatorIntRegister(unsigned long ulBase, unsigned long ulComp,
-                      void (*pfnHandler)(void))
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == COMP_BASE);
-    ASSERT(ulComp < 3);
+void ComparatorIntRegister(unsigned long ulBase, unsigned long ulComp,
+                           void (*pfnHandler)(void)) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == COMP_BASE);
+  ASSERT(ulComp < 3);
 
-    //
-    // Register the interrupt handler, returning an error if an error occurs.
-    //
-    IntRegister(INT_COMP0 + ulComp, pfnHandler);
+  //
+  // Register the interrupt handler, returning an error if an error occurs.
+  //
+  IntRegister(INT_COMP0 + ulComp, pfnHandler);
 
-    //
-    // Enable the interrupt in the interrupt controller.
-    //
-    IntEnable(INT_COMP0 + ulComp);
+  //
+  // Enable the interrupt in the interrupt controller.
+  //
+  IntEnable(INT_COMP0 + ulComp);
 
-    //
-    // Enable the comparator interrupt.
-    //
-    HWREG(ulBase + COMP_O_ACINTEN) |= 1 << ulComp;
+  //
+  // Enable the comparator interrupt.
+  //
+  HWREG(ulBase + COMP_O_ACINTEN) |= 1 << ulComp;
 }
 
 //*****************************************************************************
@@ -272,8 +262,8 @@ ComparatorIntRegister(unsigned long ulBase, unsigned long ulComp,
 //! \param ulComp is the index of the comparator.
 //!
 //! This function clears the handler to be called when a comparator interrupt
-//! occurs.  This function also masks off the interrupt in the interrupt controller
-//! so that the interrupt handler no longer is called.
+//! occurs.  This function also masks off the interrupt in the interrupt
+//! controller so that the interrupt handler no longer is called.
 //!
 //! \sa IntRegister() for important information about registering interrupt
 //! handlers.
@@ -281,29 +271,27 @@ ComparatorIntRegister(unsigned long ulBase, unsigned long ulComp,
 //! \return None.
 //
 //*****************************************************************************
-void
-ComparatorIntUnregister(unsigned long ulBase, unsigned long ulComp)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == COMP_BASE);
-    ASSERT(ulComp < 3);
+void ComparatorIntUnregister(unsigned long ulBase, unsigned long ulComp) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == COMP_BASE);
+  ASSERT(ulComp < 3);
 
-    //
-    // Disable the comparator interrupt.
-    //
-    HWREG(ulBase + COMP_O_ACINTEN) &= ~(1 << ulComp);
+  //
+  // Disable the comparator interrupt.
+  //
+  HWREG(ulBase + COMP_O_ACINTEN) &= ~(1 << ulComp);
 
-    //
-    // Disable the interrupt in the interrupt controller.
-    //
-    IntDisable(INT_COMP0 + ulComp);
+  //
+  // Disable the interrupt in the interrupt controller.
+  //
+  IntDisable(INT_COMP0 + ulComp);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_COMP0 + ulComp);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_COMP0 + ulComp);
 }
 
 //*****************************************************************************
@@ -320,19 +308,17 @@ ComparatorIntUnregister(unsigned long ulBase, unsigned long ulComp)
 //! \return None.
 //
 //*****************************************************************************
-void
-ComparatorIntEnable(unsigned long ulBase, unsigned long ulComp)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == COMP_BASE);
-    ASSERT(ulComp < 3);
+void ComparatorIntEnable(unsigned long ulBase, unsigned long ulComp) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == COMP_BASE);
+  ASSERT(ulComp < 3);
 
-    //
-    // Enable the comparator interrupt.
-    //
-    HWREG(ulBase + COMP_O_ACINTEN) |= 1 << ulComp;
+  //
+  // Enable the comparator interrupt.
+  //
+  HWREG(ulBase + COMP_O_ACINTEN) |= 1 << ulComp;
 }
 
 //*****************************************************************************
@@ -349,19 +335,17 @@ ComparatorIntEnable(unsigned long ulBase, unsigned long ulComp)
 //! \return None.
 //
 //*****************************************************************************
-void
-ComparatorIntDisable(unsigned long ulBase, unsigned long ulComp)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == COMP_BASE);
-    ASSERT(ulComp < 3);
+void ComparatorIntDisable(unsigned long ulBase, unsigned long ulComp) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == COMP_BASE);
+  ASSERT(ulComp < 3);
 
-    //
-    // Disable the comparator interrupt.
-    //
-    HWREG(ulBase + COMP_O_ACINTEN) &= ~(1 << ulComp);
+  //
+  // Disable the comparator interrupt.
+  //
+  HWREG(ulBase + COMP_O_ACINTEN) &= ~(1 << ulComp);
 }
 
 //*****************************************************************************
@@ -373,35 +357,30 @@ ComparatorIntDisable(unsigned long ulBase, unsigned long ulComp)
 //! \param bMasked is \b false if the raw interrupt status is required and
 //! \b true if the masked interrupt status is required.
 //!
-//! This function returns the interrupt status for the comparator.  Either the raw or
-//! the masked interrupt status can be returned.
+//! This function returns the interrupt status for the comparator.  Either the
+//! raw or the masked interrupt status can be returned.
 //!
 //! \return \b true if the interrupt is asserted and \b false if it is not
 //! asserted.
 //
 //*****************************************************************************
-tBoolean
-ComparatorIntStatus(unsigned long ulBase, unsigned long ulComp,
-                    tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == COMP_BASE);
-    ASSERT(ulComp < 3);
+tBoolean ComparatorIntStatus(unsigned long ulBase, unsigned long ulComp,
+                             tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == COMP_BASE);
+  ASSERT(ulComp < 3);
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(((HWREG(ulBase + COMP_O_ACMIS) >> ulComp) & 1) ? true : false);
-    }
-    else
-    {
-        return(((HWREG(ulBase + COMP_O_ACRIS) >> ulComp) & 1) ? true : false);
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (((HWREG(ulBase + COMP_O_ACMIS) >> ulComp) & 1) ? true : false);
+  } else {
+    return (((HWREG(ulBase + COMP_O_ACRIS) >> ulComp) & 1) ? true : false);
+  }
 }
 
 //*****************************************************************************
@@ -428,19 +407,17 @@ ComparatorIntStatus(unsigned long ulBase, unsigned long ulComp,
 //! \return None.
 //
 //*****************************************************************************
-void
-ComparatorIntClear(unsigned long ulBase, unsigned long ulComp)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == COMP_BASE);
-    ASSERT(ulComp < 3);
+void ComparatorIntClear(unsigned long ulBase, unsigned long ulComp) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == COMP_BASE);
+  ASSERT(ulComp < 3);
 
-    //
-    // Clear the interrupt.
-    //
-    HWREG(ulBase + COMP_O_ACMIS) = 1 << ulComp;
+  //
+  // Clear the interrupt.
+  //
+  HWREG(ulBase + COMP_O_ACMIS) = 1 << ulComp;
 }
 
 //*****************************************************************************

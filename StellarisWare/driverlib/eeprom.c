@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,21 +32,22 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
 
+#include "driverlib/eeprom.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/flash.h"
+#include "driverlib/interrupt.h"
+#include "driverlib/sysctl.h"
 #include "inc/hw_eeprom.h"
 #include "inc/hw_flash.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/flash.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/eeprom.h"
 
 //*****************************************************************************
 //
@@ -61,10 +62,10 @@
 // device and the total EEPROM storage in bytes from the EESIZE register.
 //
 //*****************************************************************************
-#define BLOCKS_FROM_EESIZE(x) (((x) & EEPROM_EESIZE_BLKCNT_M) >>               \
-                              EEPROM_EESIZE_BLKCNT_S)
-#define SIZE_FROM_EESIZE(x)   ((((x) & EEPROM_EESIZE_WORDCNT_M) >>             \
-                              EEPROM_EESIZE_WORDCNT_S) * 4)
+#define BLOCKS_FROM_EESIZE(x) \
+  (((x)&EEPROM_EESIZE_BLKCNT_M) >> EEPROM_EESIZE_BLKCNT_S)
+#define SIZE_FROM_EESIZE(x) \
+  ((((x)&EEPROM_EESIZE_WORDCNT_M) >> EEPROM_EESIZE_WORDCNT_S) * 4)
 
 //*****************************************************************************
 //
@@ -88,25 +89,23 @@
 // EEPROM write.
 //
 //*****************************************************************************
-static void
-EEPROMSetSectorMask(unsigned long ulAddress)
-{
-    unsigned long ulMask;
+static void EEPROMSetSectorMask(unsigned long ulAddress) {
+  unsigned long ulMask;
 
-    //
-    // Determine which page contains the passed EEPROM address.  The 2KB EEPROM
-    // is implemented in 16KB of flash with each 1KB sector of flash holding
-    // values for 32 consecutive EEPROM words (or 128 bytes).
-    //
-    ulMask = ~(1 << (ulAddress >> 7));
+  //
+  // Determine which page contains the passed EEPROM address.  The 2KB EEPROM
+  // is implemented in 16KB of flash with each 1KB sector of flash holding
+  // values for 32 consecutive EEPROM words (or 128 bytes).
+  //
+  ulMask = ~(1 << (ulAddress >> 7));
 
-    SysCtlDelay(10);
-    HWREG(0x400FD0FC) = 3;
-    SysCtlDelay(10);
-    HWREG(0x400AE2C0) = ulMask;
-    SysCtlDelay(10);
-    HWREG(0x400FD0FC) = 0;
-    SysCtlDelay(10);
+  SysCtlDelay(10);
+  HWREG(0x400FD0FC) = 3;
+  SysCtlDelay(10);
+  HWREG(0x400AE2C0) = ulMask;
+  SysCtlDelay(10);
+  HWREG(0x400FD0FC) = 0;
+  SysCtlDelay(10);
 }
 
 //*****************************************************************************
@@ -115,16 +114,14 @@ EEPROMSetSectorMask(unsigned long ulAddress)
 // flash erase operations operate as expected.
 //
 //*****************************************************************************
-static void
-EEPROMClearSectorMask(void)
-{
-    SysCtlDelay(10);
-    HWREG(0x400FD0FC) = 3;
-    SysCtlDelay(10);
-    HWREG(0x400AE2C0) = 0;
-    SysCtlDelay(10);
-    HWREG(0x400FD0FC) = 0;
-    SysCtlDelay(10);
+static void EEPROMClearSectorMask(void) {
+  SysCtlDelay(10);
+  HWREG(0x400FD0FC) = 3;
+  SysCtlDelay(10);
+  HWREG(0x400AE2C0) = 0;
+  SysCtlDelay(10);
+  HWREG(0x400FD0FC) = 0;
+  SysCtlDelay(10);
 }
 
 //*****************************************************************************
@@ -132,18 +129,15 @@ EEPROMClearSectorMask(void)
 // Block until the EEPROM peripheral is not busy.
 //
 //*****************************************************************************
-static void
-EEPROMWaitForDone(void)
-{
+static void EEPROMWaitForDone(void) {
+  //
+  // Is the EEPROM still busy?
+  //
+  while (HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING) {
     //
-    // Is the EEPROM still busy?
+    // Spin while EEPROM is busy.
     //
-    while(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
-    {
-        //
-        // Spin while EEPROM is busy.
-        //
-    }
+  }
 }
 
 //*****************************************************************************
@@ -175,67 +169,61 @@ EEPROMWaitForDone(void)
 //! operation.
 //
 //*****************************************************************************
-unsigned long
-EEPROMInit(void)
-{
-    unsigned long ulStatus;
+unsigned long EEPROMInit(void) {
+  unsigned long ulStatus;
+
+  //
+  // Insert a small delay (6 cycles + call overhead) to guard against the
+  // possibility that this function is called immediately after the EEPROM
+  // peripheral is enabled.  Without this delay, there is a slight chance
+  // that the first EEPROM register read will fault if you are using a
+  // compiler with a ridiculously good optimizer!
+  //
+  SysCtlDelay(2);
+
+  //
+  // Make sure the EEPROM has finished its reset processing.
+  //
+  EEPROMWaitForDone();
+
+  //
+  // Read the EESUPP register to see if any errors have been reported.
+  //
+  ulStatus = HWREG(EEPROM_EESUPP);
+
+  //
+  // Did an error of some sort occur during a previous attempt to write to
+  // the EEPROM?
+  //
+  if (ulStatus & (EEPROM_EESUPP_PRETRY | EEPROM_EESUPP_ERETRY)) {
+    //
+    // Perform a second reset to allow the EEPROM a chance to correct
+    // the errors.
+    //
+    SysCtlPeripheralReset(SYSCTL_PERIPH_EEPROM0);
 
     //
-    // Insert a small delay (6 cycles + call overhead) to guard against the
-    // possibility that this function is called immediately after the EEPROM
-    // peripheral is enabled.  Without this delay, there is a slight chance
-    // that the first EEPROM register read will fault if you are using a
-    // compiler with a ridiculously good optimizer!
+    // Wait for the EEPROM to complete it's reset processing once again.
     //
     SysCtlDelay(2);
-
-    //
-    // Make sure the EEPROM has finished its reset processing.
-    //
     EEPROMWaitForDone();
 
     //
-    // Read the EESUPP register to see if any errors have been reported.
+    // Read EESUPP once again to determine if the error conditions are
+    // cleared.
     //
     ulStatus = HWREG(EEPROM_EESUPP);
-
-    //
-    // Did an error of some sort occur during a previous attempt to write to
-    // the EEPROM?
-    //
-    if(ulStatus & (EEPROM_EESUPP_PRETRY | EEPROM_EESUPP_ERETRY))
-    {
-        //
-        // Perform a second reset to allow the EEPROM a chance to correct
-        // the errors.
-        //
-        SysCtlPeripheralReset(SYSCTL_PERIPH_EEPROM0);
-
-        //
-        // Wait for the EEPROM to complete it's reset processing once again.
-        //
-        SysCtlDelay(2);
-        EEPROMWaitForDone();
-
-        //
-        // Read EESUPP once again to determine if the error conditions are
-        // cleared.
-        //
-        ulStatus = HWREG(EEPROM_EESUPP);
-        if(ulStatus & (EEPROM_EESUPP_PRETRY | EEPROM_EESUPP_ERETRY))
-        {
-            return(EEPROM_INIT_ERROR);
-        }
-        else
-        {
-            return(EEPROM_INIT_RETRY);
-        }
+    if (ulStatus & (EEPROM_EESUPP_PRETRY | EEPROM_EESUPP_ERETRY)) {
+      return (EEPROM_INIT_ERROR);
+    } else {
+      return (EEPROM_INIT_RETRY);
     }
+  }
 
-    //
-    // The EEPROM does not indicate that any error occurred.
-    //
-    return(EEPROM_INIT_OK);
+  //
+  // The EEPROM does not indicate that any error occurred.
+  //
+  return (EEPROM_INIT_OK);
 }
 
 //*****************************************************************************
@@ -247,13 +235,11 @@ EEPROMInit(void)
 //! \return Returns the total number of bytes in the EEPROM.
 //
 //*****************************************************************************
-unsigned long
-EEPROMSizeGet(void)
-{
-    //
-    // Return the size of the EEPROM in bytes.
-    //
-    return(SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+unsigned long EEPROMSizeGet(void) {
+  //
+  // Return the size of the EEPROM in bytes.
+  //
+  return (SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
 }
 
 //*****************************************************************************
@@ -269,13 +255,11 @@ EEPROMSizeGet(void)
 //! \return Returns the total number of bytes in the device EEPROM.
 //
 //*****************************************************************************
-unsigned long
-EEPROMBlockCountGet(void)
-{
-    //
-    // Extract the number of blocks and return it to the caller.
-    //
-    return(BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+unsigned long EEPROMBlockCountGet(void) {
+  //
+  // Extract the number of blocks and return it to the caller.
+  //
+  return (BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
 }
 
 //*****************************************************************************
@@ -296,55 +280,51 @@ EEPROMBlockCountGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-EEPROMRead(unsigned long *pulData, unsigned long ulAddress,
-           unsigned long ulCount)
-{
+void EEPROMRead(unsigned long *pulData, unsigned long ulAddress,
+                unsigned long ulCount) {
+  //
+  // Check parameters in a debug build.
+  //
+  ASSERT(pulData);
+  ASSERT(ulAddress < SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+  ASSERT((ulAddress + ulCount) <= SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+  ASSERT((ulAddress & 3) == 0);
+  ASSERT((ulCount & 3) == 0);
+
+  //
+  // Set the block and offset appropriately to read the first word.
+  //
+  HWREG(EEPROM_EEBLOCK) = EEPROMBlockFromAddr(ulAddress);
+  HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ulAddress);
+
+  //
+  // Convert the byte count to a word count.
+  //
+  ulCount /= 4;
+
+  //
+  // Read each word in turn.
+  //
+  while (ulCount) {
     //
-    // Check parameters in a debug build.
+    // Read the next word through the autoincrementing register.
     //
-    ASSERT(pulData);
-    ASSERT(ulAddress < SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
-    ASSERT((ulAddress + ulCount) <= SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
-    ASSERT((ulAddress & 3) == 0);
-    ASSERT((ulCount & 3) == 0);
+    *pulData = HWREG(EEPROM_EERDWRINC);
 
     //
-    // Set the block and offset appropriately to read the first word.
+    // Move on to the next word.
     //
-    HWREG(EEPROM_EEBLOCK) = EEPROMBlockFromAddr(ulAddress);
-    HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ulAddress);
+    pulData++;
+    ulCount--;
 
     //
-    // Convert the byte count to a word count.
+    // Do we need to move to the next block?  This is the case if the
+    // offset register has just wrapped back to 0.
     //
-    ulCount /= 4;
-
-    //
-    // Read each word in turn.
-    //
-    while(ulCount)
-    {
-        //
-        // Read the next word through the autoincrementing register.
-        //
-        *pulData = HWREG(EEPROM_EERDWRINC);
-
-        //
-        // Move on to the next word.
-        //
-        pulData++;
-        ulCount--;
-
-        //
-        // Do we need to move to the next block?  This is the case if the
-        // offset register has just wrapped back to 0.
-        //
-        if(HWREG(EEPROM_EEOFFSET) == 0)
-        {
-            HWREG(EEPROM_EEBLOCK) += 1;
-        }
+    if (HWREG(EEPROM_EEOFFSET) == 0) {
+      HWREG(EEPROM_EEBLOCK) += 1;
     }
+  }
 }
 
 //*****************************************************************************
@@ -367,124 +347,112 @@ EEPROMRead(unsigned long *pulData, unsigned long ulAddress,
 //! \b EEPROM_RC_WORKING.
 //
 //*****************************************************************************
-unsigned long
-EEPROMProgram(unsigned long *pulData, unsigned long ulAddress,
-              unsigned long ulCount)
-{
-    unsigned long ulStatus;
+unsigned long EEPROMProgram(unsigned long *pulData, unsigned long ulAddress,
+                            unsigned long ulCount) {
+  unsigned long ulStatus;
 
-    //
-    // Check parameters in a debug build.
-    //
-    ASSERT(pulData);
-    ASSERT(ulAddress < SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
-    ASSERT((ulAddress + ulCount) <= SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
-    ASSERT((ulAddress & 3) == 0);
-    ASSERT((ulCount & 3) == 0);
+  //
+  // Check parameters in a debug build.
+  //
+  ASSERT(pulData);
+  ASSERT(ulAddress < SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+  ASSERT((ulAddress + ulCount) <= SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+  ASSERT((ulAddress & 3) == 0);
+  ASSERT((ulCount & 3) == 0);
 
+  //
+  // Make sure the EEPROM is idle before we start.
+  //
+  do {
     //
-    // Make sure the EEPROM is idle before we start.
+    // Read the status.
     //
-    do
-    {
-        //
-        // Read the status.
-        //
-        ulStatus = HWREG(EEPROM_EEDONE);
-    }
-    while(ulStatus & EEPROM_EEDONE_WORKING);
+    ulStatus = HWREG(EEPROM_EEDONE);
+  } while (ulStatus & EEPROM_EEDONE_WORKING);
 
+  //
+  // Set the block and offset appropriately to program the first word.
+  //
+  HWREG(EEPROM_EEBLOCK) = EEPROMBlockFromAddr(ulAddress);
+  HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ulAddress);
+
+  //
+  // Convert the byte count to a word count.
+  //
+  ulCount /= 4;
+
+  //
+  // Write each word in turn.
+  //
+  while (ulCount) {
     //
-    // Set the block and offset appropriately to program the first word.
+    // This is a workaround for a silicon problem on Blizzard rev A.  We
+    // need to do this before every word write to ensure that we don't
+    // have problems in multi-word writes that span multiple flash sectors.
     //
-    HWREG(EEPROM_EEBLOCK) = EEPROMBlockFromAddr(ulAddress);
-    HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ulAddress);
-
-    //
-    // Convert the byte count to a word count.
-    //
-    ulCount /= 4;
-
-    //
-    // Write each word in turn.
-    //
-    while(ulCount)
-    {
-        //
-        // This is a workaround for a silicon problem on Blizzard rev A.  We
-        // need to do this before every word write to ensure that we don't
-        // have problems in multi-word writes that span multiple flash sectors.
-        //
-        if(CLASS_IS_BLIZZARD && REVISION_IS_A0)
-        {
-            EEPROMSetSectorMask(ulAddress);
-            ulAddress += 4;
-        }
-
-        //
-        // Write the next word through the autoincrementing register.
-        //
-        HWREG(EEPROM_EERDWRINC) = *pulData;
-
-        //
-        // Wait for the write to complete.
-        //
-        do
-        {
-            //
-            // Read the status.
-            //
-            ulStatus = HWREG(EEPROM_EEDONE);
-        }
-        while(ulStatus & EEPROM_EEDONE_WORKING);
-
-        //
-        // Make sure we completed the write without errors.  Note that we
-        // must check this per-word because write permission can be set per
-        // block resulting in only a section of the write not being performed.
-        //
-        if(ulStatus & (EEPROM_EEDONE_NOPERM | EEPROM_EEDONE_INVPL))
-        {
-            //
-            // An error was reported that would prevent the values from
-            // being written correctly.
-            //
-            if(CLASS_IS_BLIZZARD && REVISION_IS_A0)
-            {
-                EEPROMClearSectorMask();
-            }
-            return(ulStatus);
-        }
-
-        //
-        // Move on to the next word.
-        //
-        pulData++;
-        ulCount--;
-
-        //
-        // Do we need to move to the next block?  This is the case if the
-        // offset register has just wrapped back to 0.
-        //
-        if(HWREG(EEPROM_EEOFFSET) == 0)
-        {
-            HWREG(EEPROM_EEBLOCK) += 1;
-        }
+    if (CLASS_IS_BLIZZARD && REVISION_IS_A0) {
+      EEPROMSetSectorMask(ulAddress);
+      ulAddress += 4;
     }
 
     //
-    // Clear the sector protection bits to prevent possible problems when
-    // programming the main flash array later.
+    // Write the next word through the autoincrementing register.
     //
-    if(CLASS_IS_BLIZZARD && REVISION_IS_A0)
-    {
+    HWREG(EEPROM_EERDWRINC) = *pulData;
+
+    //
+    // Wait for the write to complete.
+    //
+    do {
+      //
+      // Read the status.
+      //
+      ulStatus = HWREG(EEPROM_EEDONE);
+    } while (ulStatus & EEPROM_EEDONE_WORKING);
+
+    //
+    // Make sure we completed the write without errors.  Note that we
+    // must check this per-word because write permission can be set per
+    // block resulting in only a section of the write not being performed.
+    //
+    if (ulStatus & (EEPROM_EEDONE_NOPERM | EEPROM_EEDONE_INVPL)) {
+      //
+      // An error was reported that would prevent the values from
+      // being written correctly.
+      //
+      if (CLASS_IS_BLIZZARD && REVISION_IS_A0) {
         EEPROMClearSectorMask();
+      }
+      return (ulStatus);
     }
 
     //
-    // Return the current status to the caller.
+    // Move on to the next word.
     //
-    return(HWREG(EEPROM_EEDONE));
+    pulData++;
+    ulCount--;
+
+    //
+    // Do we need to move to the next block?  This is the case if the
+    // offset register has just wrapped back to 0.
+    //
+    if (HWREG(EEPROM_EEOFFSET) == 0) {
+      HWREG(EEPROM_EEBLOCK) += 1;
+    }
+  }
+
+  //
+  // Clear the sector protection bits to prevent possible problems when
+  // programming the main flash array later.
+  //
+  if (CLASS_IS_BLIZZARD && REVISION_IS_A0) {
+    EEPROMClearSectorMask();
+  }
+
+  //
+  // Return the current status to the caller.
+  //
+  return (HWREG(EEPROM_EEDONE));
 }
 
 //*****************************************************************************
@@ -511,39 +479,37 @@ EEPROMProgram(unsigned long *pulData, unsigned long ulAddress,
 //! an error.
 //
 //*****************************************************************************
-unsigned long
-EEPROMProgramNonBlocking(unsigned long ulData, unsigned long ulAddress)
-{
-    //
-    // Check parameters in a debug build.
-    //
-    ASSERT(ulAddress < SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
-    ASSERT((ulAddress & 3) == 0);
+unsigned long EEPROMProgramNonBlocking(unsigned long ulData,
+                                       unsigned long ulAddress) {
+  //
+  // Check parameters in a debug build.
+  //
+  ASSERT(ulAddress < SIZE_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+  ASSERT((ulAddress & 3) == 0);
 
-    //
-    // This is a workaround for a silicon problem on Blizzard rev A.
-    //
-    if(CLASS_IS_BLIZZARD && REVISION_IS_A0)
-    {
-        EEPROMSetSectorMask(ulAddress);
-    }
+  //
+  // This is a workaround for a silicon problem on Blizzard rev A.
+  //
+  if (CLASS_IS_BLIZZARD && REVISION_IS_A0) {
+    EEPROMSetSectorMask(ulAddress);
+  }
 
-    //
-    // Set the block and offset appropriately to program the desired word.
-    //
-    HWREG(EEPROM_EEBLOCK) = EEPROMBlockFromAddr(ulAddress);
-    HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ulAddress);
+  //
+  // Set the block and offset appropriately to program the desired word.
+  //
+  HWREG(EEPROM_EEBLOCK) = EEPROMBlockFromAddr(ulAddress);
+  HWREG(EEPROM_EEOFFSET) = OFFSET_FROM_ADDR(ulAddress);
 
-    //
-    // Write the new word using the auto-incrementing register just in case
-    // the caller wants to write follow-on words using direct register access
-    //
-    HWREG(EEPROM_EERDWRINC) = ulData;
+  //
+  // Write the new word using the auto-incrementing register just in case
+  // the caller wants to write follow-on words using direct register access
+  //
+  HWREG(EEPROM_EERDWRINC) = ulData;
 
-    //
-    // Return the current status to the caller.
-    //
-    return(HWREG(EEPROM_EEDONE));
+  //
+  // Return the current status to the caller.
+  //
+  return (HWREG(EEPROM_EEDONE));
 }
 
 //*****************************************************************************
@@ -565,44 +531,41 @@ EEPROMProgramNonBlocking(unsigned long ulData, unsigned long ulAddress)
 //! \b EEPROM_RC_WORKING.
 //
 //*****************************************************************************
-unsigned long
-EEPROMMassErase(void)
-{
-    //
-    // This is a workaround for a silicon problem on Blizzard rev A.
-    //
-    if(CLASS_IS_BLIZZARD && REVISION_IS_A0)
-    {
-        EEPROMClearSectorMask();
-    }
+unsigned long EEPROMMassErase(void) {
+  //
+  // This is a workaround for a silicon problem on Blizzard rev A.
+  //
+  if (CLASS_IS_BLIZZARD && REVISION_IS_A0) {
+    EEPROMClearSectorMask();
+  }
 
-    //
-    // Start the mass erase processing
-    //
-    HWREG(EEPROM_EEDBGME) = EEPROM_MASS_ERASE_KEY | EEPROM_EEDBGME_ME;
+  //
+  // Start the mass erase processing
+  //
+  HWREG(EEPROM_EEDBGME) = EEPROM_MASS_ERASE_KEY | EEPROM_EEDBGME_ME;
 
-    //
-    // Wait for completion.
-    //
-    EEPROMWaitForDone();
+  //
+  // Wait for completion.
+  //
+  EEPROMWaitForDone();
 
-    //
-    // Reset the peripheral.  This is required so that all protection
-    // mechanisms and passwords are reset now that the EEPROM data has been
-    // scrubbed.
-    //
-    SysCtlPeripheralReset(SYSCTL_PERIPH_EEPROM0);
+  //
+  // Reset the peripheral.  This is required so that all protection
+  // mechanisms and passwords are reset now that the EEPROM data has been
+  // scrubbed.
+  //
+  SysCtlPeripheralReset(SYSCTL_PERIPH_EEPROM0);
 
-    //
-    // Wait for completion again.
-    //
-    SysCtlDelay(2);
-    EEPROMWaitForDone();
+  //
+  // Wait for completion again.
+  //
+  SysCtlDelay(2);
+  EEPROMWaitForDone();
 
-    //
-    // Pass any error codes back to the caller.
-    //
-    return(HWREG(EEPROM_EEDONE));
+  //
+  // Pass any error codes back to the caller.
+  //
+  return (HWREG(EEPROM_EEDONE));
 }
 
 //*****************************************************************************
@@ -621,23 +584,21 @@ EEPROMMassErase(void)
 //! \b EEPROM_PROT_SUPERVISOR_ONLY.
 //
 //*****************************************************************************
-unsigned long
-EEPROMBlockProtectGet(unsigned long ulBlock)
-{
-    //
-    // Parameter validity check.
-    //
-    ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+unsigned long EEPROMBlockProtectGet(unsigned long ulBlock) {
+  //
+  // Parameter validity check.
+  //
+  ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
 
-    //
-    // Set the current block.
-    //
-    HWREG(EEPROM_EEBLOCK) = ulBlock;
+  //
+  // Set the current block.
+  //
+  HWREG(EEPROM_EEBLOCK) = ulBlock;
 
-    //
-    // Return the protection flags for this block.
-    //
-    return(HWREG(EEPROM_EEPROT));
+  //
+  // Return the protection flags for this block.
+  //
+  return (HWREG(EEPROM_EEPROT));
 }
 
 //*****************************************************************************
@@ -685,38 +646,36 @@ EEPROMBlockProtectGet(unsigned long ulBlock)
 //! conditions.
 //
 //*****************************************************************************
-unsigned long
-EEPROMBlockProtectSet(unsigned long ulBlock, unsigned long ulProtect)
-{
-    //
-    // Parameter validity check.
-    //
-    ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+unsigned long EEPROMBlockProtectSet(unsigned long ulBlock,
+                                    unsigned long ulProtect) {
+  //
+  // Parameter validity check.
+  //
+  ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
 
-    //
-    // Set the current block.
-    //
-    HWREG(EEPROM_EEBLOCK) = ulBlock;
+  //
+  // Set the current block.
+  //
+  HWREG(EEPROM_EEBLOCK) = ulBlock;
 
-    //
-    // Set the protection options for this block.
-    //
-    HWREG(EEPROM_EEPROT) = ulProtect;
+  //
+  // Set the protection options for this block.
+  //
+  HWREG(EEPROM_EEPROT) = ulProtect;
 
+  //
+  // Wait for the write to complete.
+  //
+  while (HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING) {
     //
-    // Wait for the write to complete.
+    // Still working.
     //
-    while(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
-    {
-        //
-        // Still working.
-        //
-    }
+  }
 
-    //
-    // Pass any error codes back to the caller.
-    //
-    return(HWREG(EEPROM_EEDONE));
+  //
+  // Pass any error codes back to the caller.
+  //
+  return (HWREG(EEPROM_EEDONE));
 }
 
 //*****************************************************************************
@@ -751,61 +710,58 @@ EEPROMBlockProtectSet(unsigned long ulBlock, unsigned long ulProtect)
 //! conditions.
 //
 //*****************************************************************************
-unsigned long
-EEPROMBlockPasswordSet(unsigned long ulBlock, unsigned long *pulPassword,
-                       unsigned long ulCount)
-{
-    unsigned long ulReg;
+unsigned long EEPROMBlockPasswordSet(unsigned long ulBlock,
+                                     unsigned long *pulPassword,
+                                     unsigned long ulCount) {
+  unsigned long ulReg;
+
+  //
+  // Check parameters in a debug build.
+  //
+  ASSERT(pulPassword);
+  ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+  ASSERT(ulCount <= 3);
+
+  //
+  // Set the block number whose password we are about to write.
+  //
+  HWREG(EEPROM_EEBLOCK) = ulBlock;
+
+  //
+  // Start with the first password word.
+  //
+  ulReg = EEPROM_EEPASS0;
+
+  //
+  // Write the password.
+  //
+  while (ulCount) {
+    //
+    // Start the process of writing the password.
+    //
+    HWREG(ulReg) = *pulPassword;
 
     //
-    // Check parameters in a debug build.
+    // Update values in preparation for writing the next word.
     //
-    ASSERT(pulPassword);
-    ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
-    ASSERT(ulCount <= 3);
+    pulPassword++;
+    ulReg += 4;
+    ulCount--;
 
     //
-    // Set the block number whose password we are about to write.
+    // Wait for the last word write to complete or an error to be reported.
     //
-    HWREG(EEPROM_EEBLOCK) = ulBlock;
-
-    //
-    // Start with the first password word.
-    //
-    ulReg = EEPROM_EEPASS0;
-
-    //
-    // Write the password.
-    //
-    while(ulCount)
-    {
-        //
-        // Start the process of writing the password.
-        //
-        HWREG(ulReg) = *pulPassword;
-
-        //
-        // Update values in preparation for writing the next word.
-        //
-        pulPassword++;
-        ulReg += 4;
-        ulCount--;
-
-        //
-        // Wait for the last word write to complete or an error to be reported.
-        //
-        while(HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
-        {
-            //
-            // Still working.
-            //
-        }
+    while (HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING) {
+      //
+      // Still working.
+      //
     }
+  }
 
-    //
-    // Return the final write status.
-    //
-    return(HWREG(EEPROM_EEDONE));
+  //
+  // Return the final write status.
+  //
+  return (HWREG(EEPROM_EEDONE));
 }
 
 //*****************************************************************************
@@ -827,28 +783,26 @@ EEPROMBlockPasswordSet(unsigned long ulBlock, unsigned long *pulPassword,
 //! would be the case if no password was set) or 0 if locked.
 //!
 //*****************************************************************************
-unsigned long
-EEPROMBlockLock(unsigned long ulBlock)
-{
-    //
-    // Check parameters in a debug build.
-    //
-    ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+unsigned long EEPROMBlockLock(unsigned long ulBlock) {
+  //
+  // Check parameters in a debug build.
+  //
+  ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
 
-    //
-    // Select the block we are going to lock.
-    //
-    HWREG(EEPROM_EEBLOCK) = ulBlock;
+  //
+  // Select the block we are going to lock.
+  //
+  HWREG(EEPROM_EEBLOCK) = ulBlock;
 
-    //
-    // Lock the block.
-    //
-    HWREG(EEPROM_EEUNLOCK) = 0xFFFFFFFF;
+  //
+  // Lock the block.
+  //
+  HWREG(EEPROM_EEUNLOCK) = 0xFFFFFFFF;
 
-    //
-    // Return the current lock state.
-    //
-    return(HWREG(EEPROM_EEUNLOCK));
+  //
+  // Return the current lock state.
+  //
+  return (HWREG(EEPROM_EEUNLOCK));
 }
 
 //*****************************************************************************
@@ -880,48 +834,46 @@ EEPROMBlockLock(unsigned long ulBlock)
 //! locked.
 //!
 //*****************************************************************************
-unsigned long
-EEPROMBlockUnlock(unsigned long ulBlock, unsigned long *pulPassword,
-                  unsigned long ulCount)
-{
-    //
-    // Check parameters in a debug build.
-    //
-    ASSERT(pulPassword);
-    ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
-    ASSERT(ulCount <= 3);
+unsigned long EEPROMBlockUnlock(unsigned long ulBlock,
+                                unsigned long *pulPassword,
+                                unsigned long ulCount) {
+  //
+  // Check parameters in a debug build.
+  //
+  ASSERT(pulPassword);
+  ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+  ASSERT(ulCount <= 3);
 
-    //
-    // Set the block that we are trying to unlock.
-    //
-    HWREG(EEPROM_EEBLOCK) = ulBlock;
+  //
+  // Set the block that we are trying to unlock.
+  //
+  HWREG(EEPROM_EEBLOCK) = ulBlock;
 
-    //
-    // Write the unlock register with 0xFFFFFFFF to reset the unlock
-    // sequence just in case a short password was previously used to try to
-    // unlock the block.
-    //
-    HWREG(EEPROM_EEUNLOCK) = 0xFFFFFFFF;
+  //
+  // Write the unlock register with 0xFFFFFFFF to reset the unlock
+  // sequence just in case a short password was previously used to try to
+  // unlock the block.
+  //
+  HWREG(EEPROM_EEUNLOCK) = 0xFFFFFFFF;
 
-    //
-    // We need to write the password words in the opposite order when unlocking
-    // compared to locking so start at the end of the array.
-    //
-    pulPassword += (ulCount - 1);
+  //
+  // We need to write the password words in the opposite order when unlocking
+  // compared to locking so start at the end of the array.
+  //
+  pulPassword += (ulCount - 1);
 
-    //
-    // Write the supplied password to unlock the block.
-    //
-    while(ulCount)
-    {
-        HWREG(EEPROM_EEUNLOCK) = *pulPassword--;
-        ulCount--;
-    }
+  //
+  // Write the supplied password to unlock the block.
+  //
+  while (ulCount) {
+    HWREG(EEPROM_EEUNLOCK) = *pulPassword--;
+    ulCount--;
+  }
 
-    //
-    // Let the caller know if their password worked.
-    //
-    return(HWREG(EEPROM_EEUNLOCK));
+  //
+  // Let the caller know if their password worked.
+  //
+  return (HWREG(EEPROM_EEUNLOCK));
 }
 
 //*****************************************************************************
@@ -940,19 +892,17 @@ EEPROMBlockUnlock(unsigned long ulBlock, unsigned long *pulPassword,
 //! \return None.
 //!
 //*****************************************************************************
-void
-EEPROMBlockHide(unsigned long ulBlock)
-{
-    //
-    // Check parameters in a debug build.
-    //
-    ASSERT(!ulBlock);
-    ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
+void EEPROMBlockHide(unsigned long ulBlock) {
+  //
+  // Check parameters in a debug build.
+  //
+  ASSERT(!ulBlock);
+  ASSERT(ulBlock < BLOCKS_FROM_EESIZE(HWREG(EEPROM_EESIZE)));
 
-    //
-    // Hide the requested block.
-    //
-    HWREG(EEPROM_EEHIDE) = (1 << ulBlock);
+  //
+  // Hide the requested block.
+  //
+  HWREG(EEPROM_EEHIDE) = (1 << ulBlock);
 }
 
 //*****************************************************************************
@@ -972,23 +922,21 @@ EEPROMBlockHide(unsigned long ulBlock)
 //! \return None.
 //!
 //*****************************************************************************
-void
-EEPROMIntEnable(unsigned long ulIntFlags)
-{
-    //
-    // Look for valid interrupt sources.
-    //
-    ASSERT(ulIntFlags == EEPROM_INT_PROGRAM);
+void EEPROMIntEnable(unsigned long ulIntFlags) {
+  //
+  // Look for valid interrupt sources.
+  //
+  ASSERT(ulIntFlags == EEPROM_INT_PROGRAM);
 
-    //
-    // Enable interrupts from the EEPROM module.
-    //
-    HWREG(EEPROM_EEINT) |= EEPROM_EEINT_INT;
+  //
+  // Enable interrupts from the EEPROM module.
+  //
+  HWREG(EEPROM_EEINT) |= EEPROM_EEINT_INT;
 
-    //
-    // Enable the EEPROM interrupt in the flash controller module.
-    //
-    HWREG(FLASH_FCIM) |= FLASH_FCRIS_ERIS;
+  //
+  // Enable the EEPROM interrupt in the flash controller module.
+  //
+  HWREG(FLASH_FCIM) |= FLASH_FCRIS_ERIS;
 }
 
 //*****************************************************************************
@@ -1008,23 +956,21 @@ EEPROMIntEnable(unsigned long ulIntFlags)
 //! \return None.
 //!
 //*****************************************************************************
-void
-EEPROMIntDisable(unsigned long ulIntFlags)
-{
-    //
-    // Look for valid interrupt sources.
-    //
-    ASSERT(ulIntFlags == EEPROM_INT_PROGRAM);
+void EEPROMIntDisable(unsigned long ulIntFlags) {
+  //
+  // Look for valid interrupt sources.
+  //
+  ASSERT(ulIntFlags == EEPROM_INT_PROGRAM);
 
-    //
-    // Disable the EEPROM interrupt in the flash controller module.
-    //
-    HWREG(FLASH_FCIM) &= ~FLASH_FCIM_EMASK;
+  //
+  // Disable the EEPROM interrupt in the flash controller module.
+  //
+  HWREG(FLASH_FCIM) &= ~FLASH_FCIM_EMASK;
 
-    //
-    // Disable interrupts from the EEPROM module.
-    //
-    HWREG(EEPROM_EEINT) &= ~EEPROM_EEINT_INT;
+  //
+  // Disable interrupts from the EEPROM module.
+  //
+  HWREG(EEPROM_EEINT) &= ~EEPROM_EEINT_INT;
 }
 
 //*****************************************************************************
@@ -1043,32 +989,28 @@ EEPROMIntDisable(unsigned long ulIntFlags)
 //! 0 otherwise.
 //
 //*****************************************************************************
-unsigned long
-EEPROMIntStatus(tBoolean bMasked)
-{
-    if(bMasked)
-    {
-        //
-        // If asked for the masked interrupt status, we check to see if the
-        // relevant interrupt is pending in the flash controller then return
-        // the appropriate EEPROM flag if it is.
-        //
-        return((HWREG(FLASH_FCMISC) & FLASH_FCMISC_EMISC) ?
-                EEPROM_INT_PROGRAM : 0);
-    }
-    else
-    {
-        //
-        // If asked for the unmasked interrupt status, infer that an interrupt
-        // is pending if the WORKING bit of the EEDONE register is clear.  The
-        // actual interrupt fires on the high to low transition of this bit
-        // but we don't have access to an unmasked interrupt status for the
-        // EEPROM because it's handled via the flash controller so we have to
-        // make do with this instead.
-        //
-        return((HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING) ?
-               0 : EEPROM_INT_PROGRAM);
-    }
+unsigned long EEPROMIntStatus(tBoolean bMasked) {
+  if (bMasked) {
+    //
+    // If asked for the masked interrupt status, we check to see if the
+    // relevant interrupt is pending in the flash controller then return
+    // the appropriate EEPROM flag if it is.
+    //
+    return ((HWREG(FLASH_FCMISC) & FLASH_FCMISC_EMISC) ? EEPROM_INT_PROGRAM
+                                                       : 0);
+  } else {
+    //
+    // If asked for the unmasked interrupt status, infer that an interrupt
+    // is pending if the WORKING bit of the EEDONE register is clear.  The
+    // actual interrupt fires on the high to low transition of this bit
+    // but we don't have access to an unmasked interrupt status for the
+    // EEPROM because it's handled via the flash controller so we have to
+    // make do with this instead.
+    //
+    return ((HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
+                ? 0
+                : EEPROM_INT_PROGRAM);
+  }
 }
 
 //*****************************************************************************
@@ -1092,22 +1034,19 @@ EEPROMIntStatus(tBoolean bMasked)
 //! \return None.
 //!
 //*****************************************************************************
-void
-EEPROMIntClear(unsigned long ulIntFlags)
-{
-    //
-    // Clear the flash interrupt.
-    //
-    HWREG(FLASH_FCMISC) = FLASH_FCMISC_EMISC;
+void EEPROMIntClear(unsigned long ulIntFlags) {
+  //
+  // Clear the flash interrupt.
+  //
+  HWREG(FLASH_FCMISC) = FLASH_FCMISC_EMISC;
 
-    //
-    // Clear the sector protection bits to prevent possible problems when
-    // programming the main flash array later.
-    //
-    if(CLASS_IS_BLIZZARD && REVISION_IS_A0)
-    {
-        EEPROMClearSectorMask();
-    }
+  //
+  // Clear the sector protection bits to prevent possible problems when
+  // programming the main flash array later.
+  //
+  if (CLASS_IS_BLIZZARD && REVISION_IS_A0) {
+    EEPROMClearSectorMask();
+  }
 }
 
 //*****************************************************************************
@@ -1126,11 +1065,7 @@ EEPROMIntClear(unsigned long ulIntFlags)
 //! \b EEPROM_RC_WKERASE, and \b EEPROM_RC_WORKING.
 //!
 //*****************************************************************************
-unsigned long
-EEPROMStatusGet(void)
-{
-    return(HWREG(EEPROM_EEDONE));
-}
+unsigned long EEPROMStatusGet(void) { return (HWREG(EEPROM_EEDONE)); }
 
 //*****************************************************************************
 //

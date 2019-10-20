@@ -23,36 +23,33 @@
 
 #include "raslib/inc/encoder.h"
 
-
 // Definition of tDecoderState
 // Contains all data for the mealy machine
-typedef const struct {
-    int value[4];
-} tDecoderState;
+typedef const struct { int value[4]; } tDecoderState;
 
 // The states of the mealy machine
 static const tDecoderState DecoderFSM[4] = {
-  {{ 0, 1,-1, 0}}, //State 00
-  {{-1, 0, 0, 1}}, //State 01
-  {{ 1, 0, 0,-1}}, //State 10
-  {{ 0,-1, 1, 0}}  //State 11
+    {{0, 1, -1, 0}},  // State 00
+    {{-1, 0, 0, 1}},  // State 01
+    {{1, 0, 0, -1}},  // State 10
+    {{0, -1, 1, 0}}   // State 11
 };
 
 // Definition of struct Encoder
 // Defined to tEncoder in encoder.h
 struct Encoder {
-    // Pointer to what state the encoder is in
-    tDecoderState *decoder;
+  // Pointer to what state the encoder is in
+  tDecoderState *decoder;
 
-    // Data associated with what pins the encoder is plugged into
-    tPin pinA;
-    tPin pinB;
+  // Data associated with what pins the encoder is plugged into
+  tPin pinA;
+  tPin pinB;
 
-    // Recorded number of encoder "ticks" thus far
-    signed long ticks;
+  // Recorded number of encoder "ticks" thus far
+  signed long ticks;
 
-    // Set to switch direction encoder is incremented
-    tBoolean invert;
+  // Set to switch direction encoder is incremented
+  tBoolean invert;
 };
 
 // Buffer of encoder structs to use
@@ -62,55 +59,49 @@ tEncoder encoderBuffer[PIN_COUNT / 2];
 
 int encoderCount = 0;
 
-
 // Handler to respond to pin interrupts
 static void EncoderHandler(void *data) {
-    tEncoder *enc = data;
+  tEncoder *enc = data;
 
-    // Determine actual value of pins
-    // and normalize inputs for lookup in a table
-    int input = (GetPin(enc->pinA) ? 0x1 : 0x0) |
-                (GetPin(enc->pinB) ? 0x2 : 0x0);
+  // Determine actual value of pins
+  // and normalize inputs for lookup in a table
+  int input = (GetPin(enc->pinA) ? 0x1 : 0x0) | (GetPin(enc->pinB) ? 0x2 : 0x0);
 
-    // Add the value in the FSM to the current tick count
-    // (or substract if invert is set)
-    if (enc->invert) {
-        enc->ticks -= enc->decoder->value[input];
-    } else {
-        enc->ticks += enc->decoder->value[input];
-    }
+  // Add the value in the FSM to the current tick count
+  // (or substract if invert is set)
+  if (enc->invert) {
+    enc->ticks -= enc->decoder->value[input];
+  } else {
+    enc->ticks += enc->decoder->value[input];
+  }
 
-    // Setup the next state of the mealy machine
-    enc->decoder = &DecoderFSM[input];
+  // Setup the next state of the mealy machine
+  enc->decoder = &DecoderFSM[input];
 }
 
 // Function to initialize an encoder on a pair of pins
 // The returned pointer can be used by the GetEncoder function
 tEncoder *InitializeEncoder(tPin a, tPin b, tBoolean invert) {
-    // Grab the next encoder
-    tEncoder *enc = &encoderBuffer[encoderCount++];
+  // Grab the next encoder
+  tEncoder *enc = &encoderBuffer[encoderCount++];
 
-    // Setup the initial data
-    enc->decoder = &DecoderFSM[0];
-    enc->pinA = a;
-    enc->pinB = b;
-    enc->ticks = 0;
-    enc->invert = invert;
+  // Setup the initial data
+  enc->decoder = &DecoderFSM[0];
+  enc->pinA = a;
+  enc->pinB = b;
+  enc->ticks = 0;
+  enc->invert = invert;
 
-    // Register the interrupt handler on the pins
-    CallOnPin(EncoderHandler, enc, a);
-    CallOnPin(EncoderHandler, enc, b);
+  // Register the interrupt handler on the pins
+  CallOnPin(EncoderHandler, enc, a);
+  CallOnPin(EncoderHandler, enc, b);
 
-    // Return the new encoder
-    return enc;
+  // Return the new encoder
+  return enc;
 }
 
 // This function returns the accumulated encoder value
-signed long GetEncoder(tEncoder *enc) {
-    return enc->ticks;
-}
+signed long GetEncoder(tEncoder *enc) { return enc->ticks; }
 
 // This function clears any ticks on the encoder
-void ResetEncoder(tEncoder *enc) {
-    enc->ticks = 0;
-}
+void ResetEncoder(tEncoder *enc) { enc->ticks = 0; }

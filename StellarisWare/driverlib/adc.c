@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2005-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,14 +44,15 @@
 //
 //*****************************************************************************
 
+#include "driverlib/adc.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_adc.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
-#include "inc/hw_types.h"
 #include "inc/hw_sysctl.h"
-#include "driverlib/adc.h"
-#include "driverlib/debug.h"
-#include "driverlib/interrupt.h"
+#include "inc/hw_types.h"
 
 //*****************************************************************************
 //
@@ -59,15 +60,15 @@
 // sequencer's registers.
 //
 //*****************************************************************************
-#define ADC_SEQ                 (ADC_O_SSMUX0)
-#define ADC_SEQ_STEP            (ADC_O_SSMUX1 - ADC_O_SSMUX0)
-#define ADC_SSMUX               (ADC_O_SSMUX0 - ADC_O_SSMUX0)
-#define ADC_SSEMUX              (ADC_O_SSEMUX0 - ADC_O_SSMUX0)
-#define ADC_SSCTL               (ADC_O_SSCTL0 - ADC_O_SSMUX0)
-#define ADC_SSFIFO              (ADC_O_SSFIFO0 - ADC_O_SSMUX0)
-#define ADC_SSFSTAT             (ADC_O_SSFSTAT0 - ADC_O_SSMUX0)
-#define ADC_SSOP                (ADC_O_SSOP0 - ADC_O_SSMUX0)
-#define ADC_SSDC                (ADC_O_SSDC0 - ADC_O_SSMUX0)
+#define ADC_SEQ (ADC_O_SSMUX0)
+#define ADC_SEQ_STEP (ADC_O_SSMUX1 - ADC_O_SSMUX0)
+#define ADC_SSMUX (ADC_O_SSMUX0 - ADC_O_SSMUX0)
+#define ADC_SSEMUX (ADC_O_SSEMUX0 - ADC_O_SSMUX0)
+#define ADC_SSCTL (ADC_O_SSCTL0 - ADC_O_SSMUX0)
+#define ADC_SSFIFO (ADC_O_SSFIFO0 - ADC_O_SSMUX0)
+#define ADC_SSFSTAT (ADC_O_SSFSTAT0 - ADC_O_SSMUX0)
+#define ADC_SSOP (ADC_O_SSOP0 - ADC_O_SSMUX0)
+#define ADC_SSDC (ADC_O_SSDC0 - ADC_O_SSMUX0)
 
 //*****************************************************************************
 //
@@ -98,33 +99,31 @@ static unsigned char g_pucOversampleFactor[3];
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCIntRegister(unsigned long ulBase, unsigned long ulSequenceNum,
-               void (*pfnHandler)(void))
-{
-    unsigned long ulInt;
+void ADCIntRegister(unsigned long ulBase, unsigned long ulSequenceNum,
+                    void (*pfnHandler)(void)) {
+  unsigned long ulInt;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Determine the interrupt to register based on the sequence number.
-    //
-    ulInt = ((ulBase == ADC0_BASE) ? (INT_ADC0SS0 + ulSequenceNum) :
-             (INT_ADC1SS0 + ulSequenceNum));
+  //
+  // Determine the interrupt to register based on the sequence number.
+  //
+  ulInt = ((ulBase == ADC0_BASE) ? (INT_ADC0SS0 + ulSequenceNum)
+                                 : (INT_ADC1SS0 + ulSequenceNum));
 
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(ulInt, pfnHandler);
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(ulInt, pfnHandler);
 
-    //
-    // Enable the timer interrupt.
-    //
-    IntEnable(ulInt);
+  //
+  // Enable the timer interrupt.
+  //
+  IntEnable(ulInt);
 }
 
 //*****************************************************************************
@@ -144,32 +143,30 @@ ADCIntRegister(unsigned long ulBase, unsigned long ulSequenceNum,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCIntUnregister(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    unsigned long ulInt;
+void ADCIntUnregister(unsigned long ulBase, unsigned long ulSequenceNum) {
+  unsigned long ulInt;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Determine the interrupt to unregister based on the sequence number.
-    //
-    ulInt = ((ulBase == ADC0_BASE) ? (INT_ADC0SS0 + ulSequenceNum) :
-             (INT_ADC1SS0 + ulSequenceNum));
+  //
+  // Determine the interrupt to unregister based on the sequence number.
+  //
+  ulInt = ((ulBase == ADC0_BASE) ? (INT_ADC0SS0 + ulSequenceNum)
+                                 : (INT_ADC1SS0 + ulSequenceNum));
 
-    //
-    // Disable the interrupt.
-    //
-    IntDisable(ulInt);
+  //
+  // Disable the interrupt.
+  //
+  IntDisable(ulInt);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(ulInt);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(ulInt);
 }
 
 //*****************************************************************************
@@ -184,19 +181,17 @@ ADCIntUnregister(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCIntDisable(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+void ADCIntDisable(unsigned long ulBase, unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Disable this sample sequence interrupt.
-    //
-    HWREG(ulBase + ADC_O_IM) &= ~(1 << ulSequenceNum);
+  //
+  // Disable this sample sequence interrupt.
+  //
+  HWREG(ulBase + ADC_O_IM) &= ~(1 << ulSequenceNum);
 }
 
 //*****************************************************************************
@@ -213,24 +208,22 @@ ADCIntDisable(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCIntEnable(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+void ADCIntEnable(unsigned long ulBase, unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Clear any outstanding interrupts on this sample sequence.
-    //
-    HWREG(ulBase + ADC_O_ISC) = 1 << ulSequenceNum;
+  //
+  // Clear any outstanding interrupts on this sample sequence.
+  //
+  HWREG(ulBase + ADC_O_ISC) = 1 << ulSequenceNum;
 
-    //
-    // Enable this sample sequence interrupt.
-    //
-    HWREG(ulBase + ADC_O_IM) |= 1 << ulSequenceNum;
+  //
+  // Enable this sample sequence interrupt.
+  //
+  HWREG(ulBase + ADC_O_IM) |= 1 << ulSequenceNum;
 }
 
 //*****************************************************************************
@@ -249,45 +242,39 @@ ADCIntEnable(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return The current raw or masked interrupt status.
 //
 //*****************************************************************************
-unsigned long
-ADCIntStatus(unsigned long ulBase, unsigned long ulSequenceNum,
-             tBoolean bMasked)
-{
-    unsigned long ulTemp;
+unsigned long ADCIntStatus(unsigned long ulBase, unsigned long ulSequenceNum,
+                           tBoolean bMasked) {
+  unsigned long ulTemp;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
+
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    ulTemp = HWREG(ulBase + ADC_O_ISC) & (0x10001 << ulSequenceNum);
+  } else {
+    ulTemp = HWREG(ulBase + ADC_O_RIS) & (0x10000 | (1 << ulSequenceNum));
 
     //
-    // Check the arguments.
+    // If the digital comparator status bit is set, reflect it to the
+    // appropriate sequence bit.
     //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
-
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        ulTemp = HWREG(ulBase + ADC_O_ISC) & (0x10001 << ulSequenceNum);
+    if (ulTemp & 0x10000) {
+      ulTemp |= 0xF0000;
+      ulTemp &= ~(0x10000 << ulSequenceNum);
     }
-    else
-    {
-        ulTemp = HWREG(ulBase + ADC_O_RIS) & (0x10000 | (1 << ulSequenceNum));
+  }
 
-        //
-        // If the digital comparator status bit is set, reflect it to the
-        // appropriate sequence bit.
-        //
-        if(ulTemp & 0x10000)
-        {
-            ulTemp |= 0xF0000;
-            ulTemp &= ~(0x10000 << ulSequenceNum);
-        }
-    }
-
-    //
-    // Return the interrupt status
-    //
-    return(ulTemp);
+  //
+  // Return the interrupt status
+  //
+  return (ulTemp);
 }
 
 //*****************************************************************************
@@ -313,19 +300,17 @@ ADCIntStatus(unsigned long ulBase, unsigned long ulSequenceNum,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCIntClear(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+void ADCIntClear(unsigned long ulBase, unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Clear the interrupt.
-    //
-    HWREG(ulBase + ADC_O_ISC) = 1 << ulSequenceNum;
+  //
+  // Clear the interrupt.
+  //
+  HWREG(ulBase + ADC_O_ISC) = 1 << ulSequenceNum;
 }
 
 //*****************************************************************************
@@ -341,19 +326,17 @@ ADCIntClear(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCSequenceEnable(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+void ADCSequenceEnable(unsigned long ulBase, unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Enable the specified sequence.
-    //
-    HWREG(ulBase + ADC_O_ACTSS) |= 1 << ulSequenceNum;
+  //
+  // Enable the specified sequence.
+  //
+  HWREG(ulBase + ADC_O_ACTSS) |= 1 << ulSequenceNum;
 }
 
 //*****************************************************************************
@@ -369,19 +352,17 @@ ADCSequenceEnable(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCSequenceDisable(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+void ADCSequenceDisable(unsigned long ulBase, unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Disable the specified sequences.
-    //
-    HWREG(ulBase + ADC_O_ACTSS) &= ~(1 << ulSequenceNum);
+  //
+  // Disable the specified sequences.
+  //
+  HWREG(ulBase + ADC_O_ACTSS) &= ~(1 << ulSequenceNum);
 }
 
 //*****************************************************************************
@@ -441,46 +422,40 @@ ADCSequenceDisable(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCSequenceConfigure(unsigned long ulBase, unsigned long ulSequenceNum,
-                     unsigned long ulTrigger, unsigned long ulPriority)
-{
-    //
-    // Check the arugments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
-    ASSERT((ulTrigger == ADC_TRIGGER_PROCESSOR) ||
-           (ulTrigger == ADC_TRIGGER_COMP0) ||
-           (ulTrigger == ADC_TRIGGER_COMP1) ||
-           (ulTrigger == ADC_TRIGGER_COMP2) ||
-           (ulTrigger == ADC_TRIGGER_EXTERNAL) ||
-           (ulTrigger == ADC_TRIGGER_TIMER) ||
-           (ulTrigger == ADC_TRIGGER_PWM0) ||
-           (ulTrigger == ADC_TRIGGER_PWM1) ||
-           (ulTrigger == ADC_TRIGGER_PWM2) ||
-           (ulTrigger == ADC_TRIGGER_PWM3) ||
-           (ulTrigger == ADC_TRIGGER_ALWAYS));
-    ASSERT(ulPriority < 4);
+void ADCSequenceConfigure(unsigned long ulBase, unsigned long ulSequenceNum,
+                          unsigned long ulTrigger, unsigned long ulPriority) {
+  //
+  // Check the arugments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
+  ASSERT((ulTrigger == ADC_TRIGGER_PROCESSOR) ||
+         (ulTrigger == ADC_TRIGGER_COMP0) || (ulTrigger == ADC_TRIGGER_COMP1) ||
+         (ulTrigger == ADC_TRIGGER_COMP2) ||
+         (ulTrigger == ADC_TRIGGER_EXTERNAL) ||
+         (ulTrigger == ADC_TRIGGER_TIMER) || (ulTrigger == ADC_TRIGGER_PWM0) ||
+         (ulTrigger == ADC_TRIGGER_PWM1) || (ulTrigger == ADC_TRIGGER_PWM2) ||
+         (ulTrigger == ADC_TRIGGER_PWM3) || (ulTrigger == ADC_TRIGGER_ALWAYS));
+  ASSERT(ulPriority < 4);
 
-    //
-    // Compute the shift for the bits that control this sample sequence.
-    //
-    ulSequenceNum *= 4;
+  //
+  // Compute the shift for the bits that control this sample sequence.
+  //
+  ulSequenceNum *= 4;
 
-    //
-    // Set the trigger event for this sample sequence.
-    //
-    HWREG(ulBase + ADC_O_EMUX) = ((HWREG(ulBase + ADC_O_EMUX) &
-                                   ~(0xf << ulSequenceNum)) |
-                                  ((ulTrigger & 0xf) << ulSequenceNum));
+  //
+  // Set the trigger event for this sample sequence.
+  //
+  HWREG(ulBase + ADC_O_EMUX) =
+      ((HWREG(ulBase + ADC_O_EMUX) & ~(0xf << ulSequenceNum)) |
+       ((ulTrigger & 0xf) << ulSequenceNum));
 
-    //
-    // Set the priority for this sample sequence.
-    //
-    HWREG(ulBase + ADC_O_SSPRI) = ((HWREG(ulBase + ADC_O_SSPRI) &
-                                    ~(0xf << ulSequenceNum)) |
-                                   ((ulPriority & 0x3) << ulSequenceNum));
+  //
+  // Set the priority for this sample sequence.
+  //
+  HWREG(ulBase + ADC_O_SSPRI) =
+      ((HWREG(ulBase + ADC_O_SSPRI) & ~(0xf << ulSequenceNum)) |
+       ((ulPriority & 0x3) << ulSequenceNum));
 }
 
 //*****************************************************************************
@@ -533,83 +508,79 @@ ADCSequenceConfigure(unsigned long ulBase, unsigned long ulSequenceNum,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCSequenceStepConfigure(unsigned long ulBase, unsigned long ulSequenceNum,
-                         unsigned long ulStep, unsigned long ulConfig)
-{
-    unsigned long ulTemp;
+void ADCSequenceStepConfigure(unsigned long ulBase, unsigned long ulSequenceNum,
+                              unsigned long ulStep, unsigned long ulConfig) {
+  unsigned long ulTemp;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
+  ASSERT(((ulSequenceNum == 0) && (ulStep < 8)) ||
+         ((ulSequenceNum == 1) && (ulStep < 4)) ||
+         ((ulSequenceNum == 2) && (ulStep < 4)) ||
+         ((ulSequenceNum == 3) && (ulStep < 1)));
+
+  //
+  // Get the offset of the sequence to be configured.
+  //
+  ulBase += ADC_SEQ + (ADC_SEQ_STEP * ulSequenceNum);
+
+  //
+  // Compute the shift for the bits that control this step.
+  //
+  ulStep *= 4;
+
+  //
+  // Set the analog mux value for this step.
+  //
+  HWREG(ulBase + ADC_SSMUX) =
+      ((HWREG(ulBase + ADC_SSMUX) & ~(0x0000000f << ulStep)) |
+       ((ulConfig & 0x0f) << ulStep));
+
+  //
+  // Set the upper bits of the analog mux value for this step.
+  //
+  HWREG(ulBase + ADC_SSEMUX) =
+      ((HWREG(ulBase + ADC_SSEMUX) & ~(0x0000000f << ulStep)) |
+       (((ulConfig & 0xf00) >> 8) << ulStep));
+
+  //
+  // Set the control value for this step.
+  //
+  HWREG(ulBase + ADC_SSCTL) =
+      ((HWREG(ulBase + ADC_SSCTL) & ~(0x0000000f << ulStep)) |
+       (((ulConfig & 0xf0) >> 4) << ulStep));
+
+  //
+  // Enable digital comparator if specified in the ulConfig bit-fields.
+  //
+  if (ulConfig & 0x000F0000) {
+    //
+    // Program the comparator for the specified step.
+    //
+    ulTemp = HWREG(ulBase + ADC_SSDC);
+    ulTemp &= ~(0xF << ulStep);
+    ulTemp |= (((ulConfig & 0x00070000) >> 16) << ulStep);
+    HWREG(ulBase + ADC_SSDC) = ulTemp;
 
     //
-    // Check the arguments.
+    // Enable the comparator.
     //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
-    ASSERT(((ulSequenceNum == 0) && (ulStep < 8)) ||
-           ((ulSequenceNum == 1) && (ulStep < 4)) ||
-           ((ulSequenceNum == 2) && (ulStep < 4)) ||
-           ((ulSequenceNum == 3) && (ulStep < 1)));
+    ulTemp = HWREG(ulBase + ADC_SSOP);
+    ulTemp |= (1 << ulStep);
+    HWREG(ulBase + ADC_SSOP) = ulTemp;
+  }
 
-    //
-    // Get the offset of the sequence to be configured.
-    //
-    ulBase += ADC_SEQ + (ADC_SEQ_STEP * ulSequenceNum);
-
-    //
-    // Compute the shift for the bits that control this step.
-    //
-    ulStep *= 4;
-
-    //
-    // Set the analog mux value for this step.
-    //
-    HWREG(ulBase + ADC_SSMUX) = ((HWREG(ulBase + ADC_SSMUX) &
-                                  ~(0x0000000f << ulStep)) |
-                                 ((ulConfig & 0x0f) << ulStep));
-
-    //
-    // Set the upper bits of the analog mux value for this step.
-    //
-    HWREG(ulBase + ADC_SSEMUX) = ((HWREG(ulBase + ADC_SSEMUX) &
-                                  ~(0x0000000f << ulStep)) |
-                                  (((ulConfig & 0xf00) >> 8) << ulStep));
-
-    //
-    // Set the control value for this step.
-    //
-    HWREG(ulBase + ADC_SSCTL) = ((HWREG(ulBase + ADC_SSCTL) &
-                                  ~(0x0000000f << ulStep)) |
-                                 (((ulConfig & 0xf0) >> 4) << ulStep));
-
-    //
-    // Enable digital comparator if specified in the ulConfig bit-fields.
-    //
-    if(ulConfig & 0x000F0000)
-    {
-        //
-        // Program the comparator for the specified step.
-        //
-        ulTemp = HWREG(ulBase + ADC_SSDC);
-        ulTemp &= ~(0xF << ulStep);
-        ulTemp |= (((ulConfig & 0x00070000) >> 16) << ulStep);
-        HWREG(ulBase + ADC_SSDC) = ulTemp;
-
-        //
-        // Enable the comparator.
-        //
-        ulTemp = HWREG(ulBase + ADC_SSOP);
-        ulTemp |= (1 << ulStep);
-        HWREG(ulBase + ADC_SSOP) = ulTemp;
-    }
-
-    //
-    // Disable digital comparator if not specified.
-    //
-    else
-    {
-        ulTemp = HWREG(ulBase + ADC_SSOP);
-        ulTemp &= ~(1 << ulStep);
-        HWREG(ulBase + ADC_SSOP) = ulTemp;
-    }
+  //
+  // Disable digital comparator if not specified.
+  //
+  else {
+    ulTemp = HWREG(ulBase + ADC_SSOP);
+    ulTemp &= ~(1 << ulStep);
+    HWREG(ulBase + ADC_SSOP) = ulTemp;
+  }
 }
 
 //*****************************************************************************
@@ -627,19 +598,17 @@ ADCSequenceStepConfigure(unsigned long ulBase, unsigned long ulSequenceNum,
 //! was.
 //
 //*****************************************************************************
-long
-ADCSequenceOverflow(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+long ADCSequenceOverflow(unsigned long ulBase, unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Determine if there was an overflow on this sequence.
-    //
-    return(HWREG(ulBase + ADC_O_OSTAT) & (1 << ulSequenceNum));
+  //
+  // Determine if there was an overflow on this sequence.
+  //
+  return (HWREG(ulBase + ADC_O_OSTAT) & (1 << ulSequenceNum));
 }
 
 //*****************************************************************************
@@ -656,19 +625,18 @@ ADCSequenceOverflow(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCSequenceOverflowClear(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+void ADCSequenceOverflowClear(unsigned long ulBase,
+                              unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Clear the overflow condition for this sequence.
-    //
-    HWREG(ulBase + ADC_O_OSTAT) = 1 << ulSequenceNum;
+  //
+  // Clear the overflow condition for this sequence.
+  //
+  HWREG(ulBase + ADC_O_OSTAT) = 1 << ulSequenceNum;
 }
 
 //*****************************************************************************
@@ -685,19 +653,17 @@ ADCSequenceOverflowClear(unsigned long ulBase, unsigned long ulSequenceNum)
 //! was.
 //
 //*****************************************************************************
-long
-ADCSequenceUnderflow(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+long ADCSequenceUnderflow(unsigned long ulBase, unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Determine if there was an underflow on this sequence.
-    //
-    return(HWREG(ulBase + ADC_O_USTAT) & (1 << ulSequenceNum));
+  //
+  // Determine if there was an underflow on this sequence.
+  //
+  return (HWREG(ulBase + ADC_O_USTAT) & (1 << ulSequenceNum));
 }
 
 //*****************************************************************************
@@ -714,19 +680,18 @@ ADCSequenceUnderflow(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCSequenceUnderflowClear(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+void ADCSequenceUnderflowClear(unsigned long ulBase,
+                               unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Clear the underflow condition for this sequence.
-    //
-    HWREG(ulBase + ADC_O_USTAT) = 1 << ulSequenceNum;
+  //
+  // Clear the underflow condition for this sequence.
+  //
+  HWREG(ulBase + ADC_O_USTAT) = 1 << ulSequenceNum;
 }
 
 //*****************************************************************************
@@ -747,44 +712,41 @@ ADCSequenceUnderflowClear(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return Returns the number of samples copied to the buffer.
 //
 //*****************************************************************************
-long
-ADCSequenceDataGet(unsigned long ulBase, unsigned long ulSequenceNum,
-                   unsigned long *pulBuffer)
-{
-    unsigned long ulCount;
+long ADCSequenceDataGet(unsigned long ulBase, unsigned long ulSequenceNum,
+                        unsigned long *pulBuffer) {
+  unsigned long ulCount;
+
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
+
+  //
+  // Get the offset of the sequence to be read.
+  //
+  ulBase += ADC_SEQ + (ADC_SEQ_STEP * ulSequenceNum);
+
+  //
+  // Read samples from the FIFO until it is empty.
+  //
+  ulCount = 0;
+  while (!(HWREG(ulBase + ADC_SSFSTAT) & ADC_SSFSTAT0_EMPTY) && (ulCount < 8)) {
+    //
+    // Read the FIFO and copy it to the destination.
+    //
+    *pulBuffer++ = HWREG(ulBase + ADC_SSFIFO);
 
     //
-    // Check the arguments.
+    // Increment the count of samples read.
     //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+    ulCount++;
+  }
 
-    //
-    // Get the offset of the sequence to be read.
-    //
-    ulBase += ADC_SEQ + (ADC_SEQ_STEP * ulSequenceNum);
-
-    //
-    // Read samples from the FIFO until it is empty.
-    //
-    ulCount = 0;
-    while(!(HWREG(ulBase + ADC_SSFSTAT) & ADC_SSFSTAT0_EMPTY) && (ulCount < 8))
-    {
-        //
-        // Read the FIFO and copy it to the destination.
-        //
-        *pulBuffer++ = HWREG(ulBase + ADC_SSFIFO);
-
-        //
-        // Increment the count of samples read.
-        //
-        ulCount++;
-    }
-
-    //
-    // Return the number of samples read.
-    //
-    return(ulCount);
+  //
+  // Return the number of samples read.
+  //
+  return (ulCount);
 }
 
 //*****************************************************************************
@@ -806,20 +768,18 @@ ADCSequenceDataGet(unsigned long ulBase, unsigned long ulSequenceNum,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCProcessorTrigger(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT((ulSequenceNum & 0xf) < 4);
+void ADCProcessorTrigger(unsigned long ulBase, unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT((ulSequenceNum & 0xf) < 4);
 
-    //
-    // Generate a processor trigger for this sample sequence.
-    //
-    HWREG(ulBase + ADC_O_PSSI) |= ((ulSequenceNum & 0xffff0000) |
-                                   (1 << (ulSequenceNum & 0xf)));
+  //
+  // Generate a processor trigger for this sample sequence.
+  //
+  HWREG(ulBase + ADC_O_PSSI) |=
+      ((ulSequenceNum & 0xffff0000) | (1 << (ulSequenceNum & 0xf)));
 }
 
 //*****************************************************************************
@@ -845,32 +805,29 @@ ADCProcessorTrigger(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCSoftwareOversampleConfigure(unsigned long ulBase,
-                               unsigned long ulSequenceNum,
-                               unsigned long ulFactor)
-{
-    unsigned long ulValue;
+void ADCSoftwareOversampleConfigure(unsigned long ulBase,
+                                    unsigned long ulSequenceNum,
+                                    unsigned long ulFactor) {
+  unsigned long ulValue;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 3);
-    ASSERT(((ulFactor == 2) || (ulFactor == 4) || (ulFactor == 8)) &&
-           ((ulSequenceNum == 0) || (ulFactor != 8)));
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 3);
+  ASSERT(((ulFactor == 2) || (ulFactor == 4) || (ulFactor == 8)) &&
+         ((ulSequenceNum == 0) || (ulFactor != 8)));
 
-    //
-    // Convert the oversampling factor to a shift factor.
-    //
-    for(ulValue = 0, ulFactor >>= 1; ulFactor; ulValue++, ulFactor >>= 1)
-    {
-    }
+  //
+  // Convert the oversampling factor to a shift factor.
+  //
+  for (ulValue = 0, ulFactor >>= 1; ulFactor; ulValue++, ulFactor >>= 1) {
+  }
 
-    //
-    // Save the shift factor.
-    //
-    g_pucOversampleFactor[ulSequenceNum] = ulValue;
+  //
+  // Save the shift factor.
+  //
+  g_pucOversampleFactor[ulSequenceNum] = ulValue;
 }
 
 //*****************************************************************************
@@ -890,69 +847,65 @@ ADCSoftwareOversampleConfigure(unsigned long ulBase,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCSoftwareOversampleStepConfigure(unsigned long ulBase,
-                                   unsigned long ulSequenceNum,
-                                   unsigned long ulStep,
-                                   unsigned long ulConfig)
-{
+void ADCSoftwareOversampleStepConfigure(unsigned long ulBase,
+                                        unsigned long ulSequenceNum,
+                                        unsigned long ulStep,
+                                        unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 3);
+  ASSERT(((ulSequenceNum == 0) &&
+          (ulStep < (8 >> g_pucOversampleFactor[ulSequenceNum]))) ||
+         (ulStep < (4 >> g_pucOversampleFactor[ulSequenceNum])));
+
+  //
+  // Get the offset of the sequence to be configured.
+  //
+  ulBase += ADC_SEQ + (ADC_SEQ_STEP * ulSequenceNum);
+
+  //
+  // Compute the shift for the bits that control this step.
+  //
+  ulStep *= 4 << g_pucOversampleFactor[ulSequenceNum];
+
+  //
+  // Loop through the hardware steps that make up this step of the software
+  // oversampled sequence.
+  //
+  for (ulSequenceNum = 1 << g_pucOversampleFactor[ulSequenceNum]; ulSequenceNum;
+       ulSequenceNum--) {
     //
-    // Check the arguments.
+    // Set the analog mux value for this step.
     //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 3);
-    ASSERT(((ulSequenceNum == 0) &&
-            (ulStep < (8 >> g_pucOversampleFactor[ulSequenceNum]))) ||
-           (ulStep < (4 >> g_pucOversampleFactor[ulSequenceNum])));
+    HWREG(ulBase + ADC_SSMUX) =
+        ((HWREG(ulBase + ADC_SSMUX) & ~(0x0000000f << ulStep)) |
+         ((ulConfig & 0x0f) << ulStep));
 
     //
-    // Get the offset of the sequence to be configured.
+    // Set the upper bits of the analog mux value for this step.
     //
-    ulBase += ADC_SEQ + (ADC_SEQ_STEP * ulSequenceNum);
+    HWREG(ulBase + ADC_SSEMUX) =
+        ((HWREG(ulBase + ADC_SSEMUX) & ~(0x0000000f << ulStep)) |
+         (((ulConfig & 0xf00) >> 8) << ulStep));
 
     //
-    // Compute the shift for the bits that control this step.
+    // Set the control value for this step.
     //
-    ulStep *= 4 << g_pucOversampleFactor[ulSequenceNum];
-
-    //
-    // Loop through the hardware steps that make up this step of the software
-    // oversampled sequence.
-    //
-    for(ulSequenceNum = 1 << g_pucOversampleFactor[ulSequenceNum];
-        ulSequenceNum; ulSequenceNum--)
-    {
-        //
-        // Set the analog mux value for this step.
-        //
-        HWREG(ulBase + ADC_SSMUX) = ((HWREG(ulBase + ADC_SSMUX) &
-                                      ~(0x0000000f << ulStep)) |
-                                     ((ulConfig & 0x0f) << ulStep));
-
-        //
-        // Set the upper bits of the analog mux value for this step.
-        //
-        HWREG(ulBase + ADC_SSEMUX) = ((HWREG(ulBase + ADC_SSEMUX) &
-                                      ~(0x0000000f << ulStep)) |
-                                      (((ulConfig & 0xf00) >> 8) << ulStep));
-
-        //
-        // Set the control value for this step.
-        //
-        HWREG(ulBase + ADC_SSCTL) = ((HWREG(ulBase + ADC_SSCTL) &
-                                      ~(0x0000000f << ulStep)) |
-                                     (((ulConfig & 0xf0) >> 4) << ulStep));
-        if(ulSequenceNum != 1)
-        {
-            HWREG(ulBase + ADC_SSCTL) &= ~((ADC_SSCTL0_IE0 |
-                                            ADC_SSCTL0_END0) << ulStep);
-        }
-
-        //
-        // Go to the next hardware step.
-        //
-        ulStep += 4;
+    HWREG(ulBase + ADC_SSCTL) =
+        ((HWREG(ulBase + ADC_SSCTL) & ~(0x0000000f << ulStep)) |
+         (((ulConfig & 0xf0) >> 4) << ulStep));
+    if (ulSequenceNum != 1) {
+      HWREG(ulBase + ADC_SSCTL) &=
+          ~((ADC_SSCTL0_IE0 | ADC_SSCTL0_END0) << ulStep);
     }
+
+    //
+    // Go to the next hardware step.
+    //
+    ulStep += 4;
+  }
 }
 
 //*****************************************************************************
@@ -975,48 +928,46 @@ ADCSoftwareOversampleStepConfigure(unsigned long ulBase,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCSoftwareOversampleDataGet(unsigned long ulBase, unsigned long ulSequenceNum,
-                             unsigned long *pulBuffer, unsigned long ulCount)
-{
-    unsigned long ulIdx, ulAccum;
+void ADCSoftwareOversampleDataGet(unsigned long ulBase,
+                                  unsigned long ulSequenceNum,
+                                  unsigned long *pulBuffer,
+                                  unsigned long ulCount) {
+  unsigned long ulIdx, ulAccum;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 3);
-    ASSERT(((ulSequenceNum == 0) &&
-            (ulCount < (8 >> g_pucOversampleFactor[ulSequenceNum]))) ||
-           (ulCount < (4 >> g_pucOversampleFactor[ulSequenceNum])));
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 3);
+  ASSERT(((ulSequenceNum == 0) &&
+          (ulCount < (8 >> g_pucOversampleFactor[ulSequenceNum]))) ||
+         (ulCount < (4 >> g_pucOversampleFactor[ulSequenceNum])));
 
-    //
-    // Get the offset of the sequence to be read.
-    //
-    ulBase += ADC_SEQ + (ADC_SEQ_STEP * ulSequenceNum);
+  //
+  // Get the offset of the sequence to be read.
+  //
+  ulBase += ADC_SEQ + (ADC_SEQ_STEP * ulSequenceNum);
 
+  //
+  // Read the samples from the FIFO until it is empty.
+  //
+  while (ulCount--) {
     //
-    // Read the samples from the FIFO until it is empty.
+    // Compute the sum of the samples.
     //
-    while(ulCount--)
-    {
-        //
-        // Compute the sum of the samples.
-        //
-        ulAccum = 0;
-        for(ulIdx = 1 << g_pucOversampleFactor[ulSequenceNum]; ulIdx; ulIdx--)
-        {
-            //
-            // Read the FIFO and add it to the accumulator.
-            //
-            ulAccum += HWREG(ulBase + ADC_SSFIFO);
-        }
-
-        //
-        // Write the averaged sample to the output buffer.
-        //
-        *pulBuffer++ = ulAccum >> g_pucOversampleFactor[ulSequenceNum];
+    ulAccum = 0;
+    for (ulIdx = 1 << g_pucOversampleFactor[ulSequenceNum]; ulIdx; ulIdx--) {
+      //
+      // Read the FIFO and add it to the accumulator.
+      //
+      ulAccum += HWREG(ulBase + ADC_SSFIFO);
     }
+
+    //
+    // Write the averaged sample to the output buffer.
+    //
+    *pulBuffer++ = ulAccum >> g_pucOversampleFactor[ulSequenceNum];
+  }
 }
 
 //*****************************************************************************
@@ -1045,30 +996,28 @@ ADCSoftwareOversampleDataGet(unsigned long ulBase, unsigned long ulSequenceNum,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCHardwareOversampleConfigure(unsigned long ulBase, unsigned long ulFactor)
-{
-    unsigned long ulValue;
+void ADCHardwareOversampleConfigure(unsigned long ulBase,
+                                    unsigned long ulFactor) {
+  unsigned long ulValue;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(((ulFactor == 0) || (ulFactor == 2) || (ulFactor == 4) ||
-           (ulFactor == 8) || (ulFactor == 16) || (ulFactor == 32) ||
-           (ulFactor == 64)));
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(((ulFactor == 0) || (ulFactor == 2) || (ulFactor == 4) ||
+          (ulFactor == 8) || (ulFactor == 16) || (ulFactor == 32) ||
+          (ulFactor == 64)));
 
-    //
-    // Convert the oversampling factor to a shift factor.
-    //
-    for(ulValue = 0, ulFactor >>= 1; ulFactor; ulValue++, ulFactor >>= 1)
-    {
-    }
+  //
+  // Convert the oversampling factor to a shift factor.
+  //
+  for (ulValue = 0, ulFactor >>= 1; ulFactor; ulValue++, ulFactor >>= 1) {
+  }
 
-    //
-    // Write the shift factor to the ADC to configure the hardware oversampler.
-    //
-    HWREG(ulBase + ADC_O_SAC) = ulValue;
+  //
+  // Write the shift factor to the ADC to configure the hardware oversampler.
+  //
+  HWREG(ulBase + ADC_O_SAC) = ulValue;
 }
 
 //*****************************************************************************
@@ -1142,20 +1091,18 @@ ADCHardwareOversampleConfigure(unsigned long ulBase, unsigned long ulFactor)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCComparatorConfigure(unsigned long ulBase, unsigned long ulComp,
-                       unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulComp < 8);
+void ADCComparatorConfigure(unsigned long ulBase, unsigned long ulComp,
+                            unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulComp < 8);
 
-    //
-    // Save the new setting.
-    //
-    HWREG(ulBase + ADC_O_DCCTL0 + (ulComp * 4)) = ulConfig;
+  //
+  // Save the new setting.
+  //
+  HWREG(ulBase + ADC_O_DCCTL0 + (ulComp * 4)) = ulConfig;
 }
 
 //*****************************************************************************
@@ -1178,22 +1125,20 @@ ADCComparatorConfigure(unsigned long ulBase, unsigned long ulComp,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCComparatorRegionSet(unsigned long ulBase, unsigned long ulComp,
-                       unsigned long ulLowRef, unsigned long ulHighRef)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulComp < 8);
-    ASSERT((ulLowRef < 1024) && (ulLowRef <= ulHighRef));
-    ASSERT(ulHighRef < 1024);
+void ADCComparatorRegionSet(unsigned long ulBase, unsigned long ulComp,
+                            unsigned long ulLowRef, unsigned long ulHighRef) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulComp < 8);
+  ASSERT((ulLowRef < 1024) && (ulLowRef <= ulHighRef));
+  ASSERT(ulHighRef < 1024);
 
-    //
-    // Save the new region settings.
-    //
-    HWREG(ulBase + ADC_O_DCCMP0 + (ulComp * 4)) = (ulHighRef << 16) | ulLowRef;
+  //
+  // Save the new region settings.
+  //
+  HWREG(ulBase + ADC_O_DCCMP0 + (ulComp * 4)) = (ulHighRef << 16) | ulLowRef;
 }
 
 //*****************************************************************************
@@ -1212,32 +1157,28 @@ ADCComparatorRegionSet(unsigned long ulBase, unsigned long ulComp,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCComparatorReset(unsigned long ulBase, unsigned long ulComp,
-                   tBoolean bTrigger, tBoolean bInterrupt)
-{
-    unsigned long ulTemp = 0;
+void ADCComparatorReset(unsigned long ulBase, unsigned long ulComp,
+                        tBoolean bTrigger, tBoolean bInterrupt) {
+  unsigned long ulTemp = 0;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulComp < 8);
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulComp < 8);
 
-    //
-    // Set the appropriate bits to reset the trigger and/or interrupt
-    // comparator conditions.
-    //
-    if(bTrigger)
-    {
-        ulTemp |= (1 << (16 + ulComp));
-    }
-    if(bInterrupt)
-    {
-        ulTemp |= (1 << ulComp);
-    }
+  //
+  // Set the appropriate bits to reset the trigger and/or interrupt
+  // comparator conditions.
+  //
+  if (bTrigger) {
+    ulTemp |= (1 << (16 + ulComp));
+  }
+  if (bInterrupt) {
+    ulTemp |= (1 << ulComp);
+  }
 
-    HWREG(ulBase + ADC_O_DCRIC) = ulTemp;
+  HWREG(ulBase + ADC_O_DCRIC) = ulTemp;
 }
 
 //*****************************************************************************
@@ -1252,19 +1193,18 @@ ADCComparatorReset(unsigned long ulBase, unsigned long ulComp,
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCComparatorIntDisable(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+void ADCComparatorIntDisable(unsigned long ulBase,
+                             unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Disable this sample sequence comparator interrupt.
-    //
-    HWREG(ulBase + ADC_O_IM) &= ~(0x10000 << ulSequenceNum);
+  //
+  // Disable this sample sequence comparator interrupt.
+  //
+  HWREG(ulBase + ADC_O_IM) &= ~(0x10000 << ulSequenceNum);
 }
 
 //*****************************************************************************
@@ -1279,19 +1219,17 @@ ADCComparatorIntDisable(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCComparatorIntEnable(unsigned long ulBase, unsigned long ulSequenceNum)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT(ulSequenceNum < 4);
+void ADCComparatorIntEnable(unsigned long ulBase, unsigned long ulSequenceNum) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT(ulSequenceNum < 4);
 
-    //
-    // Enable this sample sequence interrupt.
-    //
-    HWREG(ulBase + ADC_O_IM) |= 0x10000 << ulSequenceNum;
+  //
+  // Enable this sample sequence interrupt.
+  //
+  HWREG(ulBase + ADC_O_IM) |= 0x10000 << ulSequenceNum;
 }
 
 //*****************************************************************************
@@ -1306,18 +1244,16 @@ ADCComparatorIntEnable(unsigned long ulBase, unsigned long ulSequenceNum)
 //! \return The current comparator interrupt status.
 //
 //*****************************************************************************
-unsigned long
-ADCComparatorIntStatus(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+unsigned long ADCComparatorIntStatus(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
 
-    //
-    // Return the digital comparator interrupt status.
-    //
-    return(HWREG(ulBase + ADC_O_DCISC));
+  //
+  // Return the digital comparator interrupt status.
+  //
+  return (HWREG(ulBase + ADC_O_DCISC));
 }
 
 //*****************************************************************************
@@ -1332,18 +1268,16 @@ ADCComparatorIntStatus(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCComparatorIntClear(unsigned long ulBase, unsigned long ulStatus)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+void ADCComparatorIntClear(unsigned long ulBase, unsigned long ulStatus) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
 
-    //
-    // Clear the interrupt.
-    //
-    HWREG(ulBase + ADC_O_DCISC) = ulStatus;
+  //
+  // Clear the interrupt.
+  //
+  HWREG(ulBase + ADC_O_DCISC) = ulStatus;
 }
 
 //*****************************************************************************
@@ -1368,21 +1302,19 @@ ADCComparatorIntClear(unsigned long ulBase, unsigned long ulStatus)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCReferenceSet(unsigned long ulBase, unsigned long ulRef)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT((ulRef == ADC_REF_INT) || (ulRef == ADC_REF_EXT_3V) ||
-           (ulRef == ADC_REF_EXT_1V));
+void ADCReferenceSet(unsigned long ulBase, unsigned long ulRef) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT((ulRef == ADC_REF_INT) || (ulRef == ADC_REF_EXT_3V) ||
+         (ulRef == ADC_REF_EXT_1V));
 
-    //
-    // Set the reference.
-    //
-    HWREG(ulBase + ADC_O_CTL) = (HWREG(ulBase + ADC_O_CTL) & ~ADC_CTL_VREF_M) |
-                                ulRef;
+  //
+  // Set the reference.
+  //
+  HWREG(ulBase + ADC_O_CTL) =
+      (HWREG(ulBase + ADC_O_CTL) & ~ADC_CTL_VREF_M) | ulRef;
 }
 
 //*****************************************************************************
@@ -1401,18 +1333,16 @@ ADCReferenceSet(unsigned long ulBase, unsigned long ulRef)
 //! \return The current setting of the ADC reference.
 //
 //*****************************************************************************
-unsigned long
-ADCReferenceGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+unsigned long ADCReferenceGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
 
-    //
-    // Return the value of the reference.
-    //
-    return(HWREG(ulBase + ADC_O_CTL) & ADC_CTL_VREF_M);
+  //
+  // Return the value of the reference.
+  //
+  return (HWREG(ulBase + ADC_O_CTL) & ADC_CTL_VREF_M);
 }
 
 //*****************************************************************************
@@ -1432,20 +1362,18 @@ ADCReferenceGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCResolutionSet(unsigned long ulBase, unsigned long ulResolution)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT((ulResolution == ADC_RES_10BIT) || (ulResolution == ADC_RES_12BIT));
+void ADCResolutionSet(unsigned long ulBase, unsigned long ulResolution) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT((ulResolution == ADC_RES_10BIT) || (ulResolution == ADC_RES_12BIT));
 
-    //
-    // Set the resolution.
-    //
-    HWREG(ulBase + ADC_O_CTL) = (HWREG(ulBase + ADC_O_CTL) & ~ADC_CTL_RES) |
-                                ulResolution;
+  //
+  // Set the resolution.
+  //
+  HWREG(ulBase + ADC_O_CTL) =
+      (HWREG(ulBase + ADC_O_CTL) & ~ADC_CTL_RES) | ulResolution;
 }
 
 //*****************************************************************************
@@ -1465,18 +1393,16 @@ ADCResolutionSet(unsigned long ulBase, unsigned long ulResolution)
 //! \return The current setting of the ADC resolution.
 //
 //*****************************************************************************
-unsigned long
-ADCResolutionGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+unsigned long ADCResolutionGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
 
-    //
-    // Get the resolution and return it to the caller.
-    //
-    return(HWREG(ulBase + ADC_O_CTL) & ADC_CTL_RES);
+  //
+  // Get the resolution and return it to the caller.
+  //
+  return (HWREG(ulBase + ADC_O_CTL) & ADC_CTL_RES);
 }
 
 //*****************************************************************************
@@ -1505,26 +1431,24 @@ ADCResolutionGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-ADCPhaseDelaySet(unsigned long ulBase, unsigned long ulPhase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
-    ASSERT((ulPhase == ADC_PHASE_0) || (ulPhase == ADC_PHASE_22_5) ||
-           (ulPhase == ADC_PHASE_45) || (ulPhase == ADC_PHASE_67_5) ||
-           (ulPhase == ADC_PHASE_90) || (ulPhase == ADC_PHASE_112_5) ||
-           (ulPhase == ADC_PHASE_135) || (ulPhase == ADC_PHASE_157_5) ||
-           (ulPhase == ADC_PHASE_180) || (ulPhase == ADC_PHASE_202_5) ||
-           (ulPhase == ADC_PHASE_225) || (ulPhase == ADC_PHASE_247_5) ||
-           (ulPhase == ADC_PHASE_270) || (ulPhase == ADC_PHASE_292_5) ||
-           (ulPhase == ADC_PHASE_315) || (ulPhase == ADC_PHASE_337_5));
+void ADCPhaseDelaySet(unsigned long ulBase, unsigned long ulPhase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+  ASSERT((ulPhase == ADC_PHASE_0) || (ulPhase == ADC_PHASE_22_5) ||
+         (ulPhase == ADC_PHASE_45) || (ulPhase == ADC_PHASE_67_5) ||
+         (ulPhase == ADC_PHASE_90) || (ulPhase == ADC_PHASE_112_5) ||
+         (ulPhase == ADC_PHASE_135) || (ulPhase == ADC_PHASE_157_5) ||
+         (ulPhase == ADC_PHASE_180) || (ulPhase == ADC_PHASE_202_5) ||
+         (ulPhase == ADC_PHASE_225) || (ulPhase == ADC_PHASE_247_5) ||
+         (ulPhase == ADC_PHASE_270) || (ulPhase == ADC_PHASE_292_5) ||
+         (ulPhase == ADC_PHASE_315) || (ulPhase == ADC_PHASE_337_5));
 
-    //
-    // Set the phase delay.
-    //
-    HWREG(ulBase + ADC_O_SPC) = ulPhase;
+  //
+  // Set the phase delay.
+  //
+  HWREG(ulBase + ADC_O_SPC) = ulPhase;
 }
 
 //*****************************************************************************
@@ -1543,18 +1467,16 @@ ADCPhaseDelaySet(unsigned long ulBase, unsigned long ulPhase)
 //! \b ADC_PHASE_292_5, \b ADC_PHASE_315, or \b ADC_PHASE_337_5.
 //
 //*****************************************************************************
-unsigned long
-ADCPhaseDelayGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
+unsigned long ADCPhaseDelayGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulBase == ADC0_BASE) || (ulBase == ADC1_BASE));
 
-    //
-    // Return the phase delay.
-    //
-    return(HWREG(ulBase + ADC_O_SPC));
+  //
+  // Return the phase delay.
+  //
+  return (HWREG(ulBase + ADC_O_SPC));
 }
 
 //*****************************************************************************

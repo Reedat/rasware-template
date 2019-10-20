@@ -44,28 +44,25 @@
 //
 //*****************************************************************************
 
+#include "driverlib/i2c.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_i2c.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/i2c.h"
-#include "driverlib/interrupt.h"
 
 //*****************************************************************************
 //
 // A mapping of I2C base address to interupt number.
 //
 //*****************************************************************************
-static const unsigned long g_ppulI2CIntMap[][2] =
-{
-    { I2C0_MASTER_BASE, INT_I2C0 },
-    { I2C1_MASTER_BASE, INT_I2C1 },
-    { I2C2_MASTER_BASE, INT_I2C2 },
-    { I2C3_MASTER_BASE, INT_I2C3 },
-    { I2C4_MASTER_BASE, INT_I2C4 },
-    { I2C5_MASTER_BASE, INT_I2C5 },
+static const unsigned long g_ppulI2CIntMap[][2] = {
+    {I2C0_MASTER_BASE, INT_I2C0}, {I2C1_MASTER_BASE, INT_I2C1},
+    {I2C2_MASTER_BASE, INT_I2C2}, {I2C3_MASTER_BASE, INT_I2C3},
+    {I2C4_MASTER_BASE, INT_I2C4}, {I2C5_MASTER_BASE, INT_I2C5},
 };
 
 //*****************************************************************************
@@ -82,12 +79,10 @@ static const unsigned long g_ppulI2CIntMap[][2] =
 //
 //*****************************************************************************
 #ifdef DEBUG
-static tBoolean
-I2CMasterBaseValid(unsigned long ulBase)
-{
-    return((ulBase == I2C0_MASTER_BASE) || (ulBase == I2C1_MASTER_BASE) ||
-           (ulBase == I2C2_MASTER_BASE) || (ulBase == I2C3_MASTER_BASE) ||
-           (ulBase == I2C4_MASTER_BASE) || (ulBase == I2C5_MASTER_BASE));
+static tBoolean I2CMasterBaseValid(unsigned long ulBase) {
+  return ((ulBase == I2C0_MASTER_BASE) || (ulBase == I2C1_MASTER_BASE) ||
+          (ulBase == I2C2_MASTER_BASE) || (ulBase == I2C3_MASTER_BASE) ||
+          (ulBase == I2C4_MASTER_BASE) || (ulBase == I2C5_MASTER_BASE));
 }
 #endif
 
@@ -105,12 +100,10 @@ I2CMasterBaseValid(unsigned long ulBase)
 //
 //*****************************************************************************
 #ifdef DEBUG
-static tBoolean
-I2CSlaveBaseValid(unsigned long ulBase)
-{
-    return((ulBase == I2C0_SLAVE_BASE) || (ulBase == I2C1_SLAVE_BASE) ||
-           (ulBase == I2C2_SLAVE_BASE) || (ulBase == I2C3_SLAVE_BASE) ||
-           (ulBase == I2C4_SLAVE_BASE) || (ulBase == I2C5_SLAVE_BASE));
+static tBoolean I2CSlaveBaseValid(unsigned long ulBase) {
+  return ((ulBase == I2C0_SLAVE_BASE) || (ulBase == I2C1_SLAVE_BASE) ||
+          (ulBase == I2C2_SLAVE_BASE) || (ulBase == I2C3_SLAVE_BASE) ||
+          (ulBase == I2C4_SLAVE_BASE) || (ulBase == I2C5_SLAVE_BASE));
 }
 #endif
 
@@ -127,34 +120,31 @@ I2CSlaveBaseValid(unsigned long ulBase)
 //! \return Returns an I2C interrupt number, or -1 if \e ulBase is invalid.
 //
 //*****************************************************************************
-static long
-I2CIntNumberGet(unsigned long ulBase)
-{
-    unsigned long ulIdx;
+static long I2CIntNumberGet(unsigned long ulBase) {
+  unsigned long ulIdx;
 
+  //
+  // Loop through the table that maps I2C base addresses to interrupt
+  // numbers.
+  //
+  for (ulIdx = 0;
+       ulIdx < (sizeof(g_ppulI2CIntMap) / sizeof(g_ppulI2CIntMap[0]));
+       ulIdx++) {
     //
-    // Loop through the table that maps I2C base addresses to interrupt
-    // numbers.
+    // See if this base address matches.
     //
-    for(ulIdx = 0; ulIdx < (sizeof(g_ppulI2CIntMap) /
-                            sizeof(g_ppulI2CIntMap[0])); ulIdx++)
-    {
-        //
-        // See if this base address matches.
-        //
-        if(g_ppulI2CIntMap[ulIdx][0] == ulBase)
-        {
-            //
-            // Return the corresponding interrupt number.
-            //
-            return(g_ppulI2CIntMap[ulIdx][1]);
-        }
+    if (g_ppulI2CIntMap[ulIdx][0] == ulBase) {
+      //
+      // Return the corresponding interrupt number.
+      //
+      return (g_ppulI2CIntMap[ulIdx][1]);
     }
+  }
 
-    //
-    // The base address could not be found, so return an error.
-    //
-    return(-1);
+  //
+  // The base address could not be found, so return an error.
+  //
+  return (-1);
 }
 
 //*****************************************************************************
@@ -188,54 +178,47 @@ I2CIntNumberGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterInitExpClk(unsigned long ulBase, unsigned long ulI2CClk,
-                    tBoolean bFast)
-{
-    unsigned long ulSCLFreq;
-    unsigned long ulTPR;
+void I2CMasterInitExpClk(unsigned long ulBase, unsigned long ulI2CClk,
+                         tBoolean bFast) {
+  unsigned long ulSCLFreq;
+  unsigned long ulTPR;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Must enable the device before doing anything else.
-    //
-    I2CMasterEnable(ulBase);
+  //
+  // Must enable the device before doing anything else.
+  //
+  I2CMasterEnable(ulBase);
 
-    //
-    // Get the desired SCL speed.
-    //
-    if(bFast == true)
-    {
-        ulSCLFreq = 400000;
-    }
-    else
-    {
-        ulSCLFreq = 100000;
-    }
+  //
+  // Get the desired SCL speed.
+  //
+  if (bFast == true) {
+    ulSCLFreq = 400000;
+  } else {
+    ulSCLFreq = 100000;
+  }
 
-    //
-    // Compute the clock divider that achieves the fastest speed less than or
-    // equal to the desired speed.  The numerator is biased to favor a larger
-    // clock divider so that the resulting clock is always less than or equal
-    // to the desired clock, never greater.
-    //
-    ulTPR = ((ulI2CClk + (2 * 10 * ulSCLFreq) - 1) / (2 * 10 * ulSCLFreq)) - 1;
-    HWREG(ulBase + I2C_O_MTPR) = ulTPR;
+  //
+  // Compute the clock divider that achieves the fastest speed less than or
+  // equal to the desired speed.  The numerator is biased to favor a larger
+  // clock divider so that the resulting clock is always less than or equal
+  // to the desired clock, never greater.
+  //
+  ulTPR = ((ulI2CClk + (2 * 10 * ulSCLFreq) - 1) / (2 * 10 * ulSCLFreq)) - 1;
+  HWREG(ulBase + I2C_O_MTPR) = ulTPR;
 
-    //
-    // Check to see if this I2C peripheral is High-Speed enabled.  If yes, also
-    // choose the fastest speed that is less than or equal to 3.4 Mbps.
-    //
-    if(HWREG(ulBase + I2C_O_PP) & I2C_PP_HS)
-    {
-        ulTPR = ((ulI2CClk + (2 * 3 * 3400000) - 1) /
-                (2 * 3 * 3400000)) - 1;
-        HWREG(ulBase + I2C_O_MTPR) = I2C_MTPR_HS | ulTPR;
-    }
+  //
+  // Check to see if this I2C peripheral is High-Speed enabled.  If yes, also
+  // choose the fastest speed that is less than or equal to 3.4 Mbps.
+  //
+  if (HWREG(ulBase + I2C_O_PP) & I2C_PP_HS) {
+    ulTPR = ((ulI2CClk + (2 * 3 * 3400000) - 1) / (2 * 3 * 3400000)) - 1;
+    HWREG(ulBase + I2C_O_MTPR) = I2C_MTPR_HS | ulTPR;
+  }
 }
 
 //*****************************************************************************
@@ -254,24 +237,22 @@ I2CMasterInitExpClk(unsigned long ulBase, unsigned long ulI2CClk,
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveInit(unsigned long ulBase, unsigned char ucSlaveAddr)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
-    ASSERT(!(ucSlaveAddr & 0x80));
+void I2CSlaveInit(unsigned long ulBase, unsigned char ucSlaveAddr) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
+  ASSERT(!(ucSlaveAddr & 0x80));
 
-    //
-    // Must enable the device before doing anything else.
-    //
-    I2CSlaveEnable(ulBase);
+  //
+  // Must enable the device before doing anything else.
+  //
+  I2CSlaveEnable(ulBase);
 
-    //
-    // Set up the slave address.
-    //
-    HWREG(ulBase + I2C_O_SOAR) = ucSlaveAddr;
+  //
+  // Set up the slave address.
+  //
+  HWREG(ulBase + I2C_O_SOAR) = ucSlaveAddr;
 }
 
 //*****************************************************************************
@@ -292,40 +273,35 @@ I2CSlaveInit(unsigned long ulBase, unsigned char ucSlaveAddr)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveAddressSet(unsigned long ulBase, unsigned char ucAddrNum,
-                   unsigned char ucSlaveAddr)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
-    ASSERT(!(ucAddrNum > 1));
-    ASSERT(!(ucSlaveAddr & 0x80));
+void I2CSlaveAddressSet(unsigned long ulBase, unsigned char ucAddrNum,
+                        unsigned char ucSlaveAddr) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
+  ASSERT(!(ucAddrNum > 1));
+  ASSERT(!(ucSlaveAddr & 0x80));
 
+  //
+  // Determine which slave address is being set.
+  //
+  switch (ucAddrNum) {
     //
-    // Determine which slave address is being set.
+    // Set up the primary slave address.
     //
-    switch(ucAddrNum)
-    {
-        //
-        // Set up the primary slave address.
-        //
-        case 0:
-        {
-            HWREG(ulBase + I2C_O_SOAR) = ucSlaveAddr;
-            break;
-        }
-
-        //
-        // Set up and enable the secondary slave address.
-        //
-        case 1:
-        {
-            HWREG(ulBase + I2C_O_SOAR2) = I2C_SOAR2_OAR2EN | ucSlaveAddr;
-            break;
-        }
+    case 0: {
+      HWREG(ulBase + I2C_O_SOAR) = ucSlaveAddr;
+      break;
     }
+
+    //
+    // Set up and enable the secondary slave address.
+    //
+    case 1: {
+      HWREG(ulBase + I2C_O_SOAR2) = I2C_SOAR2_OAR2EN | ucSlaveAddr;
+      break;
+    }
+  }
 }
 
 //*****************************************************************************
@@ -339,18 +315,16 @@ I2CSlaveAddressSet(unsigned long ulBase, unsigned char ucAddrNum,
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Enable the master block.
-    //
-    HWREG(ulBase + I2C_O_MCR) |= I2C_MCR_MFE;
+  //
+  // Enable the master block.
+  //
+  HWREG(ulBase + I2C_O_MCR) |= I2C_MCR_MFE;
 }
 
 //*****************************************************************************
@@ -364,24 +338,21 @@ I2CMasterEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Enable the clock to the slave block.
-    //
-    HWREG(ulBase - I2C0_SLAVE_BASE + I2C0_MASTER_BASE + I2C_O_MCR) |=
-        I2C_MCR_SFE;
+  //
+  // Enable the clock to the slave block.
+  //
+  HWREG(ulBase - I2C0_SLAVE_BASE + I2C0_MASTER_BASE + I2C_O_MCR) |= I2C_MCR_SFE;
 
-    //
-    // Enable the slave.
-    //
-    HWREG(ulBase + I2C_O_SCSR) = I2C_SCSR_DA;
+  //
+  // Enable the slave.
+  //
+  HWREG(ulBase + I2C_O_SCSR) = I2C_SCSR_DA;
 }
 
 //*****************************************************************************
@@ -395,18 +366,16 @@ I2CSlaveEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Disable the master block.
-    //
-    HWREG(ulBase + I2C_O_MCR) &= ~(I2C_MCR_MFE);
+  //
+  // Disable the master block.
+  //
+  HWREG(ulBase + I2C_O_MCR) &= ~(I2C_MCR_MFE);
 }
 
 //*****************************************************************************
@@ -420,24 +389,22 @@ I2CMasterDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Disable the slave.
-    //
-    HWREG(ulBase + I2C_O_SCSR) = 0;
+  //
+  // Disable the slave.
+  //
+  HWREG(ulBase + I2C_O_SCSR) = 0;
 
-    //
-    // Disable the clock to the slave block.
-    //
-    HWREG(ulBase - I2C0_SLAVE_BASE + I2C0_MASTER_BASE + I2C_O_MCR) &=
-        ~(I2C_MCR_SFE);
+  //
+  // Disable the clock to the slave block.
+  //
+  HWREG(ulBase - I2C0_SLAVE_BASE + I2C0_MASTER_BASE + I2C_O_MCR) &=
+      ~(I2C_MCR_SFE);
 }
 
 //*****************************************************************************
@@ -461,30 +428,28 @@ I2CSlaveDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
-{
-    unsigned long ulInt;
+void I2CIntRegister(unsigned long ulBase, void (*pfnHandler)(void)) {
+  unsigned long ulInt;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Determine the interrupt number based on the I2C port.
-    //
-    ulInt = I2CIntNumberGet(ulBase);
+  //
+  // Determine the interrupt number based on the I2C port.
+  //
+  ulInt = I2CIntNumberGet(ulBase);
 
-    //
-    // Register the interrupt handler, returning an error if an error occurs.
-    //
-    IntRegister(ulInt, pfnHandler);
+  //
+  // Register the interrupt handler, returning an error if an error occurs.
+  //
+  IntRegister(ulInt, pfnHandler);
 
-    //
-    // Enable the I2C interrupt.
-    //
-    IntEnable(ulInt);
+  //
+  // Enable the I2C interrupt.
+  //
+  IntEnable(ulInt);
 }
 
 //*****************************************************************************
@@ -503,30 +468,28 @@ I2CIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CIntUnregister(unsigned long ulBase)
-{
-    unsigned long ulInt;
+void I2CIntUnregister(unsigned long ulBase) {
+  unsigned long ulInt;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Determine the interrupt number based on the I2C port.
-    //
-    ulInt = I2CIntNumberGet(ulBase);
+  //
+  // Determine the interrupt number based on the I2C port.
+  //
+  ulInt = I2CIntNumberGet(ulBase);
 
-    //
-    // Disable the interrupt.
-    //
-    IntDisable(ulInt);
+  //
+  // Disable the interrupt.
+  //
+  IntDisable(ulInt);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(ulInt);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(ulInt);
 }
 
 //*****************************************************************************
@@ -540,18 +503,16 @@ I2CIntUnregister(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterIntEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterIntEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Enable the master interrupt.
-    //
-    HWREG(ulBase + I2C_O_MIMR) = 1;
+  //
+  // Enable the master interrupt.
+  //
+  HWREG(ulBase + I2C_O_MIMR) = 1;
 }
 
 //*****************************************************************************
@@ -577,18 +538,16 @@ I2CMasterIntEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterIntEnableEx(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterIntEnableEx(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Enable the master interrupt.
-    //
-    HWREG(ulBase + I2C_O_MIMR) |= ulIntFlags;
+  //
+  // Enable the master interrupt.
+  //
+  HWREG(ulBase + I2C_O_MIMR) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -602,18 +561,16 @@ I2CMasterIntEnableEx(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveIntEnable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveIntEnable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Enable the slave interrupt.
-    //
-    HWREG(ulBase + I2C_O_SIMR) |= I2C_SLAVE_INT_DATA;
+  //
+  // Enable the slave interrupt.
+  //
+  HWREG(ulBase + I2C_O_SIMR) |= I2C_SLAVE_INT_DATA;
 }
 
 //*****************************************************************************
@@ -640,18 +597,16 @@ I2CSlaveIntEnable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveIntEnableEx(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveIntEnableEx(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Enable the slave interrupt.
-    //
-    HWREG(ulBase + I2C_O_SIMR) |= ulIntFlags;
+  //
+  // Enable the slave interrupt.
+  //
+  HWREG(ulBase + I2C_O_SIMR) |= ulIntFlags;
 }
 
 //*****************************************************************************
@@ -665,18 +620,16 @@ I2CSlaveIntEnableEx(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterIntDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterIntDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Disable the master interrupt.
-    //
-    HWREG(ulBase + I2C_O_MIMR) = 0;
+  //
+  // Disable the master interrupt.
+  //
+  HWREG(ulBase + I2C_O_MIMR) = 0;
 }
 
 //*****************************************************************************
@@ -696,18 +649,16 @@ I2CMasterIntDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterIntDisableEx(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterIntDisableEx(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Disable the master interrupt.
-    //
-    HWREG(ulBase + I2C_O_MIMR) &= ~ulIntFlags;
+  //
+  // Disable the master interrupt.
+  //
+  HWREG(ulBase + I2C_O_MIMR) &= ~ulIntFlags;
 }
 
 //*****************************************************************************
@@ -721,18 +672,16 @@ I2CMasterIntDisableEx(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveIntDisable(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveIntDisable(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Disable the slave interrupt.
-    //
-    HWREG(ulBase + I2C_O_SIMR) &= ~I2C_SLAVE_INT_DATA;
+  //
+  // Disable the slave interrupt.
+  //
+  HWREG(ulBase + I2C_O_SIMR) &= ~I2C_SLAVE_INT_DATA;
 }
 
 //*****************************************************************************
@@ -752,18 +701,16 @@ I2CSlaveIntDisable(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveIntDisableEx(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveIntDisableEx(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Disable the slave interrupt.
-    //
-    HWREG(ulBase + I2C_O_SIMR) &= ~ulIntFlags;
+  //
+  // Disable the slave interrupt.
+  //
+  HWREG(ulBase + I2C_O_SIMR) &= ~ulIntFlags;
 }
 
 //*****************************************************************************
@@ -775,33 +722,28 @@ I2CSlaveIntDisableEx(unsigned long ulBase, unsigned long ulIntFlags)
 //! true if the masked interrupt status is requested.
 //!
 //! This function returns the interrupt status for the I2C Master module.
-//! Either the raw interrupt status or the status of interrupts that are allowed to
-//! reflect to the processor can be returned.
+//! Either the raw interrupt status or the status of interrupts that are allowed
+//! to reflect to the processor can be returned.
 //!
 //! \return The current interrupt status, returned as \b true if active
 //! or \b false if not active.
 //
 //*****************************************************************************
-tBoolean
-I2CMasterIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+tBoolean I2CMasterIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return((HWREG(ulBase + I2C_O_MMIS)) ? true : false);
-    }
-    else
-    {
-        return((HWREG(ulBase + I2C_O_MRIS)) ? true : false);
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return ((HWREG(ulBase + I2C_O_MMIS)) ? true : false);
+  } else {
+    return ((HWREG(ulBase + I2C_O_MRIS)) ? true : false);
+  }
 }
 
 //*****************************************************************************
@@ -820,26 +762,21 @@ I2CMasterIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! values described in I2CMasterIntEnableEx().
 //
 //*****************************************************************************
-unsigned long
-I2CMasterIntStatusEx(unsigned long ulBase, tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+unsigned long I2CMasterIntStatusEx(unsigned long ulBase, tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(ulBase + I2C_O_MMIS));
-    }
-    else
-    {
-        return(HWREG(ulBase + I2C_O_MRIS));
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(ulBase + I2C_O_MMIS));
+  } else {
+    return (HWREG(ulBase + I2C_O_MRIS));
+  }
 }
 
 //*****************************************************************************
@@ -858,26 +795,21 @@ I2CMasterIntStatusEx(unsigned long ulBase, tBoolean bMasked)
 //! or \b false if not active.
 //
 //*****************************************************************************
-tBoolean
-I2CSlaveIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+tBoolean I2CSlaveIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return((HWREG(ulBase + I2C_O_SMIS)) ? true : false);
-    }
-    else
-    {
-        return((HWREG(ulBase + I2C_O_SRIS)) ? true : false);
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return ((HWREG(ulBase + I2C_O_SMIS)) ? true : false);
+  } else {
+    return ((HWREG(ulBase + I2C_O_SRIS)) ? true : false);
+  }
 }
 
 //*****************************************************************************
@@ -896,40 +828,32 @@ I2CSlaveIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! values described in I2CSlaveIntEnableEx().
 //
 //*****************************************************************************
-unsigned long
-I2CSlaveIntStatusEx(unsigned long ulBase, tBoolean bMasked)
-{
-    unsigned long ulValue;
+unsigned long I2CSlaveIntStatusEx(unsigned long ulBase, tBoolean bMasked) {
+  unsigned long ulValue;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
     //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
+    // Workaround for I2C slave masked interrupt status register errata
+    // (7.1) for Dustdevil Rev A0 devices.
     //
-    if(bMasked)
-    {
-        //
-        // Workaround for I2C slave masked interrupt status register errata
-        // (7.1) for Dustdevil Rev A0 devices.
-        //
-        if(CLASS_IS_DUSTDEVIL && REVISION_IS_A0)
-        {
-            ulValue = HWREG(ulBase + I2C_O_SRIS);
-            return(ulValue & HWREG(ulBase + I2C_O_SIMR));
-        }
-        else
-        {
-            return(HWREG(ulBase + I2C_O_SMIS));
-        }
+    if (CLASS_IS_DUSTDEVIL && REVISION_IS_A0) {
+      ulValue = HWREG(ulBase + I2C_O_SRIS);
+      return (ulValue & HWREG(ulBase + I2C_O_SIMR));
+    } else {
+      return (HWREG(ulBase + I2C_O_SMIS));
     }
-    else
-    {
-        return(HWREG(ulBase + I2C_O_SRIS));
-    }
+  } else {
+    return (HWREG(ulBase + I2C_O_SRIS));
+  }
 }
 
 //*****************************************************************************
@@ -954,25 +878,23 @@ I2CSlaveIntStatusEx(unsigned long ulBase, tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterIntClear(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterIntClear(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Clear the I2C master interrupt source.
-    //
-    HWREG(ulBase + I2C_O_MICR) = I2C_MICR_IC;
+  //
+  // Clear the I2C master interrupt source.
+  //
+  HWREG(ulBase + I2C_O_MICR) = I2C_MICR_IC;
 
-    //
-    // Workaround for I2C master interrupt clear errata for rev B Stellaris
-    // devices.  For later devices, this write is ignored and therefore
-    // harmless (other than the slight performance hit).
-    //
-    HWREG(ulBase + I2C_O_MMIS) = I2C_MICR_IC;
+  //
+  // Workaround for I2C master interrupt clear errata for rev B Stellaris
+  // devices.  For later devices, this write is ignored and therefore
+  // harmless (other than the slight performance hit).
+  //
+  HWREG(ulBase + I2C_O_MMIS) = I2C_MICR_IC;
 }
 
 //*****************************************************************************
@@ -1001,18 +923,16 @@ I2CMasterIntClear(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterIntClearEx(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterIntClearEx(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Clear the I2C master interrupt source.
-    //
-    HWREG(ulBase + I2C_O_MICR) = ulIntFlags;
+  //
+  // Clear the I2C master interrupt source.
+  //
+  HWREG(ulBase + I2C_O_MICR) = ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1037,18 +957,16 @@ I2CMasterIntClearEx(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveIntClear(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveIntClear(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Clear the I2C slave interrupt source.
-    //
-    HWREG(ulBase + I2C_O_SICR) = I2C_SICR_DATAIC;
+  //
+  // Clear the I2C slave interrupt source.
+  //
+  HWREG(ulBase + I2C_O_SICR) = I2C_SICR_DATAIC;
 }
 
 //*****************************************************************************
@@ -1077,18 +995,16 @@ I2CSlaveIntClear(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveIntClearEx(unsigned long ulBase, unsigned long ulIntFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveIntClearEx(unsigned long ulBase, unsigned long ulIntFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Clear the I2C slave interrupt source.
-    //
-    HWREG(ulBase + I2C_O_SICR) = ulIntFlags;
+  //
+  // Clear the I2C slave interrupt source.
+  //
+  HWREG(ulBase + I2C_O_SICR) = ulIntFlags;
 }
 
 //*****************************************************************************
@@ -1108,20 +1024,18 @@ I2CSlaveIntClearEx(unsigned long ulBase, unsigned long ulIntFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterSlaveAddrSet(unsigned long ulBase, unsigned char ucSlaveAddr,
-                      tBoolean bReceive)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
-    ASSERT(!(ucSlaveAddr & 0x80));
+void I2CMasterSlaveAddrSet(unsigned long ulBase, unsigned char ucSlaveAddr,
+                           tBoolean bReceive) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
+  ASSERT(!(ucSlaveAddr & 0x80));
 
-    //
-    // Set the address of the slave with which the master will communicate.
-    //
-    HWREG(ulBase + I2C_O_MSA) = (ucSlaveAddr << 1) | bReceive;
+  //
+  // Set the address of the slave with which the master will communicate.
+  //
+  HWREG(ulBase + I2C_O_MSA) = (ucSlaveAddr << 1) | bReceive;
 }
 
 //*****************************************************************************
@@ -1140,18 +1054,16 @@ I2CMasterSlaveAddrSet(unsigned long ulBase, unsigned char ucSlaveAddr,
 //! bit position 0.
 //
 //*****************************************************************************
-unsigned long
-I2CMasterLineStateGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+unsigned long I2CMasterLineStateGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Return the line state.
-    //
-    return(HWREG(ulBase + I2C_O_MBMON));
+  //
+  // Return the line state.
+  //
+  return (HWREG(ulBase + I2C_O_MBMON));
 }
 
 //*****************************************************************************
@@ -1167,25 +1079,20 @@ I2CMasterLineStateGet(unsigned long ulBase)
 //! \b false.
 //
 //*****************************************************************************
-tBoolean
-I2CMasterBusy(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+tBoolean I2CMasterBusy(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Return the busy status.
-    //
-    if(HWREG(ulBase + I2C_O_MCS) & I2C_MCS_BUSY)
-    {
-        return(true);
-    }
-    else
-    {
-        return(false);
-    }
+  //
+  // Return the busy status.
+  //
+  if (HWREG(ulBase + I2C_O_MCS) & I2C_MCS_BUSY) {
+    return (true);
+  } else {
+    return (false);
+  }
 }
 
 //*****************************************************************************
@@ -1202,25 +1109,20 @@ I2CMasterBusy(unsigned long ulBase)
 //! \b false.
 //
 //*****************************************************************************
-tBoolean
-I2CMasterBusBusy(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+tBoolean I2CMasterBusBusy(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Return the bus busy status.
-    //
-    if(HWREG(ulBase + I2C_O_MCS) & I2C_MCS_BUSBSY)
-    {
-        return(true);
-    }
-    else
-    {
-        return(false);
-    }
+  //
+  // Return the bus busy status.
+  //
+  if (HWREG(ulBase + I2C_O_MCS) & I2C_MCS_BUSBSY) {
+    return (true);
+  } else {
+    return (false);
+  }
 }
 
 //*****************************************************************************
@@ -1250,30 +1152,28 @@ I2CMasterBusBusy(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterControl(unsigned long ulBase, unsigned long ulCmd)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
-    ASSERT((ulCmd == I2C_MASTER_CMD_SINGLE_SEND) ||
-           (ulCmd == I2C_MASTER_CMD_SINGLE_RECEIVE) ||
-           (ulCmd == I2C_MASTER_CMD_BURST_SEND_START) ||
-           (ulCmd == I2C_MASTER_CMD_BURST_SEND_CONT) ||
-           (ulCmd == I2C_MASTER_CMD_BURST_SEND_FINISH) ||
-           (ulCmd == I2C_MASTER_CMD_BURST_SEND_ERROR_STOP) ||
-           (ulCmd == I2C_MASTER_CMD_BURST_RECEIVE_START) ||
-           (ulCmd == I2C_MASTER_CMD_BURST_RECEIVE_CONT) ||
-           (ulCmd == I2C_MASTER_CMD_BURST_RECEIVE_FINISH) ||
-           (ulCmd == I2C_MASTER_CMD_BURST_RECEIVE_ERROR_STOP) ||
-           (ulCmd == I2C_MASTER_CMD_QUICK_COMMAND) ||
-           (ulCmd == I2C_MASTER_CMD_HS_MASTER_CODE_SEND));
+void I2CMasterControl(unsigned long ulBase, unsigned long ulCmd) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
+  ASSERT((ulCmd == I2C_MASTER_CMD_SINGLE_SEND) ||
+         (ulCmd == I2C_MASTER_CMD_SINGLE_RECEIVE) ||
+         (ulCmd == I2C_MASTER_CMD_BURST_SEND_START) ||
+         (ulCmd == I2C_MASTER_CMD_BURST_SEND_CONT) ||
+         (ulCmd == I2C_MASTER_CMD_BURST_SEND_FINISH) ||
+         (ulCmd == I2C_MASTER_CMD_BURST_SEND_ERROR_STOP) ||
+         (ulCmd == I2C_MASTER_CMD_BURST_RECEIVE_START) ||
+         (ulCmd == I2C_MASTER_CMD_BURST_RECEIVE_CONT) ||
+         (ulCmd == I2C_MASTER_CMD_BURST_RECEIVE_FINISH) ||
+         (ulCmd == I2C_MASTER_CMD_BURST_RECEIVE_ERROR_STOP) ||
+         (ulCmd == I2C_MASTER_CMD_QUICK_COMMAND) ||
+         (ulCmd == I2C_MASTER_CMD_HS_MASTER_CODE_SEND));
 
-    //
-    // Send the command.
-    //
-    HWREG(ulBase + I2C_O_MCS) = ulCmd;
+  //
+  // Send the command.
+  //
+  HWREG(ulBase + I2C_O_MCS) = ulCmd;
 }
 
 //*****************************************************************************
@@ -1290,41 +1190,35 @@ I2CMasterControl(unsigned long ulBase, unsigned long ulCmd)
 //! \b I2C_MASTER_ERR_ARB_LOST.
 //
 //*****************************************************************************
-unsigned long
-I2CMasterErr(unsigned long ulBase)
-{
-    unsigned long ulErr;
+unsigned long I2CMasterErr(unsigned long ulBase) {
+  unsigned long ulErr;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Get the raw error state
-    //
-    ulErr = HWREG(ulBase + I2C_O_MCS);
+  //
+  // Get the raw error state
+  //
+  ulErr = HWREG(ulBase + I2C_O_MCS);
 
-    //
-    // If the I2C master is busy, then all the other bit are invalid, and
-    // don't have an error to report.
-    //
-    if(ulErr & I2C_MCS_BUSY)
-    {
-        return(I2C_MASTER_ERR_NONE);
-    }
+  //
+  // If the I2C master is busy, then all the other bit are invalid, and
+  // don't have an error to report.
+  //
+  if (ulErr & I2C_MCS_BUSY) {
+    return (I2C_MASTER_ERR_NONE);
+  }
 
-    //
-    // Check for errors.
-    //
-    if(ulErr & (I2C_MCS_ERROR | I2C_MCS_ARBLST))
-    {
-        return(ulErr & (I2C_MCS_ARBLST | I2C_MCS_DATACK | I2C_MCS_ADRACK));
-    }
-    else
-    {
-        return(I2C_MASTER_ERR_NONE);
-    }
+  //
+  // Check for errors.
+  //
+  if (ulErr & (I2C_MCS_ERROR | I2C_MCS_ARBLST)) {
+    return (ulErr & (I2C_MCS_ARBLST | I2C_MCS_DATACK | I2C_MCS_ADRACK));
+  } else {
+    return (I2C_MASTER_ERR_NONE);
+  }
 }
 
 //*****************************************************************************
@@ -1339,18 +1233,16 @@ I2CMasterErr(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterDataPut(unsigned long ulBase, unsigned char ucData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterDataPut(unsigned long ulBase, unsigned char ucData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Write the byte.
-    //
-    HWREG(ulBase + I2C_O_MDR) = ucData;
+  //
+  // Write the byte.
+  //
+  HWREG(ulBase + I2C_O_MDR) = ucData;
 }
 
 //*****************************************************************************
@@ -1365,18 +1257,16 @@ I2CMasterDataPut(unsigned long ulBase, unsigned char ucData)
 //! unsigned long.
 //
 //*****************************************************************************
-unsigned long
-I2CMasterDataGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+unsigned long I2CMasterDataGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Read a byte.
-    //
-    return(HWREG(ulBase + I2C_O_MDR));
+  //
+  // Read a byte.
+  //
+  return (HWREG(ulBase + I2C_O_MDR));
 }
 
 //*****************************************************************************
@@ -1397,18 +1287,16 @@ I2CMasterDataGet(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CMasterTimeoutSet(unsigned long ulBase, unsigned long ulValue)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CMasterBaseValid(ulBase));
+void I2CMasterTimeoutSet(unsigned long ulBase, unsigned long ulValue) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CMasterBaseValid(ulBase));
 
-    //
-    // Write the timeout value.
-    //
-    HWREG(ulBase + I2C_O_MCLKOCNT) = ulValue;
+  //
+  // Write the timeout value.
+  //
+  HWREG(ulBase + I2C_O_MCLKOCNT) = ulValue;
 }
 
 //*****************************************************************************
@@ -1427,25 +1315,20 @@ I2CMasterTimeoutSet(unsigned long ulBase, unsigned long ulValue)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveACKOverride(unsigned long ulBase, tBoolean bEnable)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveACKOverride(unsigned long ulBase, tBoolean bEnable) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Enable or disable based on bEnable.
-    //
-    if(bEnable)
-    {
-        HWREG(ulBase + I2C_O_SACKCTL) |= I2C_SACKCTL_ACKOEN;
-    }
-    else
-    {
-        HWREG(ulBase + I2C_O_SACKCTL) &= ~I2C_SACKCTL_ACKOEN;
-    }
+  //
+  // Enable or disable based on bEnable.
+  //
+  if (bEnable) {
+    HWREG(ulBase + I2C_O_SACKCTL) |= I2C_SACKCTL_ACKOEN;
+  } else {
+    HWREG(ulBase + I2C_O_SACKCTL) &= ~I2C_SACKCTL_ACKOEN;
+  }
 }
 
 //*****************************************************************************
@@ -1462,25 +1345,20 @@ I2CSlaveACKOverride(unsigned long ulBase, tBoolean bEnable)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveACKValueSet(unsigned long ulBase, tBoolean bACK)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveACKValueSet(unsigned long ulBase, tBoolean bACK) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // ACK or NACK based on the value of bACK.
-    //
-    if(bACK)
-    {
-        HWREG(ulBase + I2C_O_SACKCTL) &= ~I2C_SACKCTL_ACKOVAL;
-    }
-    else
-    {
-        HWREG(ulBase + I2C_O_SACKCTL) |= I2C_SACKCTL_ACKOVAL;
-    }
+  //
+  // ACK or NACK based on the value of bACK.
+  //
+  if (bACK) {
+    HWREG(ulBase + I2C_O_SACKCTL) &= ~I2C_SACKCTL_ACKOVAL;
+  } else {
+    HWREG(ulBase + I2C_O_SACKCTL) |= I2C_SACKCTL_ACKOVAL;
+  }
 }
 
 //*****************************************************************************
@@ -1516,18 +1394,16 @@ I2CSlaveACKValueSet(unsigned long ulBase, tBoolean bACK)
 //! data bit was set when the quick command was received.
 //
 //*****************************************************************************
-unsigned long
-I2CSlaveStatus(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+unsigned long I2CSlaveStatus(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Return the slave status.
-    //
-    return(HWREG(ulBase + I2C_O_SCSR));
+  //
+  // Return the slave status.
+  //
+  return (HWREG(ulBase + I2C_O_SCSR));
 }
 
 //*****************************************************************************
@@ -1542,18 +1418,16 @@ I2CSlaveStatus(unsigned long ulBase)
 //! \return None.
 //
 //*****************************************************************************
-void
-I2CSlaveDataPut(unsigned long ulBase, unsigned char ucData)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+void I2CSlaveDataPut(unsigned long ulBase, unsigned char ucData) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Write the byte.
-    //
-    HWREG(ulBase + I2C_O_SDR) = ucData;
+  //
+  // Write the byte.
+  //
+  HWREG(ulBase + I2C_O_SDR) = ucData;
 }
 
 //*****************************************************************************
@@ -1568,18 +1442,16 @@ I2CSlaveDataPut(unsigned long ulBase, unsigned char ucData)
 //! unsigned long.
 //
 //*****************************************************************************
-unsigned long
-I2CSlaveDataGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(I2CSlaveBaseValid(ulBase));
+unsigned long I2CSlaveDataGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(I2CSlaveBaseValid(ulBase));
 
-    //
-    // Read a byte.
-    //
-    return(HWREG(ulBase + I2C_O_SDR));
+  //
+  // Read a byte.
+  //
+  return (HWREG(ulBase + I2C_O_SDR));
 }
 
 //*****************************************************************************

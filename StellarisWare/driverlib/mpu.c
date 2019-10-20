@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,12 +44,13 @@
 //
 //*****************************************************************************
 
+#include "driverlib/mpu.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/mpu.h"
 
 //*****************************************************************************
 //
@@ -83,20 +84,17 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-MPUEnable(unsigned long ulMPUConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(!(ulMPUConfig & ~(MPU_CONFIG_PRIV_DEFAULT |
-                             MPU_CONFIG_HARDFLT_NMI)));
+void MPUEnable(unsigned long ulMPUConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(!(ulMPUConfig & ~(MPU_CONFIG_PRIV_DEFAULT | MPU_CONFIG_HARDFLT_NMI)));
 
-    //
-    // Set the MPU control bits according to the flags passed by the user,
-    // and also set the enable bit.
-    //
-    HWREG(NVIC_MPU_CTRL) = ulMPUConfig | NVIC_MPU_CTRL_ENABLE;
+  //
+  // Set the MPU control bits according to the flags passed by the user,
+  // and also set the enable bit.
+  //
+  HWREG(NVIC_MPU_CTRL) = ulMPUConfig | NVIC_MPU_CTRL_ENABLE;
 }
 
 //*****************************************************************************
@@ -110,13 +108,11 @@ MPUEnable(unsigned long ulMPUConfig)
 //! \return None.
 //
 //*****************************************************************************
-void
-MPUDisable(void)
-{
-    //
-    // Turn off the MPU enable bit.
-    //
-    HWREG(NVIC_MPU_CTRL) &= ~NVIC_MPU_CTRL_ENABLE;
+void MPUDisable(void) {
+  //
+  // Turn off the MPU enable bit.
+  //
+  HWREG(NVIC_MPU_CTRL) &= ~NVIC_MPU_CTRL_ENABLE;
 }
 
 //*****************************************************************************
@@ -130,15 +126,13 @@ MPUDisable(void)
 //! for programming using MPURegionSet().
 //
 //*****************************************************************************
-unsigned long
-MPURegionCountGet(void)
-{
-    //
-    // Read the DREGION field of the MPU type register and mask off
-    // the bits of interest to get the count of regions.
-    //
-    return((HWREG(NVIC_MPU_TYPE) & NVIC_MPU_TYPE_DREGION_M)
-            >> NVIC_MPU_TYPE_DREGION_S);
+unsigned long MPURegionCountGet(void) {
+  //
+  // Read the DREGION field of the MPU type register and mask off
+  // the bits of interest to get the count of regions.
+  //
+  return ((HWREG(NVIC_MPU_TYPE) & NVIC_MPU_TYPE_DREGION_M) >>
+          NVIC_MPU_TYPE_DREGION_S);
 }
 
 //*****************************************************************************
@@ -155,23 +149,21 @@ MPURegionCountGet(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-MPURegionEnable(unsigned long ulRegion)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulRegion < 8);
+void MPURegionEnable(unsigned long ulRegion) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulRegion < 8);
 
-    //
-    // Select the region to modify.
-    //
-    HWREG(NVIC_MPU_NUMBER) = ulRegion;
+  //
+  // Select the region to modify.
+  //
+  HWREG(NVIC_MPU_NUMBER) = ulRegion;
 
-    //
-    // Modify the enable bit in the region attributes.
-    //
-    HWREG(NVIC_MPU_ATTR) |= NVIC_MPU_ATTR_ENABLE;
+  //
+  // Modify the enable bit in the region attributes.
+  //
+  HWREG(NVIC_MPU_ATTR) |= NVIC_MPU_ATTR_ENABLE;
 }
 
 //*****************************************************************************
@@ -188,23 +180,21 @@ MPURegionEnable(unsigned long ulRegion)
 //! \return None.
 //
 //*****************************************************************************
-void
-MPURegionDisable(unsigned long ulRegion)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulRegion < 8);
+void MPURegionDisable(unsigned long ulRegion) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulRegion < 8);
 
-    //
-    // Select the region to modify.
-    //
-    HWREG(NVIC_MPU_NUMBER) = ulRegion;
+  //
+  // Select the region to modify.
+  //
+  HWREG(NVIC_MPU_NUMBER) = ulRegion;
 
-    //
-    // Modify the enable bit in the region attributes.
-    //
-    HWREG(NVIC_MPU_ATTR) &= ~NVIC_MPU_ATTR_ENABLE;
+  //
+  // Modify the enable bit in the region attributes.
+  //
+  HWREG(NVIC_MPU_ATTR) &= ~NVIC_MPU_ATTR_ENABLE;
 }
 
 //*****************************************************************************
@@ -315,32 +305,29 @@ MPURegionDisable(unsigned long ulRegion)
 //! \return None.
 //
 //*****************************************************************************
-void
-MPURegionSet(unsigned long ulRegion, unsigned long ulAddr,
-             unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulRegion < 8);
-    ASSERT((ulAddr & ~0 << (((ulFlags & NVIC_MPU_ATTR_SIZE_M) >> 1) + 1))
-            == ulAddr);
+void MPURegionSet(unsigned long ulRegion, unsigned long ulAddr,
+                  unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulRegion < 8);
+  ASSERT((ulAddr & ~0 << (((ulFlags & NVIC_MPU_ATTR_SIZE_M) >> 1) + 1)) ==
+         ulAddr);
 
-    //
-    // Program the base address, use the region field to select the
-    // region at the same time.
-    //
-    HWREG(NVIC_MPU_BASE) = ulAddr | ulRegion | NVIC_MPU_BASE_VALID;
+  //
+  // Program the base address, use the region field to select the
+  // region at the same time.
+  //
+  HWREG(NVIC_MPU_BASE) = ulAddr | ulRegion | NVIC_MPU_BASE_VALID;
 
-    //
-    // Program the region attributes.  Set the TEX field and the S, C,
-    // and B bits to fixed values that are suitable for all Stellaris
-    // memory.
-    //
-    HWREG(NVIC_MPU_ATTR) = (ulFlags & ~(NVIC_MPU_ATTR_TEX_M |
-                                       NVIC_MPU_ATTR_CACHEABLE)) |
-                            NVIC_MPU_ATTR_SHAREABLE |
-                            NVIC_MPU_ATTR_BUFFRABLE;
+  //
+  // Program the region attributes.  Set the TEX field and the S, C,
+  // and B bits to fixed values that are suitable for all Stellaris
+  // memory.
+  //
+  HWREG(NVIC_MPU_ATTR) =
+      (ulFlags & ~(NVIC_MPU_ATTR_TEX_M | NVIC_MPU_ATTR_CACHEABLE)) |
+      NVIC_MPU_ATTR_SHAREABLE | NVIC_MPU_ATTR_BUFFRABLE;
 }
 
 //*****************************************************************************
@@ -362,31 +349,29 @@ MPURegionSet(unsigned long ulRegion, unsigned long ulAddr,
 //! \return None.
 //
 //*****************************************************************************
-void
-MPURegionGet(unsigned long ulRegion, unsigned long *pulAddr,
-             unsigned long *pulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulRegion < 8);
-    ASSERT(pulAddr);
-    ASSERT(pulFlags);
+void MPURegionGet(unsigned long ulRegion, unsigned long *pulAddr,
+                  unsigned long *pulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulRegion < 8);
+  ASSERT(pulAddr);
+  ASSERT(pulFlags);
 
-    //
-    // Select the region to get.
-    //
-    HWREG(NVIC_MPU_NUMBER) = ulRegion;
+  //
+  // Select the region to get.
+  //
+  HWREG(NVIC_MPU_NUMBER) = ulRegion;
 
-    //
-    // Read and store the base address for the region.
-    //
-    *pulAddr = HWREG(NVIC_MPU_BASE);
+  //
+  // Read and store the base address for the region.
+  //
+  *pulAddr = HWREG(NVIC_MPU_BASE);
 
-    //
-    // Read and store the region attributes.
-    //
-    *pulFlags = HWREG(NVIC_MPU_ATTR);
+  //
+  // Read and store the region attributes.
+  //
+  *pulFlags = HWREG(NVIC_MPU_ATTR);
 }
 
 //*****************************************************************************
@@ -406,23 +391,21 @@ MPURegionGet(unsigned long ulRegion, unsigned long *pulAddr,
 //! \return None.
 //
 //*****************************************************************************
-void
-MPUIntRegister(void (*pfnHandler)(void))
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(pfnHandler);
+void MPUIntRegister(void (*pfnHandler)(void)) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(pfnHandler);
 
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(FAULT_MPU, pfnHandler);
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(FAULT_MPU, pfnHandler);
 
-    //
-    // Enable the memory management fault.
-    //
-    IntEnable(FAULT_MPU);
+  //
+  // Enable the memory management fault.
+  //
+  IntEnable(FAULT_MPU);
 }
 
 //*****************************************************************************
@@ -438,18 +421,16 @@ MPUIntRegister(void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-MPUIntUnregister(void)
-{
-    //
-    // Disable the interrupt.
-    //
-    IntDisable(FAULT_MPU);
+void MPUIntUnregister(void) {
+  //
+  // Disable the interrupt.
+  //
+  IntDisable(FAULT_MPU);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(FAULT_MPU);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(FAULT_MPU);
 }
 
 //*****************************************************************************

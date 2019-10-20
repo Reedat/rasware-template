@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2005-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,7 +32,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
@@ -44,12 +44,13 @@
 //
 //*****************************************************************************
 
+#include "driverlib/systick.h"
+
+#include "driverlib/debug.h"
+#include "driverlib/interrupt.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
-#include "driverlib/debug.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/systick.h"
 
 //*****************************************************************************
 //
@@ -69,13 +70,11 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-SysTickEnable(void)
-{
-    //
-    // Enable SysTick.
-    //
-    HWREG(NVIC_ST_CTRL) |= NVIC_ST_CTRL_CLK_SRC | NVIC_ST_CTRL_ENABLE;
+void SysTickEnable(void) {
+  //
+  // Enable SysTick.
+  //
+  HWREG(NVIC_ST_CTRL) |= NVIC_ST_CTRL_CLK_SRC | NVIC_ST_CTRL_ENABLE;
 }
 
 //*****************************************************************************
@@ -88,13 +87,11 @@ SysTickEnable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysTickDisable(void)
-{
-    //
-    // Disable SysTick.
-    //
-    HWREG(NVIC_ST_CTRL) &= ~(NVIC_ST_CTRL_ENABLE);
+void SysTickDisable(void) {
+  //
+  // Disable SysTick.
+  //
+  HWREG(NVIC_ST_CTRL) &= ~(NVIC_ST_CTRL_ENABLE);
 }
 
 //*****************************************************************************
@@ -113,18 +110,16 @@ SysTickDisable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysTickIntRegister(void (*pfnHandler)(void))
-{
-    //
-    // Register the interrupt handler, returning an error if an error occurs.
-    //
-    IntRegister(FAULT_SYSTICK, pfnHandler);
+void SysTickIntRegister(void (*pfnHandler)(void)) {
+  //
+  // Register the interrupt handler, returning an error if an error occurs.
+  //
+  IntRegister(FAULT_SYSTICK, pfnHandler);
 
-    //
-    // Enable the SysTick interrupt.
-    //
-    HWREG(NVIC_ST_CTRL) |= NVIC_ST_CTRL_INTEN;
+  //
+  // Enable the SysTick interrupt.
+  //
+  HWREG(NVIC_ST_CTRL) |= NVIC_ST_CTRL_INTEN;
 }
 
 //*****************************************************************************
@@ -140,18 +135,16 @@ SysTickIntRegister(void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-SysTickIntUnregister(void)
-{
-    //
-    // Disable the SysTick interrupt.
-    //
-    HWREG(NVIC_ST_CTRL) &= ~(NVIC_ST_CTRL_INTEN);
+void SysTickIntUnregister(void) {
+  //
+  // Disable the SysTick interrupt.
+  //
+  HWREG(NVIC_ST_CTRL) &= ~(NVIC_ST_CTRL_INTEN);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(FAULT_SYSTICK);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(FAULT_SYSTICK);
 }
 
 //*****************************************************************************
@@ -168,13 +161,11 @@ SysTickIntUnregister(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysTickIntEnable(void)
-{
-    //
-    // Enable the SysTick interrupt.
-    //
-    HWREG(NVIC_ST_CTRL) |= NVIC_ST_CTRL_INTEN;
+void SysTickIntEnable(void) {
+  //
+  // Enable the SysTick interrupt.
+  //
+  HWREG(NVIC_ST_CTRL) |= NVIC_ST_CTRL_INTEN;
 }
 
 //*****************************************************************************
@@ -187,13 +178,11 @@ SysTickIntEnable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysTickIntDisable(void)
-{
-    //
-    // Disable the SysTick interrupt.
-    //
-    HWREG(NVIC_ST_CTRL) &= ~(NVIC_ST_CTRL_INTEN);
+void SysTickIntDisable(void) {
+  //
+  // Disable the SysTick interrupt.
+  //
+  HWREG(NVIC_ST_CTRL) &= ~(NVIC_ST_CTRL_INTEN);
 }
 
 //*****************************************************************************
@@ -215,18 +204,16 @@ SysTickIntDisable(void)
 //! \return None.
 //
 //*****************************************************************************
-void
-SysTickPeriodSet(unsigned long ulPeriod)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT((ulPeriod > 0) && (ulPeriod <= 16777216));
+void SysTickPeriodSet(unsigned long ulPeriod) {
+  //
+  // Check the arguments.
+  //
+  ASSERT((ulPeriod > 0) && (ulPeriod <= 16777216));
 
-    //
-    // Set the period of the SysTick counter.
-    //
-    HWREG(NVIC_ST_RELOAD) = ulPeriod - 1;
+  //
+  // Set the period of the SysTick counter.
+  //
+  HWREG(NVIC_ST_RELOAD) = ulPeriod - 1;
 }
 
 //*****************************************************************************
@@ -239,13 +226,11 @@ SysTickPeriodSet(unsigned long ulPeriod)
 //! \return Returns the period of the SysTick counter.
 //
 //*****************************************************************************
-unsigned long
-SysTickPeriodGet(void)
-{
-    //
-    // Return the period of the SysTick counter.
-    //
-    return(HWREG(NVIC_ST_RELOAD) + 1);
+unsigned long SysTickPeriodGet(void) {
+  //
+  // Return the period of the SysTick counter.
+  //
+  return (HWREG(NVIC_ST_RELOAD) + 1);
 }
 
 //*****************************************************************************
@@ -258,13 +243,11 @@ SysTickPeriodGet(void)
 //! \return Returns the current value of the SysTick counter.
 //
 //*****************************************************************************
-unsigned long
-SysTickValueGet(void)
-{
-    //
-    // Return the current value of the SysTick counter.
-    //
-    return(HWREG(NVIC_ST_CURRENT));
+unsigned long SysTickValueGet(void) {
+  //
+  // Return the current value of the SysTick counter.
+  //
+  return (HWREG(NVIC_ST_CURRENT));
 }
 
 //*****************************************************************************

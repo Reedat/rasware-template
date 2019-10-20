@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,18 +32,19 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
 
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_fan.h"
-#include "inc/hw_ints.h"
 #include "driverlib/fan.h"
+
 #include "driverlib/debug.h"
 #include "driverlib/interrupt.h"
+#include "inc/hw_fan.h"
+#include "inc/hw_ints.h"
+#include "inc/hw_memmap.h"
+#include "inc/hw_types.h"
 
 //*****************************************************************************
 //
@@ -64,19 +65,17 @@
 //! \return None.
 //
 //*****************************************************************************
-void
-FanChannelEnable(unsigned long ulBase, unsigned long ulChannel)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(ulChannel < 6);
+void FanChannelEnable(unsigned long ulBase, unsigned long ulChannel) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(ulChannel < 6);
 
-    //
-    // Enable the requested channel
-    //
-    HWREG(ulBase + FAN_O_CTL) |= 1 << ulChannel;
+  //
+  // Enable the requested channel
+  //
+  HWREG(ulBase + FAN_O_CTL) |= 1 << ulChannel;
 }
 
 //*****************************************************************************
@@ -91,19 +90,17 @@ FanChannelEnable(unsigned long ulBase, unsigned long ulChannel)
 //! \return None.
 //
 //*****************************************************************************
-void
-FanChannelDisable(unsigned long ulBase, unsigned long ulChannel)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(ulChannel < 6);
+void FanChannelDisable(unsigned long ulBase, unsigned long ulChannel) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(ulChannel < 6);
 
-    //
-    // Disable the requested channel
-    //
-    HWREG(ulBase + FAN_O_CTL) &= ~(1 << ulChannel);
+  //
+  // Disable the requested channel
+  //
+  HWREG(ulBase + FAN_O_CTL) &= ~(1 << ulChannel);
 }
 
 //*****************************************************************************
@@ -124,19 +121,17 @@ FanChannelDisable(unsigned long ulBase, unsigned long ulChannel)
 //! \return Returns the status of the specified FAN channel.
 //
 //*****************************************************************************
-unsigned long
-FanChannelStatus(unsigned long ulBase, unsigned long ulChannel)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(ulChannel < 6);
+unsigned long FanChannelStatus(unsigned long ulBase, unsigned long ulChannel) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(ulChannel < 6);
 
-    //
-    // Read and return the status for the specified fan channel
-    //
-    return((HWREG(ulBase + FAN_O_STS) >> (ulChannel * 2)) & FAN_STS_ST0_M);
+  //
+  // Read and return the status for the specified fan channel
+  //
+  return ((HWREG(ulBase + FAN_O_STS) >> (ulChannel * 2)) & FAN_STS_ST0_M);
 }
 
 //*****************************************************************************
@@ -169,20 +164,18 @@ FanChannelStatus(unsigned long ulBase, unsigned long ulChannel)
 //! \return None.
 //
 //*****************************************************************************
-void
-FanChannelConfigManual(unsigned long ulBase, unsigned long ulChannel,
-                       unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(ulChannel < 6);
+void FanChannelConfigManual(unsigned long ulBase, unsigned long ulChannel,
+                            unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(ulChannel < 6);
 
-    //
-    // Program the fan channel for manual mode with parameters.
-    //
-    HWREG(ulBase + FAN_O_CH0 + (ulChannel * 0x10)) =  FAN_CH0_MAN | ulConfig;
+  //
+  // Program the fan channel for manual mode with parameters.
+  //
+  HWREG(ulBase + FAN_O_CH0 + (ulChannel * 0x10)) = FAN_CH0_MAN | ulConfig;
 }
 
 //*****************************************************************************
@@ -246,20 +239,18 @@ FanChannelConfigManual(unsigned long ulBase, unsigned long ulChannel,
 //! \return None.
 //
 //*****************************************************************************
-void
-FanChannelConfigAuto(unsigned long ulBase, unsigned long ulChannel,
-                     unsigned long ulConfig)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(ulChannel < 6);
+void FanChannelConfigAuto(unsigned long ulBase, unsigned long ulChannel,
+                          unsigned long ulConfig) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(ulChannel < 6);
 
-    //
-    // Program the fan channel for automatic mode with parameters.
-    //
-    HWREG(ulBase + FAN_O_CH0 + (ulChannel * 0x10)) = ~FAN_CH0_MAN & ulConfig;
+  //
+  // Program the fan channel for automatic mode with parameters.
+  //
+  HWREG(ulBase + FAN_O_CH0 + (ulChannel * 0x10)) = ~FAN_CH0_MAN & ulConfig;
 }
 
 //*****************************************************************************
@@ -277,22 +268,20 @@ FanChannelConfigAuto(unsigned long ulBase, unsigned long ulChannel,
 //! \return None.
 //
 //*****************************************************************************
-void
-FanChannelDutySet(unsigned long ulBase, unsigned long ulChannel,
-                  unsigned long ulDuty)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(ulChannel < 6);
-    ASSERT(ulDuty < 512);
+void FanChannelDutySet(unsigned long ulBase, unsigned long ulChannel,
+                       unsigned long ulDuty) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(ulChannel < 6);
+  ASSERT(ulDuty < 512);
 
-    //
-    // Program the specified duty cycle for the specified channel
-    //
-    HWREG(ulBase + FAN_O_CMD0 + (ulChannel * 0x10)) =
-            (ulDuty << FAN_CMD0_DC_S) & FAN_CMD0_DC_M;
+  //
+  // Program the specified duty cycle for the specified channel
+  //
+  HWREG(ulBase + FAN_O_CMD0 + (ulChannel * 0x10)) =
+      (ulDuty << FAN_CMD0_DC_S) & FAN_CMD0_DC_M;
 }
 
 //*****************************************************************************
@@ -311,28 +300,26 @@ FanChannelDutySet(unsigned long ulBase, unsigned long ulChannel,
 //! 0-511, out of a 512-clock PWM period.
 //
 //*****************************************************************************
-unsigned long
-FanChannelDutyGet(unsigned long ulBase, unsigned long ulChannel)
-{
-    unsigned long ulDuty;
+unsigned long FanChannelDutyGet(unsigned long ulBase, unsigned long ulChannel) {
+  unsigned long ulDuty;
 
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(ulChannel < 6);
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(ulChannel < 6);
 
-    //
-    // Read the duty cycle field from the command register and shift to
-    // lower bits for return value.
-    //
-    ulDuty = HWREG(ulBase + FAN_O_CMD0 + (ulChannel * 0x10)) & FAN_CMD0_DC_M;
-    ulDuty >>= FAN_CMD0_DC_S;
+  //
+  // Read the duty cycle field from the command register and shift to
+  // lower bits for return value.
+  //
+  ulDuty = HWREG(ulBase + FAN_O_CMD0 + (ulChannel * 0x10)) & FAN_CMD0_DC_M;
+  ulDuty >>= FAN_CMD0_DC_S;
 
-    //
-    // Return the duty cycle for the specified channel.
-    //
-    return(ulDuty);
+  //
+  // Return the duty cycle for the specified channel.
+  //
+  return (ulDuty);
 }
 
 //*****************************************************************************
@@ -350,21 +337,19 @@ FanChannelDutyGet(unsigned long ulBase, unsigned long ulChannel)
 //! \return None.
 //
 //*****************************************************************************
-void
-FanChannelRPMSet(unsigned long ulBase, unsigned long ulChannel,
-                 unsigned long ulRPM)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(ulChannel < 6);
-    ASSERT(ulRPM < 8192);
+void FanChannelRPMSet(unsigned long ulBase, unsigned long ulChannel,
+                      unsigned long ulRPM) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(ulChannel < 6);
+  ASSERT(ulRPM < 8192);
 
-    //
-    // Program the specified RPM for the specified channel
-    //
-    HWREG(ulBase + FAN_O_CMD0 + (ulChannel * 0x10)) = ulRPM;
+  //
+  // Program the specified RPM for the specified channel
+  //
+  HWREG(ulBase + FAN_O_CMD0 + (ulChannel * 0x10)) = ulRPM;
 }
 
 //*****************************************************************************
@@ -379,20 +364,17 @@ FanChannelRPMSet(unsigned long ulBase, unsigned long ulChannel,
 //! \return Returns the FAN channel RPM as a number from 0-4095.
 //
 //*****************************************************************************
-unsigned long
-FanChannelRPMGet(unsigned long ulBase, unsigned long ulChannel)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(ulChannel < 6);
+unsigned long FanChannelRPMGet(unsigned long ulBase, unsigned long ulChannel) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(ulChannel < 6);
 
-
-    //
-    // Read and return the RPM for the specified channel.
-    //
-    return(HWREG(ulBase + FAN_O_CST0 + (ulChannel * 0x10)) & FAN_CST0_RPM_M);
+  //
+  // Read and return the RPM for the specified channel.
+  //
+  return (HWREG(ulBase + FAN_O_CST0 + (ulChannel * 0x10)) & FAN_CST0_RPM_M);
 }
 
 //*****************************************************************************
@@ -433,18 +415,16 @@ FanChannelRPMGet(unsigned long ulBase, unsigned long ulChannel)
 //! \return None.
 //
 //*****************************************************************************
-void
-FanIntEnable(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
+void FanIntEnable(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
 
-    //
-    // Enable the requested interrupt sources.
-    //
-    HWREG(ulBase + FAN_O_IM) |= ulFlags;
+  //
+  // Enable the requested interrupt sources.
+  //
+  HWREG(ulBase + FAN_O_IM) |= ulFlags;
 }
 
 //*****************************************************************************
@@ -462,18 +442,16 @@ FanIntEnable(unsigned long ulBase, unsigned long ulFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-FanIntDisable(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
+void FanIntDisable(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
 
-    //
-    // Disable the requested interrupt sources.
-    //
-    HWREG(ulBase + FAN_O_IM) &= ~ulFlags;
+  //
+  // Disable the requested interrupt sources.
+  //
+  HWREG(ulBase + FAN_O_IM) &= ~ulFlags;
 }
 
 //*****************************************************************************
@@ -492,26 +470,21 @@ FanIntDisable(unsigned long ulBase, unsigned long ulFlags)
 //! flags, refer to the documentation for the function FanIntEnable().
 //
 //*****************************************************************************
-unsigned long
-FanIntStatus(unsigned long ulBase, tBoolean bMasked)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
+unsigned long FanIntStatus(unsigned long ulBase, tBoolean bMasked) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
 
-    //
-    // Return either the interrupt status or the raw interrupt status as
-    // requested.
-    //
-    if(bMasked)
-    {
-        return(HWREG(ulBase + FAN_O_MIS));
-    }
-    else
-    {
-        return(HWREG(ulBase + FAN_O_RIS));
-    }
+  //
+  // Return either the interrupt status or the raw interrupt status as
+  // requested.
+  //
+  if (bMasked) {
+    return (HWREG(ulBase + FAN_O_MIS));
+  } else {
+    return (HWREG(ulBase + FAN_O_RIS));
+  }
 }
 
 //*****************************************************************************
@@ -529,18 +502,16 @@ FanIntStatus(unsigned long ulBase, tBoolean bMasked)
 //! \return None.
 //
 //*****************************************************************************
-void
-FanIntClear(unsigned long ulBase, unsigned long ulFlags)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
+void FanIntClear(unsigned long ulBase, unsigned long ulFlags) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
 
-    //
-    // Clear the requested pending interrupts
-    //
-    HWREG(ulBase + FAN_O_IC) = ulFlags;
+  //
+  // Clear the requested pending interrupts
+  //
+  HWREG(ulBase + FAN_O_IC) = ulFlags;
 }
 
 //*****************************************************************************
@@ -561,24 +532,22 @@ FanIntClear(unsigned long ulBase, unsigned long ulFlags)
 //! \return None.
 //
 //*****************************************************************************
-void
-FanIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
-    ASSERT(pfnHandler);
+void FanIntRegister(unsigned long ulBase, void (*pfnHandler)(void)) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
+  ASSERT(pfnHandler);
 
-    //
-    // Register the interrupt handler.
-    //
-    IntRegister(INT_FAN0, pfnHandler);
+  //
+  // Register the interrupt handler.
+  //
+  IntRegister(INT_FAN0, pfnHandler);
 
-    //
-    // Enable the FAN peripheral interrupt.
-    //
-    IntEnable(INT_FAN0);
+  //
+  // Enable the FAN peripheral interrupt.
+  //
+  IntEnable(INT_FAN0);
 }
 
 //*****************************************************************************
@@ -596,23 +565,21 @@ FanIntRegister(unsigned long ulBase, void (*pfnHandler)(void))
 //! \return None.
 //
 //*****************************************************************************
-void
-FanIntUnregister(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
+void FanIntUnregister(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
 
-    //
-    // Disable the FAN peripheral interrupt.
-    //
-    IntDisable(INT_FAN0);
+  //
+  // Disable the FAN peripheral interrupt.
+  //
+  IntDisable(INT_FAN0);
 
-    //
-    // Unregister the interrupt handler.
-    //
-    IntUnregister(INT_FAN0);
+  //
+  // Unregister the interrupt handler.
+  //
+  IntUnregister(INT_FAN0);
 }
 
 //*****************************************************************************
@@ -627,18 +594,16 @@ FanIntUnregister(unsigned long ulBase)
 //! \return Returns the number of FAN channels.
 //
 //*****************************************************************************
-unsigned long
-FanChannelsGet(unsigned long ulBase)
-{
-    //
-    // Check the arguments.
-    //
-    ASSERT(ulBase == FAN0_BASE);
+unsigned long FanChannelsGet(unsigned long ulBase) {
+  //
+  // Check the arguments.
+  //
+  ASSERT(ulBase == FAN0_BASE);
 
-    //
-    // Read and return the fan channel count
-    //
-    return(HWREG(ulBase + FAN_O_PP) & FAN_PP_CHAN_M);
+  //
+  // Read and return the fan channel count
+  //
+  return (HWREG(ulBase + FAN_O_PP) & FAN_PP_CHAN_M);
 }
 
 //*****************************************************************************
