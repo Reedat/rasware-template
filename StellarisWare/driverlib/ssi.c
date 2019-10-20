@@ -448,7 +448,7 @@ unsigned long SSIIntStatus(unsigned long ulBase, tBoolean bMasked) {
   if (bMasked) {
     return (HWREG(ulBase + SSI_O_MIS));
   }
-    return (HWREG(ulBase + SSI_O_RIS));
+  return (HWREG(ulBase + SSI_O_RIS));
 }
 
 //*****************************************************************************
@@ -565,7 +565,7 @@ long SSIDataPutNonBlocking(unsigned long ulBase, unsigned long ulData) {
     HWREG(ulBase + SSI_O_DR) = ulData;
     return (1);
   }
-    return (0);
+  return (0);
 }
 
 //*****************************************************************************
@@ -647,7 +647,7 @@ long SSIDataGetNonBlocking(unsigned long ulBase, unsigned long *pulData) {
     *pulData = HWREG(ulBase + SSI_O_DR);
     return (1);
   }
-    return (0);
+  return (0);
 }
 
 //*****************************************************************************

@@ -1097,7 +1097,7 @@ unsigned long HibernateIntStatus(tBoolean bMasked) {
   if (bMasked == true) {
     return (HWREG(HIB_MIS) & 0x1f);
   }
-    return (HWREG(HIB_RIS) & 0x1f);
+  return (HWREG(HIB_RIS) & 0x1f);
 }
 
 //*****************************************************************************

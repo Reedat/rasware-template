@@ -922,10 +922,10 @@ unsigned long uDMAChannelSizeGet(unsigned long ulChannelStructIndex) {
   // not all the items have been transferred.
   //
 
-    //
-    // Shift the size field and add one, then return to user.
-    //
-    return ((ulControl >> 4) + 1);
+  //
+  // Shift the size field and add one, then return to user.
+  //
+  return ((ulControl >> 4) + 1);
 }
 
 //*****************************************************************************

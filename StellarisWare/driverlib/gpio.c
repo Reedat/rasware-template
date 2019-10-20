@@ -669,7 +669,7 @@ long GPIOPinIntStatus(unsigned long ulPort, tBoolean bMasked) {
   if (bMasked) {
     return (HWREG(ulPort + GPIO_O_MIS));
   }
-    return (HWREG(ulPort + GPIO_O_RIS));
+  return (HWREG(ulPort + GPIO_O_RIS));
 }
 
 //*****************************************************************************

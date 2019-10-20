@@ -216,7 +216,7 @@ unsigned long EEPROMInit(void) {
     if (ulStatus & (EEPROM_EESUPP_PRETRY | EEPROM_EESUPP_ERETRY)) {
       return (EEPROM_INIT_ERROR);
     }
-      return (EEPROM_INIT_RETRY);
+    return (EEPROM_INIT_RETRY);
   }
 
   //
@@ -998,17 +998,16 @@ unsigned long EEPROMIntStatus(tBoolean bMasked) {
     return ((HWREG(FLASH_FCMISC) & FLASH_FCMISC_EMISC) ? EEPROM_INT_PROGRAM
                                                        : 0);
   }
-    //
-    // If asked for the unmasked interrupt status, infer that an interrupt
-    // is pending if the WORKING bit of the EEDONE register is clear.  The
-    // actual interrupt fires on the high to low transition of this bit
-    // but we don't have access to an unmasked interrupt status for the
-    // EEPROM because it's handled via the flash controller so we have to
-    // make do with this instead.
-    //
-    return ((HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
-                ? 0
-                : EEPROM_INT_PROGRAM);
+  //
+  // If asked for the unmasked interrupt status, infer that an interrupt
+  // is pending if the WORKING bit of the EEDONE register is clear.  The
+  // actual interrupt fires on the high to low transition of this bit
+  // but we don't have access to an unmasked interrupt status for the
+  // EEPROM because it's handled via the flash controller so we have to
+  // make do with this instead.
+  //
+  return ((HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING) ? 0
+                                                         : EEPROM_INT_PROGRAM);
 }
 
 //*****************************************************************************

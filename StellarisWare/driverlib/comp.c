@@ -206,7 +206,7 @@ tBoolean ComparatorValueGet(unsigned long ulBase, unsigned long ulComp) {
   if (HWREG(ulBase + (ulComp * 0x20) + COMP_O_ACSTAT0) & COMP_ACSTAT0_OVAL) {
     return (true);
   }
-    return (false);
+  return (false);
 }
 
 //*****************************************************************************
@@ -378,7 +378,7 @@ tBoolean ComparatorIntStatus(unsigned long ulBase, unsigned long ulComp,
   if (bMasked) {
     return (((HWREG(ulBase + COMP_O_ACMIS) >> ulComp) & 1) ? true : false);
   }
-    return (((HWREG(ulBase + COMP_O_ACRIS) >> ulComp) & 1) ? true : false);
+  return (((HWREG(ulBase + COMP_O_ACRIS) >> ulComp) & 1) ? true : false);
 }
 
 //*****************************************************************************

@@ -331,10 +331,10 @@ unsigned long PWMGenPeriodGet(unsigned long ulBase, unsigned long ulGen) {
     //
     return (HWREG(ulGen + PWM_O_X_LOAD) * 2);
   }
-    //
-    // The period is the reload register value plus one.
-    //
-    return (HWREG(ulGen + PWM_O_X_LOAD) + 1);
+  //
+  // The period is the reload register value plus one.
+  //
+  return (HWREG(ulGen + PWM_O_X_LOAD) + 1);
 }
 
 //*****************************************************************************
@@ -1233,7 +1233,7 @@ unsigned long PWMGenIntStatus(unsigned long ulBase, unsigned long ulGen,
   if (bMasked == true) {
     return (HWREG(ulGen + PWM_O_X_ISC));
   }
-    return (HWREG(ulGen + PWM_O_X_RIS));
+  return (HWREG(ulGen + PWM_O_X_RIS));
 }
 
 //*****************************************************************************
@@ -1411,7 +1411,7 @@ unsigned long PWMIntStatus(unsigned long ulBase, tBoolean bMasked) {
   if (bMasked == true) {
     return (HWREG(ulBase + PWM_O_ISC));
   }
-    return (HWREG(ulBase + PWM_O_RIS));
+  return (HWREG(ulBase + PWM_O_RIS));
 }
 
 //*****************************************************************************
@@ -1623,7 +1623,7 @@ unsigned long PWMGenFaultTriggerGet(unsigned long ulBase, unsigned long ulGen,
   if (ulGroup == PWM_FAULT_GROUP_0) {
     return (HWREG(PWM_GEN_BADDR(ulBase, ulGen) + PWM_O_X_FLTSRC0));
   }
-    return (HWREG(PWM_GEN_BADDR(ulBase, ulGen) + PWM_O_X_FLTSRC1));
+  return (HWREG(PWM_GEN_BADDR(ulBase, ulGen) + PWM_O_X_FLTSRC1));
 }
 
 //*****************************************************************************
@@ -1675,7 +1675,7 @@ unsigned long PWMGenFaultStatus(unsigned long ulBase, unsigned long ulGen,
   if (ulGroup == PWM_FAULT_GROUP_0) {
     return (HWREG(PWM_GEN_EXT_BADDR(ulBase, ulGen) + PWM_O_X_FLTSTAT0));
   }
-    return (HWREG(PWM_GEN_EXT_BADDR(ulBase, ulGen) + PWM_O_X_FLTSTAT1));
+  return (HWREG(PWM_GEN_EXT_BADDR(ulBase, ulGen) + PWM_O_X_FLTSTAT1));
 }
 
 //*****************************************************************************

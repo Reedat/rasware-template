@@ -408,7 +408,7 @@ tBoolean SysCtlPinPresent(unsigned long ulPin) {
   if (HWREG(SYSCTL_DC3) & ulPin) {
     return (true);
   }
-    return (false);
+  return (false);
 }
 
 //*****************************************************************************
@@ -476,7 +476,7 @@ tBoolean SysCtlPeripheralPresent(unsigned long ulPeripheral) {
     if (HWREG(SYSCTL_DC6) & SYSCTL_DC6_USB0_M) {
       return (true);
     }
-      return (false);
+    return (false);
 
   } else if (HWREG(g_pulDCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &
              SYSCTL_PERIPH_MASK(ulPeripheral)) {
@@ -1397,7 +1397,7 @@ unsigned long SysCtlIntStatus(tBoolean bMasked) {
   if (bMasked) {
     return (HWREG(SYSCTL_MISC));
   }
-    return (HWREG(SYSCTL_RIS));
+  return (HWREG(SYSCTL_RIS));
 }
 
 //*****************************************************************************
@@ -2426,10 +2426,10 @@ unsigned long SysCtlPWMClockGet(void) {
     //
     return (SYSCTL_PWMDIV_1);
   }
-    //
-    // The divider is active so directly return the masked register value.
-    //
-    return (HWREG(SYSCTL_RCC) & (SYSCTL_RCC_USEPWMDIV | SYSCTL_RCC_PWMDIV_M));
+  //
+  // The divider is active so directly return the masked register value.
+  //
+  return (HWREG(SYSCTL_RCC) & (SYSCTL_RCC_USEPWMDIV | SYSCTL_RCC_PWMDIV_M));
 }
 
 //*****************************************************************************

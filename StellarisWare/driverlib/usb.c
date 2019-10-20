@@ -3020,10 +3020,10 @@ unsigned long USBHostAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
     //
     return (HWREGB(ulBase + USB_O_TXFUNCADDR0 + (ulEndpoint >> 1)));
   }
-    //
-    // Return this endpoint's receive address.
-    //
-    return (HWREGB(ulBase + USB_O_TXFUNCADDR0 + 4 + (ulEndpoint >> 1)));
+  //
+  // Return this endpoint's receive address.
+  //
+  return (HWREGB(ulBase + USB_O_TXFUNCADDR0 + 4 + (ulEndpoint >> 1)));
 }
 
 //*****************************************************************************
@@ -3135,10 +3135,10 @@ unsigned long USBHostHubAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
     //
     return (HWREGB(ulBase + USB_O_TXHUBADDR0 + (ulEndpoint >> 1)));
   }
-    //
-    // Return the hub receive address for this endpoint.
-    //
-    return (HWREGB(ulBase + USB_O_TXHUBADDR0 + 4 + (ulEndpoint >> 1)));
+  //
+  // Return the hub receive address for this endpoint.
+  //
+  return (HWREGB(ulBase + USB_O_TXHUBADDR0 + 4 + (ulEndpoint >> 1)));
 }
 
 //*****************************************************************************

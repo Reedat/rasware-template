@@ -203,7 +203,7 @@ long I2STxDataPutNonBlocking(unsigned long ulBase, unsigned long ulData) {
     HWREG(ulBase + I2S_O_TXFIFO) = ulData;
     return (1);
   }
-    return (0);
+  return (0);
 }
 
 //*****************************************************************************
@@ -521,7 +521,7 @@ long I2SRxDataGetNonBlocking(unsigned long ulBase, unsigned long *pulData) {
     *pulData = HWREG(ulBase + I2S_O_RXFIFO);
     return (1);
   }
-    return (0);
+  return (0);
 }
 
 //*****************************************************************************
@@ -957,7 +957,7 @@ unsigned long I2SIntStatus(unsigned long ulBase, tBoolean bMasked) {
   if (bMasked) {
     return (HWREG(ulBase + I2S_O_MIS));
   }
-    return (HWREG(ulBase + I2S_O_RIS));
+  return (HWREG(ulBase + I2S_O_RIS));
 }
 
 //*****************************************************************************

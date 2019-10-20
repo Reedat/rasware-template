@@ -814,7 +814,7 @@ unsigned long FlashIntStatus(tBoolean bMasked) {
   if (bMasked) {
     return (HWREG(FLASH_FCMISC));
   }
-    return (HWREG(FLASH_FCRIS));
+  return (HWREG(FLASH_FCRIS));
 }
 
 //*****************************************************************************

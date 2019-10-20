@@ -141,9 +141,9 @@ unsigned char fGetc(tUART *module) {
     }
     return tmp;
   }
-    tmp = module->ungotten;
-    module->ungotten = 0;
-    return tmp;
+  tmp = module->ungotten;
+  module->ungotten = 0;
+  return tmp;
 }
 
 unsigned char Getc(void) { return fGetc(&uartModules[0]); }

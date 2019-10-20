@@ -1078,10 +1078,10 @@ long UARTCharGetNonBlocking(unsigned long ulBase) {
     //
     return (HWREG(ulBase + UART_O_DR));
   }
-    //
-    // There are no characters, so return a failure.
-    //
-    return (-1);
+  //
+  // There are no characters, so return a failure.
+  //
+  return (-1);
 }
 
 //*****************************************************************************
@@ -1157,10 +1157,10 @@ tBoolean UARTCharPutNonBlocking(unsigned long ulBase, unsigned char ucData) {
     //
     return (true);
   }
-    //
-    // There is no space in the transmit FIFO, so return a failure.
-    //
-    return (false);
+  //
+  // There is no space in the transmit FIFO, so return a failure.
+  //
+  return (false);
 }
 
 //*****************************************************************************
@@ -1434,7 +1434,7 @@ unsigned long UARTIntStatus(unsigned long ulBase, tBoolean bMasked) {
   if (bMasked) {
     return (HWREG(ulBase + UART_O_MIS));
   }
-    return (HWREG(ulBase + UART_O_RIS));
+  return (HWREG(ulBase + UART_O_RIS));
 }
 
 //*****************************************************************************

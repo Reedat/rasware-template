@@ -190,7 +190,7 @@ unsigned long SysExcIntStatus(tBoolean bMasked) {
   if (bMasked) {
     return (HWREG(SYSEXC_MIS));
   }
-    return (HWREG(SYSEXC_RIS));
+  return (HWREG(SYSEXC_RIS));
 }
 
 //*****************************************************************************

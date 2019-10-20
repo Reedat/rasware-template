@@ -767,7 +767,7 @@ unsigned long PECIIntStatus(unsigned long ulBase, tBoolean bMasked) {
   if (bMasked) {
     return (HWREG(ulBase + PECI_O_MIS));
   }
-    return (HWREG(ulBase + PECI_O_RIS));
+  return (HWREG(ulBase + PECI_O_RIS));
 }
 
 //*****************************************************************************
