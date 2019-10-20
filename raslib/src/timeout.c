@@ -61,7 +61,9 @@ int CallOnTimeout(tCallback callback, void *data, float s) {
 
 int CallOnTimeoutUS(tCallback callback, void *data, tTime us) {
   int timeoutNum = numTimeoutsAllocated;
-  if (timeoutNum >= TIMEOUT_COUNT) return 0;
+  if (timeoutNum >= TIMEOUT_COUNT) {
+    return 0;
+  }
   ++numTimeoutsAllocated;
   timeouts[timeoutNum].data = data;
   timeouts[timeoutNum].toCall = callback;
@@ -80,9 +82,10 @@ int CallOnTimeoutUS(tCallback callback, void *data, tTime us) {
 }
 
 void TimeoutReset(int timeoutid) {
-  if (timeoutid > 0 && timeoutid - 1 < numTimeoutsAllocated)
+  if (timeoutid > 0 && timeoutid - 1 < numTimeoutsAllocated) {
     WatchdogReloadSet(timeouts[timeoutid - 1].baseR,
                       timeouts[timeoutid - 1].timeout);
+  }
 }
 
 void TimeoutStop(int timeoutid) {

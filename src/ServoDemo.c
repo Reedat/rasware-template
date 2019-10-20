@@ -36,16 +36,16 @@ void servoDemo(void) {
   while (ch != newline) {
     switch (ch) {
       case 'w':
-        position += 0.01f;
+        position += 0.01F;
         break;
       case 's':
-        position -= 0.01f;
+        position -= 0.01F;
         break;
       case 'a':
-        position += 0.10f;
+        position += 0.10F;
         break;
       case 'd':
-        position -= 0.10f;
+        position -= 0.10F;
         break;
       default:
         position = position;
@@ -53,10 +53,10 @@ void servoDemo(void) {
 
     // bounds checking (done in SetServo, but also useful to bound it here for
     // the demo)
-    if (position > 1.0f) {
-      position = 1.0f;
-    } else if (position < 0.0f) {
-      position = 0.0f;
+    if (position > 1.0F) {
+      position = 1.0F;
+    } else if (position < 0.0F) {
+      position = 0.0F;
     }
 
     SetServo(servo, position);

@@ -297,7 +297,8 @@ long FlashProgram(unsigned long *pulData, unsigned long ulAddress,
 //
 //*****************************************************************************
 tFlashProtection FlashProtectGet(unsigned long ulAddress) {
-  unsigned long ulFMPRE, ulFMPPE;
+  unsigned long ulFMPRE;
+  unsigned long ulFMPPE;
   unsigned long ulBank;
 
   //
@@ -390,7 +391,8 @@ tFlashProtection FlashProtectGet(unsigned long ulAddress) {
 //
 //*****************************************************************************
 long FlashProtectSet(unsigned long ulAddress, tFlashProtection eProtect) {
-  unsigned long ulProtectRE, ulProtectPE;
+  unsigned long ulProtectRE;
+  unsigned long ulProtectPE;
   unsigned long ulBank;
 
   //
@@ -536,7 +538,8 @@ long FlashProtectSet(unsigned long ulAddress, tFlashProtection eProtect) {
 //
 //*****************************************************************************
 long FlashProtectSave(void) {
-  unsigned long ulTemp, ulLimit;
+  unsigned long ulTemp;
+  unsigned long ulLimit;
 
   //
   // If running on a Sandstorm-class device, only trigger a save of the first
@@ -810,9 +813,8 @@ unsigned long FlashIntStatus(tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(FLASH_FCMISC));
-  } else {
-    return (HWREG(FLASH_FCRIS));
   }
+    return (HWREG(FLASH_FCRIS));
 }
 
 //*****************************************************************************

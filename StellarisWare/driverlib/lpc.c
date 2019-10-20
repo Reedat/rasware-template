@@ -617,9 +617,8 @@ unsigned long LPCIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(ulBase + LPC_O_MIS));
-  } else {
-    return (HWREG(ulBase + LPC_O_RIS));
   }
+    return (HWREG(ulBase + LPC_O_RIS));
 }
 
 //*****************************************************************************

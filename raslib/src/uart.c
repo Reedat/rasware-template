@@ -121,10 +121,10 @@ void InitializeUART(int baud) {
   hack_offset = false;
 }
 
-static tBoolean DoubleTest(int, ...);
+static tBoolean DoubleTest(int /*eh*/, ...);
 void InitializeDoublePrintHack(void) {
   // Just try the offset and see if its wrong
-  hack_offset ^= !DoubleTest(1, 1.0f);
+  hack_offset ^= !DoubleTest(1, 1.0F);
 }
 
 void fPutc(tUART *module, char ch) { UARTCharPut(module->base, ch); }
@@ -136,13 +136,14 @@ unsigned char fGetc(tUART *module) {
   unsigned char tmp;
   if (module->ungotten == 0) {
     tmp = UARTCharGet(module->base);
-    if (module->echo == true) fPutc(module, tmp);
+    if (module->echo == true) {
+      fPutc(module, tmp);
+    }
     return tmp;
-  } else {
+  }
     tmp = module->ungotten;
     module->ungotten = 0;
     return tmp;
-  }
 }
 
 unsigned char Getc(void) { return fGetc(&uartModules[0]); }
@@ -167,8 +168,11 @@ unsigned char whiteSpaceP(const char toCheck) {
 unsigned char matchCharP(const char toCheck, const char *possible,
                          const int len) {
   int i;
-  for (i = 0; i < len; i++)
-    if (toCheck == possible[i]) return true;
+  for (i = 0; i < len; i++) {
+    if (toCheck == possible[i]) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -176,14 +180,18 @@ unsigned int GetAToI(tUART *module) {
   unsigned char tmp;
   unsigned int toRet = 0;
   unsigned char negativeP = false;
-  if ((tmp = fGetc(module)) == '-')
+  if ((tmp = fGetc(module)) == '-') {
     negativeP = true;
-  else if (tmp != '+')
+  } else if (tmp != '+') {
     unGetC(module, tmp);
-  while (matchCharP((tmp = fGetc(module)), "0123456789", 10))
+  }
+  while (matchCharP((tmp = fGetc(module)), "0123456789", 10)) {
     toRet = (toRet * 10) + (tmp - '0');
+  }
   unGetC(module, tmp);
-  if (negativeP) toRet = -toRet;
+  if (negativeP) {
+    toRet = -toRet;
+  }
   return toRet;
 }
 
@@ -203,14 +211,18 @@ unsigned int GetOToI(tUART *module) {
   unsigned char tmp;
   unsigned int toRet = 0;
   unsigned char negativeP = false;
-  if ((tmp = fGetc(module)) == '-')
+  if ((tmp = fGetc(module)) == '-') {
     negativeP = true;
-  else if (tmp != '+')
+  } else if (tmp != '+') {
     unGetC(module, tmp);
-  while (matchCharP((tmp = fGetc(module)), "01234567", 8))
+  }
+  while (matchCharP((tmp = fGetc(module)), "01234567", 8)) {
     toRet = (toRet * 8) + (tmp - '0');
+  }
   unGetC(module, tmp);
-  if (negativeP) toRet = -toRet;
+  if (negativeP) {
+    toRet = -toRet;
+  }
   return toRet;
 }
 
@@ -218,11 +230,12 @@ unsigned int GetXToI(tUART *module) {
   unsigned char tmp;
   unsigned int toRet = 0;
   unsigned char negativeP = false;
-  if ((tmp = fGetc(module)) == '-')
+  if ((tmp = fGetc(module)) == '-') {
     negativeP = true;
-  else if (tmp != '+')
+  } else if (tmp != '+') {
     unGetC(module, tmp);
-  while (matchCharP((tmp = fGetc(module)), "0123456789abcdefABCDEF", 22))
+  }
+  while (matchCharP((tmp = fGetc(module)), "0123456789abcdefABCDEF", 22)) {
     switch (tmp) {
       case '0':
       case '1':
@@ -255,8 +268,11 @@ unsigned int GetXToI(tUART *module) {
       default:
         return 0;
     }
+  }
   unGetC(module, tmp);
-  if (negativeP) toRet = -toRet;
+  if (negativeP) {
+    toRet = -toRet;
+  }
   return toRet;
 }
 
@@ -274,8 +290,9 @@ unsigned int vScanf(tUART *module, const char *formatString, va_list ap) {
     switch (formatString[i]) {
       case ' ':
       case '\t':
-        while (whiteSpaceP((tmp = fGetc(module))))
+        while (whiteSpaceP((tmp = fGetc(module)))) {
           ;
+        }
         unGetC(module, tmp);
         break;
       case '%':
@@ -283,40 +300,50 @@ unsigned int vScanf(tUART *module, const char *formatString, va_list ap) {
       fmtTop:
         switch (formatString[++i]) {
           case '%':
-            if (fGetc(module) == '%')
+            if (fGetc(module) == '%') {
               break;
-            else
+            } else {
               goto exit;
+            }
           case 'c':
             *(va_arg(ap, char *)) = fGetc(module);
             break;
           case 's':
-            if (length == 0) length = (1 << 30);
+            if (length == 0) {
+              length = (1 << 30);
+            }
             s_ptr = va_arg(ap, char *);
-            while (!whiteSpaceP((*(s_ptr++) = fGetc(module))) && length-- > 0)
+            while (!whiteSpaceP((*(s_ptr++) = fGetc(module))) && length-- > 0) {
               ;
+            }
             unGetC(module, s_ptr[-1]);
             s_ptr[-1] = '\0';
             break;
           case '[':
-            if (length == 0) length = (1 << 30);
+            if (length == 0) {
+              length = (1 << 30);
+            }
             braket_ptr = &formatString[i + 1];
             s_ptr = va_arg(ap, char *);
-            while (formatString[++i] != ']' && formatString[i] != '\0')
+            while (formatString[++i] != ']' && formatString[i] != '\0') {
               ;
+            }
             braket_len = &formatString[i] - braket_ptr;
             if (*braket_ptr == '^') {
               braket_len--;
               braket_ptr++;
               while (!matchCharP((*(s_ptr++) = fGetc(module)), braket_ptr,
                                  braket_len) &&
-                     length-- > 0)
+                     length-- > 0) {
                 ;
-            } else
+              }
+            } else {
               while (matchCharP((*(s_ptr++) = fGetc(module)), braket_ptr,
                                 braket_len) &&
-                     length-- > 0)
+                     length-- > 0) {
                 ;
+              }
+            }
             unGetC(module, s_ptr[-1]);
             s_ptr[-1] = '\0';
             break;
@@ -324,14 +351,15 @@ unsigned int vScanf(tUART *module, const char *formatString, va_list ap) {
             tmp = fGetc(module);
             if (tmp == '0') {
               tmp = fGetc(module);
-              if (tmp == 'x')
+              if (tmp == 'x') {
                 goto hex;
-              else {
+              } else {
                 unGetC(module, tmp);
                 goto octal;
               }
-            } else
+            } else {
               goto decimal;
+            }
           case 'o':
           octal:
             i_ptr = va_arg(ap, unsigned int *);
@@ -384,7 +412,9 @@ unsigned int vScanf(tUART *module, const char *formatString, va_list ap) {
         break;
       default:
         tmp = fGetc(module);
-        if (tmp != formatString[i]) goto exit;
+        if (tmp != formatString[i]) {
+          goto exit;
+        }
     }
   }
 exit:
@@ -462,10 +492,11 @@ int fKeyWasPressed(tUART *module) { return (UARTCharsAvail(module->base) > 0); }
 
 // Unfortunately varargs wreaks havoc on how floating point is passed.
 // We get a 64bit double and have to decode it ourselves.
-#define va_d2f(args) DoubleFloat(&args.__ap)
+#define va_d2f(args) DoubleFloat(&(args).__ap)
 
 static float DoubleFloat(void **args) {
-  unsigned int a, b;
+  unsigned int a;
+  unsigned int b;
   int exp;
 
   union {
@@ -484,8 +515,12 @@ static float DoubleFloat(void **args) {
   }
 
   exp = (0x7ff & (a >> 20)) - 1023 + 127;
-  if (exp > 0xff) exp = 0xff;  // check range
-  if (exp < 0x00) exp = 0x00;
+  if (exp > 0xff) {
+    exp = 0xff;  // check range
+  }
+  if (exp < 0x00) {
+    exp = 0x00;
+  }
 
   num.i = 0x80000000 & a;                      // sign bit
   num.i |= 0x7f800000 & (exp << 23);           // exponent
@@ -531,7 +566,9 @@ static int SizeString(const char *buffer, int count) {
   int i;
 
   for (i = 0; i < count; i++) {
-    if (buffer[i] == '\0') return i;
+    if (buffer[i] == '\0') {
+      return i;
+    }
   }
 
   return count;
@@ -541,7 +578,9 @@ static void PutString(tUART *module, const char *buffer, int left, int width,
                       int prec) {
   int len;
 
-  if (prec < 0) prec = 0x7fffffff;
+  if (prec < 0) {
+    prec = 0x7fffffff;
+  }
 
   len = SizeString(buffer, prec);
 
@@ -570,7 +609,9 @@ static int SizeNum(int base, unsigned int n) {
 
 static void PutNum(tUART *module, const char *table, int base, int count,
                    unsigned int n) {
-  if (!n && count <= 0) return;
+  if (!n && count <= 0) {
+    return;
+  }
 
   PutNum(module, table, base, count - 1, n / base);
   fPutc(module, table[n % base]);
@@ -586,7 +627,9 @@ static void PutBase(tUART *module, unsigned int n, const char *table, int base,
     width--;
   }
 
-  if (width < 1) width = 1;
+  if (width < 1) {
+    width = 1;
+  }
 
   if (left) {
     PutNum(module, table, base, 1, n);
@@ -609,7 +652,9 @@ static void PutSigned(tUART *module, signed int d, int left, int sign,
 /** Floating point printing **/
 static void PutNormalFloat(tUART *module, float f, int left, int sign,
                            int width, int prec) {
-  if (prec < 0) prec = 6;
+  if (prec < 0) {
+    prec = 6;
+  }
 
   if (f < 0) {
     fPutc(module, '-');
@@ -642,7 +687,9 @@ static void PutNormalFloat(tUART *module, float f, int left, int sign,
 
 static void PutScienceFloat(tUART *module, float f, const char *table, int left,
                             int sign, int width, int prec) {
-  if (prec < 0) prec = 6;
+  if (prec < 0) {
+    prec = 6;
+  }
 
   if (f < 0) {
     fPutc(module, '-');
@@ -681,7 +728,10 @@ static void PutScienceFloat(tUART *module, float f, const char *table, int left,
 
 // And finally printf itself
 void vPrintf(tUART *module, const char *buffer, va_list args) {
-  int left, sign, width, prec;
+  int left;
+  int sign;
+  int width;
+  int prec;
 
   // Start the varargs processing.
 
@@ -784,7 +834,9 @@ void vPrintf(tUART *module, const char *buffer, va_list args) {
       }
     } else {
       // Print out the next character
-      if (*buffer == '\n') fPutc(module, '\r');
+      if (*buffer == '\n') {
+        fPutc(module, '\r');
+      }
 
       fPutc(module, *buffer++);
     }

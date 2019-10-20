@@ -419,7 +419,8 @@ void UARTConfigSetExpClk(unsigned long ulBase, unsigned long ulUARTClk,
 //*****************************************************************************
 void UARTConfigGetExpClk(unsigned long ulBase, unsigned long ulUARTClk,
                          unsigned long *pulBaud, unsigned long *pulConfig) {
-  unsigned long ulInt, ulFrac;
+  unsigned long ulInt;
+  unsigned long ulFrac;
 
   //
   // Check the arguments.
@@ -1076,12 +1077,11 @@ long UARTCharGetNonBlocking(unsigned long ulBase) {
     // Read and return the next character.
     //
     return (HWREG(ulBase + UART_O_DR));
-  } else {
+  }
     //
     // There are no characters, so return a failure.
     //
     return (-1);
-  }
 }
 
 //*****************************************************************************
@@ -1156,12 +1156,11 @@ tBoolean UARTCharPutNonBlocking(unsigned long ulBase, unsigned char ucData) {
     // Success.
     //
     return (true);
-  } else {
+  }
     //
     // There is no space in the transmit FIFO, so return a failure.
     //
     return (false);
-  }
 }
 
 //*****************************************************************************
@@ -1434,9 +1433,8 @@ unsigned long UARTIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(ulBase + UART_O_MIS));
-  } else {
-    return (HWREG(ulBase + UART_O_RIS));
   }
+    return (HWREG(ulBase + UART_O_RIS));
 }
 
 //*****************************************************************************

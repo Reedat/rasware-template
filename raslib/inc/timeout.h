@@ -62,7 +62,7 @@ int CallOnTimeout(tCallback callback, void *data, float s);
  * reschedules the callback function to be called after the programmed time from this function call
  * @param the id of the timeout to reschedule
  */
-void TimeoutReset(int timoutid);
+void TimeoutReset(int timeoutid);
 
 /**
  * stops the callback function from being called

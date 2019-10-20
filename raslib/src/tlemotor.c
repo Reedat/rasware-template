@@ -49,10 +49,14 @@ static int tleMotorCount = 0;
 // This function sets a motor speed
 static void SetTLEMotor(tTLEMotor *mtr, float input) {
   // Check the input range
-  if (input > 1 || input < -1) return;
+  if (input > 1 || input < -1) {
+    return;
+  }
 
   // invert if set
-  if (mtr->invert) input *= -1;
+  if (mtr->invert) {
+    input *= -1;
+  }
 
   // Operate the motor controller
   // Motor controller operation is specific
@@ -60,30 +64,30 @@ static void SetTLEMotor(tTLEMotor *mtr, float input) {
   if (mtr->brake) {
     if (input < 0) {
       // CCW (P, ~P)
-      SetPWM(mtr->pwm0, 1.0f + input, 0.0f);
-      SetPWM(mtr->pwm1, -input, 1.0f + input);
+      SetPWM(mtr->pwm0, 1.0F + input, 0.0F);
+      SetPWM(mtr->pwm1, -input, 1.0F + input);
     } else if (input > 0) {
       // CW (P, 0)
-      SetPWM(mtr->pwm0, 1.0f - input, 0.0f);
-      SetPWM(mtr->pwm1, 0.0f, 0.0f);
+      SetPWM(mtr->pwm0, 1.0F - input, 0.0F);
+      SetPWM(mtr->pwm1, 0.0F, 0.0F);
     } else {
       // S (1, 0)
-      SetPWM(mtr->pwm0, 1.0f, 0.0f);
-      SetPWM(mtr->pwm1, 0.0f, 0.0f);
+      SetPWM(mtr->pwm0, 1.0F, 0.0F);
+      SetPWM(mtr->pwm1, 0.0F, 0.0F);
     }
   } else {
     if (input < 0) {
       // CCW (P, 1)
-      SetPWM(mtr->pwm0, 1.0f + input, 0.0f);
-      SetPWM(mtr->pwm1, 1.0f, 0.0f);
+      SetPWM(mtr->pwm0, 1.0F + input, 0.0F);
+      SetPWM(mtr->pwm1, 1.0F, 0.0F);
     } else if (input > 0) {
       // CW (P, P)
-      SetPWM(mtr->pwm0, 1.0f - input, 0.0f);
-      SetPWM(mtr->pwm1, 1.0f - input, 0.0f);
+      SetPWM(mtr->pwm0, 1.0F - input, 0.0F);
+      SetPWM(mtr->pwm1, 1.0F - input, 0.0F);
     } else {
       // S (1, 1)
-      SetPWM(mtr->pwm0, 1.0f, 0.0f);
-      SetPWM(mtr->pwm1, 1.0f, 0.0f);
+      SetPWM(mtr->pwm0, 1.0F, 0.0F);
+      SetPWM(mtr->pwm1, 1.0F, 0.0F);
     }
   }
 }
@@ -100,8 +104,8 @@ tTLEMotor *_InitializeTLEMotor(tPin a, tPin b, tBoolean brake,
   mtr->invert = invert;
 
   // Initialize pwm on both pins
-  mtr->pwm0 = InitializePWM(a, 1600.0f);
-  mtr->pwm1 = InitializePWM(b, 1600.0f);
+  mtr->pwm0 = InitializePWM(a, 1600.0F);
+  mtr->pwm1 = InitializePWM(b, 1600.0F);
 
   // Set parent methods
   mtr->SetMotor = SetTLEMotor;

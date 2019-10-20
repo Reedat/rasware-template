@@ -80,7 +80,9 @@ void InitializeSystemTime(void) {
   // Reset queue and thread all tasks in the buffer together
   unusedQueue = &taskBuffer[0];
 
-  for (i = 0; i < TASK_COUNT - 1; i++) taskBuffer[i].next = &taskBuffer[i + 1];
+  for (i = 0; i < TASK_COUNT - 1; i++) {
+    taskBuffer[i].next = &taskBuffer[i + 1];
+  }
 
   taskBuffer[TASK_COUNT - 1].next = 0;
 
@@ -118,7 +120,8 @@ void InitializeSystemTime(void) {
 
 // Outputs system time in microseconds
 tTime GetTimeUS(void) {
-  tTime timing, systick;
+  tTime timing;
+  tTime systick;
 
   do {
     timing = systemTiming;
@@ -143,7 +146,9 @@ static void RegisterTask(tTask *task) {
   // Iterate through the queue until we find a
   // later task or hit the end
   for (p = &pendingQueue; *p; p = &(*p)->next) {
-    if ((*p)->target > task->target) break;
+    if ((*p)->target > task->target) {
+      break;
+    }
   }
 
   // Insert the task into the queue
@@ -156,7 +161,9 @@ static void SetNextTaskInt(tTime time) {
   tTime until;
 
   // Check to make sure there even is a task
-  if (!pendingQueue) return;
+  if (!pendingQueue) {
+    return;
+  }
 
   until = pendingQueue->target;
 
@@ -224,7 +231,9 @@ int CallInUS(tCallback callback, void *data, tTime us) {
   tTask *task;
 
   // Check if any tasks are available
-  if (!unusedQueue) return 0;
+  if (!unusedQueue) {
+    return 0;
+  }
 
   // Grab the next available task
   task = unusedQueue;
@@ -258,7 +267,9 @@ int CallEveryUS(tCallback callback, void *data, tTime us) {
   tTask *task;
 
   // Check if any tasks are available
-  if (!unusedQueue) return 0;
+  if (!unusedQueue) {
+    return 0;
+  }
 
   // Grab the next available task
   task = unusedQueue;
@@ -308,8 +319,9 @@ static void WaitHandler(int *flag) { *flag = 1; }
 void WaitUS(tTime us) {
   volatile int waitFlag = 0;
   CallInUS(WaitHandler, (void *)&waitFlag, us);
-  while (!waitFlag)
+  while (!waitFlag) {
     ;
+  }
 }
 
 void Wait(float s) { WaitUS(US(s)); }

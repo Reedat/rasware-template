@@ -257,7 +257,7 @@ unsigned long EthernetConfigGet(unsigned long ulBase) {
 //! \return None.
 //
 //*****************************************************************************
-void EthernetMACAddrSet(unsigned long ulBase, unsigned char *pucMACAddr) {
+void EthernetMACAddrSet(unsigned long ulBase, const unsigned char *pucMACAddr) {
   unsigned long ulTemp;
   unsigned char *pucTemp = (unsigned char *)&ulTemp;
 
@@ -523,7 +523,8 @@ tBoolean EthernetSpaceAvail(unsigned long ulBase) {
 static long EthernetPacketGetInternal(unsigned long ulBase,
                                       unsigned char *pucBuf, long lBufLen) {
   unsigned long ulTemp;
-  long lFrameLen, lTempLen;
+  long lFrameLen;
+  long lTempLen;
   long i = 0;
 
   //
@@ -732,7 +733,8 @@ long EthernetPacketGet(unsigned long ulBase, unsigned char *pucBuf,
 //
 //*****************************************************************************
 static long EthernetPacketPutInternal(unsigned long ulBase,
-                                      unsigned char *pucBuf, long lBufLen) {
+                                      const unsigned char *pucBuf,
+                                      long lBufLen) {
   unsigned long ulTemp;
   long i = 0;
 

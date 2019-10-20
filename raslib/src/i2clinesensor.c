@@ -120,19 +120,24 @@ static unsigned char I2CLineSensorRead(tI2CLineSensor *ls, float threshold) {
   if (!ls->in_callback && !ls->continous) {
     // Just call LineSensorBackgroundRead and busy wait
     I2CLineSensorBackgroundRead(ls, 0, 0);
-    while (ls->pending)
+    while (ls->pending) {
       ;
+    }
   }
 
   // Check for any errors
-  if (!I2CSuccess(ls->i2c)) return 0xff;
+  if (!I2CSuccess(ls->i2c)) {
+    return 0xff;
+  }
 
   // Stick to unsigned chars for efficiency
   thresh = (unsigned char)(0xff * threshold);
 
   // Calculate the byte and return it
   for (i = 0; i < 8; i++) {
-    if (ls->values[i] > thresh) output |= (1 << i);
+    if (ls->values[i] > thresh) {
+      output |= (1 << i);
+    }
   }
 
   return output;
@@ -149,13 +154,16 @@ static tBoolean I2CLineSensorReadArray(tI2CLineSensor *ls, float *array) {
   if (!ls->in_callback && !ls->continous) {
     // Just call LineSensorBackgroundRead and busy wait
     I2CLineSensorBackgroundRead(ls, 0, 0);
-    while (ls->pending)
+    while (ls->pending) {
       ;
+    }
   }
 
   // Check for any errors
   if (!I2CSuccess(ls->i2c)) {
-    for (i = 0; i < 8; i++) array[i] = INFINITY;
+    for (i = 0; i < 8; i++) {
+      array[i] = INFINITY;
+    }
 
     return false;
   }
@@ -190,12 +198,13 @@ static void I2CLineSensorReadContinuouslyUS(tI2CLineSensor *ls, tTime us) {
   // Check if there isn't enough time for the sensor to be read
   // NOTE: This is unknown at the time and may be calculatable
   // For now only a time of 0 will switch to the fast as possible solution
-  if (us <= 1)
+  if (us <= 1) {
     // If there isn't, read as fast as possible
     I2CLineSensorBackgroundRead(ls, ContinuousReadHandler, ls);
-  else
+  } else {
     // Otherwise just periodically call the single read handler
     CallEveryUS(SingleReadHandler, ls, us);
+  }
 }
 
 static void I2CLineSensorReadContinuously(tI2CLineSensor *ls, float s) {

@@ -812,7 +812,9 @@ void TimerLoadSet64(unsigned long ulBase, unsigned long long ullValue) {
 //
 //*****************************************************************************
 unsigned long long TimerLoadGet64(unsigned long ulBase) {
-  unsigned long ulHigh1, ulHigh2, ulLow;
+  unsigned long ulHigh1;
+  unsigned long ulHigh2;
+  unsigned long ulLow;
 
   //
   // Check the arguments.
@@ -882,7 +884,9 @@ unsigned long TimerValueGet(unsigned long ulBase, unsigned long ulTimer) {
 //
 //*****************************************************************************
 unsigned long long TimerValueGet64(unsigned long ulBase) {
-  unsigned long ulHigh1, ulHigh2, ulLow;
+  unsigned long ulHigh1;
+  unsigned long ulHigh2;
+  unsigned long ulLow;
 
   //
   // Check the arguments.
@@ -1028,7 +1032,9 @@ void TimerMatchSet64(unsigned long ulBase, unsigned long long ullValue) {
 //
 //*****************************************************************************
 unsigned long long TimerMatchGet64(unsigned long ulBase) {
-  unsigned long ulHigh1, ulHigh2, ulLow;
+  unsigned long ulHigh1;
+  unsigned long ulHigh2;
+  unsigned long ulLow;
 
   //
   // Check the arguments.

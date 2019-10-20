@@ -287,7 +287,8 @@ void GPIODirModeSet(unsigned long ulPort, unsigned char ucPins,
 //
 //*****************************************************************************
 unsigned long GPIODirModeGet(unsigned long ulPort, unsigned char ucPin) {
-  unsigned long ulDir, ulAFSEL;
+  unsigned long ulDir;
+  unsigned long ulAFSEL;
 
   //
   // Check the arguments.
@@ -393,7 +394,9 @@ void GPIOIntTypeSet(unsigned long ulPort, unsigned char ucPins,
 //
 //*****************************************************************************
 unsigned long GPIOIntTypeGet(unsigned long ulPort, unsigned char ucPin) {
-  unsigned long ulIBE, ulIS, ulIEV;
+  unsigned long ulIBE;
+  unsigned long ulIS;
+  unsigned long ulIEV;
 
   //
   // Check the arguments.
@@ -548,7 +551,8 @@ void GPIOPadConfigSet(unsigned long ulPort, unsigned char ucPins,
 //*****************************************************************************
 void GPIOPadConfigGet(unsigned long ulPort, unsigned char ucPin,
                       unsigned long *pulStrength, unsigned long *pulPinType) {
-  unsigned long ulPinType, ulStrength;
+  unsigned long ulPinType;
+  unsigned long ulStrength;
 
   //
   // Check the arguments.
@@ -664,9 +668,8 @@ long GPIOPinIntStatus(unsigned long ulPort, tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(ulPort + GPIO_O_MIS));
-  } else {
-    return (HWREG(ulPort + GPIO_O_RIS));
   }
+    return (HWREG(ulPort + GPIO_O_RIS));
 }
 
 //*****************************************************************************
@@ -1791,7 +1794,8 @@ void GPIOPinTypeUSBDigital(unsigned long ulPort, unsigned char ucPins) {
 //
 //*****************************************************************************
 void GPIOPinConfigure(unsigned long ulPinConfig) {
-  unsigned long ulBase, ulShift;
+  unsigned long ulBase;
+  unsigned long ulShift;
 
   //
   // Check the argument.

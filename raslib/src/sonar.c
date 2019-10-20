@@ -91,10 +91,11 @@ static void BeginSonarSequence(tSonar *snr);
 // Handler to the delay after full reads
 static void DelayHandler(tSonar *snr) {
   // Check if there is pending operation
-  if (snr->state == PENDING)
+  if (snr->state == PENDING) {
     BeginSonarSequence(snr);
-  else
+  } else {
     snr->state = READY;
+  }
 }
 
 // Function to start delaying after a full read
@@ -102,7 +103,9 @@ static void DelayHandler(tSonar *snr) {
 static void SonarDelay(tSonar *snr) {
   // If the state was changed previously
   // we leave it
-  if (snr->state == CALLBACK) snr->state = DELAY;
+  if (snr->state == CALLBACK) {
+    snr->state = DELAY;
+  }
 
   // Call the DelayHandler later
   CallInUS(DelayHandler, snr, SONAR_DELAY);
@@ -179,10 +182,11 @@ void SonarBackgroundRead(tSonar *snr, tCallback callback, void *data) {
   snr->data = data;
 
   // Begin the sonar sequence if we can
-  if (snr->state == READY)
+  if (snr->state == READY) {
     BeginSonarSequence(snr);
-  else if (snr->state == DELAY || snr->state == CALLBACK)
+  } else if (snr->state == DELAY || snr->state == CALLBACK) {
     snr->state = PENDING;
+  }
 }
 
 // This function returns the distance measured as a percentage of
@@ -194,8 +198,9 @@ float SonarRead(tSonar *snr) {
   if (snr->state != CALLBACK && !snr->continous) {
     // Just call background read and then busy wait
     SonarBackgroundRead(snr, 0, 0);
-    while (snr->state != DELAY && snr->state != READY)
+    while (snr->state != DELAY && snr->state != READY) {
       ;
+    }
   }
 
   // Return the most recent value
@@ -221,12 +226,13 @@ void SonarReadContinuouslyUS(tSonar *snr, tTime us) {
   snr->continous = true;
 
   // Check if there isn't enough time for the sensor to be read
-  if (us <= SONAR_TIMEOUT + SONAR_PULSE)
+  if (us <= SONAR_TIMEOUT + SONAR_PULSE) {
     // If there isn't, read as fast as possible
     SonarBackgroundRead(snr, ContinuousReadHandler, snr);
-  else
+  } else {
     // Otherwise just periodically call the single read handler
     CallEveryUS(SingleReadHandler, snr, us);
+  }
 }
 
 void SonarReadContinuously(tSonar *snr, float s) {

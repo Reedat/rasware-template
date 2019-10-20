@@ -407,9 +407,8 @@ tBoolean SysCtlPinPresent(unsigned long ulPin) {
   //
   if (HWREG(SYSCTL_DC3) & ulPin) {
     return (true);
-  } else {
-    return (false);
   }
+    return (false);
 }
 
 //*****************************************************************************
@@ -469,15 +468,16 @@ tBoolean SysCtlPeripheralPresent(unsigned long ulPeripheral) {
     //
     return (HWREGBITW(SYSCTL_PPBASE + ((ulPeripheral & 0xff00) >> 8),
                       ulPeripheral & 0xff));
-  } else if (ulPeripheral == SYSCTL_PERIPH_USB0) {
+  }
+  if (ulPeripheral == SYSCTL_PERIPH_USB0) {
     //
     // USB is a special case because the DC bit is missing for USB0.
     //
     if (HWREG(SYSCTL_DC6) & SYSCTL_DC6_USB0_M) {
       return (true);
-    } else {
-      return (false);
     }
+      return (false);
+
   } else if (HWREG(g_pulDCRegs[SYSCTL_PERIPH_INDEX(ulPeripheral)]) &
              SYSCTL_PERIPH_MASK(ulPeripheral)) {
     return (true);
@@ -1396,9 +1396,8 @@ unsigned long SysCtlIntStatus(tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(SYSCTL_MISC));
-  } else {
-    return (HWREG(SYSCTL_RIS));
   }
+    return (HWREG(SYSCTL_RIS));
 }
 
 //*****************************************************************************
@@ -1877,7 +1876,9 @@ tBoolean bNewPLL;
 //
 //*****************************************************************************
 void SysCtlClockSet(unsigned long ulConfig) {
-  unsigned long ulDelay, ulRCC, ulRCC2;
+  unsigned long ulDelay;
+  unsigned long ulRCC;
+  unsigned long ulRCC2;
 
   //
   // See if this is a Sandstorm-class device and clocking features from newer
@@ -2068,7 +2069,10 @@ void SysCtlClockSet(unsigned long ulConfig) {
 //
 //*****************************************************************************
 unsigned long SysCtlClockGet(void) {
-  unsigned long ulRCC, ulRCC2, ulPLL, ulClk;
+  unsigned long ulRCC;
+  unsigned long ulRCC2;
+  unsigned long ulPLL;
+  unsigned long ulClk;
   unsigned long ulPLL1;
 
   //
@@ -2421,12 +2425,11 @@ unsigned long SysCtlPWMClockGet(void) {
     // The divider is not active so reflect this in the value we return.
     //
     return (SYSCTL_PWMDIV_1);
-  } else {
+  }
     //
     // The divider is active so directly return the masked register value.
     //
     return (HWREG(SYSCTL_RCC) & (SYSCTL_RCC_USEPWMDIV | SYSCTL_RCC_PWMDIV_M));
-  }
 }
 
 //*****************************************************************************
@@ -2742,7 +2745,9 @@ void SysCtlUSBPLLDisable(void) {
 //*****************************************************************************
 unsigned long SysCtlI2SMClkSet(unsigned long ulInputClock,
                                unsigned long ulMClk) {
-  unsigned long ulDivInt, ulDivFrac, ulPLL;
+  unsigned long ulDivInt;
+  unsigned long ulDivFrac;
+  unsigned long ulPLL;
 
   //
   // See if the I2S MCLK should be disabled.

@@ -142,7 +142,8 @@ static tBoolean PECIDomainValid(unsigned long ulDomain) {
 void PECIConfigSet(unsigned long ulBase, unsigned long ulPECIClk,
                    unsigned long ulBaud, unsigned long ulPoll,
                    unsigned long ulOffset, unsigned long ulRetry) {
-  unsigned long ulTemp, ulDiv;
+  unsigned long ulTemp;
+  unsigned long ulDiv;
 
   //
   // Check the arguments.
@@ -385,8 +386,8 @@ void PECIDomainConfigGet(unsigned long ulBase, unsigned long ulDomain,
   // register.
   //
   ulTemp = HWREG(ulBase + PECI_O_M0D0C + (ulDomain * 4));
-  *pulHigh = ((ulTemp && PECI_M0D0C_HITHR_M) >> PECI_M0D0C_HITHR_S);
-  *pulLow = ((ulTemp && PECI_M0D0C_LOTHR_M) >> PECI_M0D0C_LOTHR_S);
+  *pulHigh = ((ulTemp & PECI_M0D0C_HITHR_M) >> PECI_M0D0C_HITHR_S);
+  *pulLow = ((ulTemp & PECI_M0D0C_LOTHR_M) >> PECI_M0D0C_LOTHR_S);
 }
 
 //*****************************************************************************
@@ -765,9 +766,8 @@ unsigned long PECIIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(ulBase + PECI_O_MIS));
-  } else {
-    return (HWREG(ulBase + PECI_O_RIS));
   }
+    return (HWREG(ulBase + PECI_O_RIS));
 }
 
 //*****************************************************************************

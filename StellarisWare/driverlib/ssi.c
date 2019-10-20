@@ -447,9 +447,8 @@ unsigned long SSIIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(ulBase + SSI_O_MIS));
-  } else {
-    return (HWREG(ulBase + SSI_O_RIS));
   }
+    return (HWREG(ulBase + SSI_O_RIS));
 }
 
 //*****************************************************************************
@@ -565,9 +564,8 @@ long SSIDataPutNonBlocking(unsigned long ulBase, unsigned long ulData) {
   if (HWREG(ulBase + SSI_O_SR) & SSI_SR_TNF) {
     HWREG(ulBase + SSI_O_DR) = ulData;
     return (1);
-  } else {
-    return (0);
   }
+    return (0);
 }
 
 //*****************************************************************************
@@ -648,9 +646,8 @@ long SSIDataGetNonBlocking(unsigned long ulBase, unsigned long *pulData) {
   if (HWREG(ulBase + SSI_O_SR) & SSI_SR_RNE) {
     *pulData = HWREG(ulBase + SSI_O_DR);
     return (1);
-  } else {
-    return (0);
   }
+    return (0);
 }
 
 //*****************************************************************************

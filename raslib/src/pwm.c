@@ -186,7 +186,7 @@ static void InsertPWM(tPWMModule *mod, tPWM *pwm) {
 
   // Then we simply call SetPWM and let it entangle the
   // nodes appropriately
-  SetPWM(pwm, 0.5f, 0.0f);
+  SetPWM(pwm, 0.5F, 0.0F);
 }
 
 // Function to initialize pwm on a pin
@@ -253,7 +253,7 @@ tPWM *InitializePWM(tPin pin, float freq) {
 // same time value, as that occurs often in synchronized pwm
 #define TIMER_HANDLER(BASE, TIM)                                             \
   void WTimer##BASE##TIM##Handler(void) {                                    \
-    tPWMModule *mod = &modBuffer[2 * BASE + (TIMER_##TIM == TIMER_B)];       \
+    tPWMModule *mod = &modBuffer[2 * (BASE) + (TIMER_##TIM == TIMER_B)];     \
     tPWMEvent *event = mod->event;                                           \
                                                                              \
     TimerIntClear(WTIMER##BASE##_BASE, TIMER_TIM##TIM##_TIMEOUT);            \
@@ -350,12 +350,17 @@ static void MoveEventBackward(tPWMEvent *event, unsigned long diff) {
 // This function sets a pwm duty cycle and phase
 // Both Duty Cycle and Phase must be in percentage
 void SetPWM(tPWM *pwm, float duty, float phase) {
-  unsigned long iphase, iduty;
+  unsigned long iphase;
+  unsigned long iduty;
 
   // Limit the range of both values to [0.0,1.0]
-  if (duty > 1.0f || duty < 0.0f) return;
+  if (duty > 1.0F || duty < 0.0F) {
+    return;
+  }
 
-  if (phase > 1.0f || phase < 0.0f) return;
+  if (phase > 1.0F || phase < 0.0F) {
+    return;
+  }
 
   // Calculate the new absolute phase and duty
   iphase = (unsigned long)(phase * pwm->period);
@@ -365,16 +370,20 @@ void SetPWM(tPWM *pwm, float duty, float phase) {
   // to make sure the events don't overlap at 0% and 100% duty cycles
 
   // Push the events forward if nescessary
-  if (iphase < pwm->up.target)
+  if (iphase < pwm->up.target) {
     MoveEventForward(&pwm->up, pwm->up.target - iphase);
-  if (iduty < pwm->down.target)
+  }
+  if (iduty < pwm->down.target) {
     MoveEventForward(&pwm->down, pwm->down.target - iduty);
+  }
 
   // Push the events backward if nescessary
-  if (iduty > pwm->down.target)
+  if (iduty > pwm->down.target) {
     MoveEventBackward(&pwm->down, iduty - pwm->down.target);
-  if (iphase > pwm->up.target)
+  }
+  if (iphase > pwm->up.target) {
     MoveEventBackward(&pwm->up, iphase - pwm->up.target);
+  }
 
   // Update the new phase/duty values
   pwm->up.target = iphase;

@@ -218,8 +218,9 @@ void I2CBackgroundSend(tI2C *i2c, unsigned char addr, const unsigned char *data,
   // We loop here while the bus is busy
   // correct sending behaviour should be implemented
   // at a higher level
-  while (i2c->state != DONE)
+  while (i2c->state != DONE) {
     ;
+  }
   i2c->state = SENDING;
 
   // Assign the address
@@ -235,10 +236,11 @@ void I2CBackgroundSend(tI2C *i2c, unsigned char addr, const unsigned char *data,
   i2c->len = len - 1;
 
   // Either send a single command or start sending multiple
-  if (len == 1)
+  if (len == 1) {
     I2CMasterControl(i2c->BASE, I2C_MASTER_CMD_SINGLE_SEND);
-  else
+  } else {
     I2CMasterControl(i2c->BASE, I2C_MASTER_CMD_BURST_SEND_START);
+  }
 
   // The finite state machine implemented in the interrupt
   // handler will take over from here
@@ -250,8 +252,9 @@ void I2CBackgroundSend(tI2C *i2c, unsigned char addr, const unsigned char *data,
 tBoolean I2CSend(tI2C *i2c, unsigned char addr, const unsigned char *data,
                  unsigned int len) {
   I2CBackgroundSend(i2c, addr, data, len, 0, 0);
-  while (i2c->state != DONE)
+  while (i2c->state != DONE) {
     ;
+  }
   return I2CSuccess(i2c);
 }
 
@@ -275,8 +278,9 @@ void I2CBackgroundReceive(tI2C *i2c, unsigned char addr, unsigned char *data,
   // We loop here while the bus is busy
   // correct recieving behaviour should be implemented
   // at a higher level
-  while (i2c->state != DONE)
+  while (i2c->state != DONE) {
     ;
+  }
   i2c->state = RECEIVING;
 
   // Assign the address
@@ -291,10 +295,11 @@ void I2CBackgroundReceive(tI2C *i2c, unsigned char addr, unsigned char *data,
   i2c->len = len;
 
   // Either read single byte of data or multiple
-  if (len == 1)
+  if (len == 1) {
     I2CMasterControl(i2c->BASE, I2C_MASTER_CMD_SINGLE_RECEIVE);
-  else
+  } else {
     I2CMasterControl(i2c->BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
+  }
 
   // The finite state machine implemented in the interrupt
   // handler will take over from here
@@ -306,8 +311,9 @@ void I2CBackgroundReceive(tI2C *i2c, unsigned char addr, unsigned char *data,
 tBoolean I2CReceive(tI2C *i2c, unsigned char addr, unsigned char *data,
                     unsigned int len) {
   I2CBackgroundReceive(i2c, addr, data, len, 0, 0);
-  while (i2c->state != DONE)
+  while (i2c->state != DONE) {
     ;
+  }
   return I2CSuccess(i2c);
 }
 
@@ -330,8 +336,9 @@ void I2CBackgroundRequest(tI2C *i2c, unsigned char addr,
   // We loop here while the bus is busy
   // correct requesting behaviour should be implemented
   // at a higher level
-  while (i2c->state != DONE && i2c->state != TIMEOUT)
+  while (i2c->state != DONE && i2c->state != TIMEOUT) {
     ;
+  }
 
   // First fill out request information to keep track of
   i2c->request.addr = addr;
@@ -356,7 +363,8 @@ tBoolean I2CRequest(tI2C *i2c, unsigned char addr,
                     const unsigned char *sendData, unsigned int sendLen,
                     unsigned char *recData, unsigned int recLen) {
   I2CBackgroundRequest(i2c, addr, sendData, sendLen, recData, recLen, 0, 0);
-  while (i2c->state != DONE)
+  while (i2c->state != DONE) {
     ;
+  }
   return I2CSuccess(i2c);
 }

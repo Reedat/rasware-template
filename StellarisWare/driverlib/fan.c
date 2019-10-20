@@ -482,9 +482,8 @@ unsigned long FanIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(ulBase + FAN_O_MIS));
-  } else {
-    return (HWREG(ulBase + FAN_O_RIS));
   }
+    return (HWREG(ulBase + FAN_O_RIS));
 }
 
 //*****************************************************************************

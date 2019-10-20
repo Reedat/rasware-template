@@ -932,7 +932,8 @@ void ADCSoftwareOversampleDataGet(unsigned long ulBase,
                                   unsigned long ulSequenceNum,
                                   unsigned long *pulBuffer,
                                   unsigned long ulCount) {
-  unsigned long ulIdx, ulAccum;
+  unsigned long ulIdx;
+  unsigned long ulAccum;
 
   //
   // Check the arguments.

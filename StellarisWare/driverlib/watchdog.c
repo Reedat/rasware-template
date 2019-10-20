@@ -452,9 +452,8 @@ unsigned long WatchdogIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(ulBase + WDT_O_MIS));
-  } else {
-    return (HWREG(ulBase + WDT_O_RIS));
   }
+    return (HWREG(ulBase + WDT_O_RIS));
 }
 
 //*****************************************************************************

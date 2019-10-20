@@ -40,7 +40,7 @@
 #ifndef __SYSCTL_H__
 #define __SYSCTL_H__
 
-#include <stdbool.h>
+#include "inc/hw_types.h"
 
 //*****************************************************************************
 //

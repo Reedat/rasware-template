@@ -18,7 +18,10 @@ void initMotors(void) {
 }
 
 void motorDemo(void) {
-  float left = 0, right = 0, speed = 0.75f, accel = 0.01f;
+  float left = 0;
+  float right = 0;
+  float speed = 0.75f;
+  float accel = 0.01f;
   char ch;
   int i;
 
@@ -88,6 +91,8 @@ void motorDemo(void) {
   }
 
   // make sure the motors are off before exiting the demo
-  for (i = 0; i < 4; ++i) SetMotor(Motors[i], 0);
+  for (i = 0; i < 4; ++i) {
+    SetMotor(Motors[i], 0);
+  }
   Printf("\n");
 }

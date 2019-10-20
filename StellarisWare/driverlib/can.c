@@ -104,9 +104,9 @@
 //
 //*****************************************************************************
 #define CAN_BIT_VALUE(seg1, seg2, sjw)                   \
-  ((((seg1 - 1) << CAN_BIT_TSEG1_S) & CAN_BIT_TSEG1_M) | \
-   (((seg2 - 1) << CAN_BIT_TSEG2_S) & CAN_BIT_TSEG2_M) | \
-   (((sjw - 1) << CAN_BIT_SJW_S) & CAN_BIT_SJW_M))
+  (((((seg1)-1) << CAN_BIT_TSEG1_S) & CAN_BIT_TSEG1_M) | \
+   ((((seg2)-1) << CAN_BIT_TSEG2_S) & CAN_BIT_TSEG2_M) | \
+   ((((sjw)-1) << CAN_BIT_SJW_S) & CAN_BIT_SJW_M))
 
 //*****************************************************************************
 //
@@ -354,9 +354,10 @@ static void CANRegWrite(unsigned long ulRegAddress, unsigned long ulRegValue) {
 //! \return None.
 //
 //*****************************************************************************
-static void CANDataRegWrite(unsigned char *pucData, unsigned long *pulRegister,
-                            unsigned long ulSize) {
-  unsigned long ulIdx, ulValue;
+static void CANDataRegWrite(const unsigned char *pucData,
+                            unsigned long *pulRegister, unsigned long ulSize) {
+  unsigned long ulIdx;
+  unsigned long ulValue;
 
   //
   // Loop always copies 1 or 2 bytes per iteration.
@@ -406,7 +407,8 @@ static void CANDataRegWrite(unsigned char *pucData, unsigned long *pulRegister,
 //*****************************************************************************
 static void CANDataRegRead(unsigned char *pucData, unsigned long *pulRegister,
                            unsigned long ulSize) {
-  unsigned long ulIdx, ulValue;
+  unsigned long ulIdx;
+  unsigned long ulValue;
 
   //
   // Loop always copies 1 or 2 bytes per iteration.
@@ -824,7 +826,8 @@ unsigned long CANBitRateSet(unsigned long ulBase, unsigned long ulSourceClock,
 //
 //*****************************************************************************
 void CANBitTimingSet(unsigned long ulBase, tCANBitClkParms *pClkParms) {
-  unsigned long ulBitReg, ulSavedInit;
+  unsigned long ulBitReg;
+  unsigned long ulSavedInit;
 
   //
   // Check the arguments.
@@ -1538,8 +1541,10 @@ tBoolean CANErrCntrGet(unsigned long ulBase, unsigned long *pulRxCount,
 void CANMessageSet(unsigned long ulBase, unsigned long ulObjID,
                    tCANMsgObject *pMsgObject, tMsgObjType eMsgType) {
   unsigned short usCmdMaskReg;
-  unsigned short usMaskReg0, usMaskReg1;
-  unsigned short usArbReg0, usArbReg1;
+  unsigned short usMaskReg0;
+  unsigned short usMaskReg1;
+  unsigned short usArbReg0;
+  unsigned short usArbReg1;
   unsigned short usMsgCtrl;
   tBoolean bTransferData;
   tBoolean bUseExtendedID;
@@ -1866,8 +1871,10 @@ void CANMessageSet(unsigned long ulBase, unsigned long ulObjID,
 void CANMessageGet(unsigned long ulBase, unsigned long ulObjID,
                    tCANMsgObject *pMsgObject, tBoolean bClrPendingInt) {
   unsigned short usCmdMaskReg;
-  unsigned short usMaskReg0, usMaskReg1;
-  unsigned short usArbReg0, usArbReg1;
+  unsigned short usMaskReg0;
+  unsigned short usMaskReg1;
+  unsigned short usArbReg0;
+  unsigned short usArbReg1;
   unsigned short usMsgCtrl;
 
   //

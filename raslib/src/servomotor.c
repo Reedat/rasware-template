@@ -45,13 +45,17 @@ static int servoMotorCount = 0;
 // This function sets a motor value, with -1 being 3% and 1 being 12%
 static void SetServoMotor(tServoMotor *mtr, float value) {
   // Bind to the valid range of inputs
-  if (value > 1 || value < -1) return;
+  if (value > 1 || value < -1) {
+    return;
+  }
 
   // invert if set
-  if (mtr->invert) value *= -1;
+  if (mtr->invert) {
+    value *= -1;
+  }
 
   // Set pwm to proper value
-  SetPWM(mtr->pwm, 0.075f + (value * 0.045f), 0.0f);
+  SetPWM(mtr->pwm, 0.075F + (value * 0.045F), 0.0F);
 }
 
 // Function to initialize a motor on a pin
@@ -64,7 +68,7 @@ tServoMotor *_InitializeServoMotor(tPin pin, tBoolean invert) {
   mtr->invert = invert;
 
   // Create the pwm signal at 50Hz
-  mtr->pwm = InitializePWM(pin, 50.0f);
+  mtr->pwm = InitializePWM(pin, 50.0F);
   // Set it to the center point
   SetServoMotor(mtr, 0);
 

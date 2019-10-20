@@ -741,9 +741,8 @@ tBoolean I2CMasterIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return ((HWREG(ulBase + I2C_O_MMIS)) ? true : false);
-  } else {
-    return ((HWREG(ulBase + I2C_O_MRIS)) ? true : false);
   }
+    return ((HWREG(ulBase + I2C_O_MRIS)) ? true : false);
 }
 
 //*****************************************************************************
@@ -774,9 +773,8 @@ unsigned long I2CMasterIntStatusEx(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(ulBase + I2C_O_MMIS));
-  } else {
-    return (HWREG(ulBase + I2C_O_MRIS));
   }
+    return (HWREG(ulBase + I2C_O_MRIS));
 }
 
 //*****************************************************************************
@@ -807,9 +805,8 @@ tBoolean I2CSlaveIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return ((HWREG(ulBase + I2C_O_SMIS)) ? true : false);
-  } else {
-    return ((HWREG(ulBase + I2C_O_SRIS)) ? true : false);
   }
+    return ((HWREG(ulBase + I2C_O_SRIS)) ? true : false);
 }
 
 //*****************************************************************************
@@ -848,9 +845,9 @@ unsigned long I2CSlaveIntStatusEx(unsigned long ulBase, tBoolean bMasked) {
     if (CLASS_IS_DUSTDEVIL && REVISION_IS_A0) {
       ulValue = HWREG(ulBase + I2C_O_SRIS);
       return (ulValue & HWREG(ulBase + I2C_O_SIMR));
-    } else {
-      return (HWREG(ulBase + I2C_O_SMIS));
     }
+      return (HWREG(ulBase + I2C_O_SMIS));
+
   } else {
     return (HWREG(ulBase + I2C_O_SRIS));
   }
@@ -1090,9 +1087,8 @@ tBoolean I2CMasterBusy(unsigned long ulBase) {
   //
   if (HWREG(ulBase + I2C_O_MCS) & I2C_MCS_BUSY) {
     return (true);
-  } else {
-    return (false);
   }
+    return (false);
 }
 
 //*****************************************************************************
@@ -1120,9 +1116,8 @@ tBoolean I2CMasterBusBusy(unsigned long ulBase) {
   //
   if (HWREG(ulBase + I2C_O_MCS) & I2C_MCS_BUSBSY) {
     return (true);
-  } else {
-    return (false);
   }
+    return (false);
 }
 
 //*****************************************************************************
@@ -1216,9 +1211,8 @@ unsigned long I2CMasterErr(unsigned long ulBase) {
   //
   if (ulErr & (I2C_MCS_ERROR | I2C_MCS_ARBLST)) {
     return (ulErr & (I2C_MCS_ARBLST | I2C_MCS_DATACK | I2C_MCS_ADRACK));
-  } else {
-    return (I2C_MASTER_ERR_NONE);
   }
+    return (I2C_MASTER_ERR_NONE);
 }
 
 //*****************************************************************************

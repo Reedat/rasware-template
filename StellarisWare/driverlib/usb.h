@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2007-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,13 +32,15 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
 
 #ifndef __USB_H__
 #define __USB_H__
+
+#include "inc/hw_types.h"
 
 //*****************************************************************************
 //
@@ -464,7 +466,7 @@ extern void USBHostAddrSet(unsigned long ulBase, unsigned long ulEndpoint,
                            unsigned long ulAddr, unsigned long ulFlags);
 extern void USBHostEndpointConfig(unsigned long ulBase,
                                   unsigned long ulEndpoint,
-                                  unsigned long ulMaxPacketSize,
+                                  unsigned long ulMaxPayload,
                                   unsigned long ulNAKPollInterval,
                                   unsigned long ulTargetEndpoint,
                                   unsigned long ulFlags);
@@ -498,15 +500,11 @@ extern void USBHostReset(unsigned long ulBase, tBoolean bStart);
 extern void USBHostResume(unsigned long ulBase, tBoolean bStart);
 extern unsigned long USBHostSpeedGet(unsigned long ulBase);
 extern void USBHostSuspend(unsigned long ulBase);
-extern void USBIntDisableControl(unsigned long ulBase,
-                                 unsigned long ulIntFlags);
-extern void USBIntEnableControl(unsigned long ulBase,
-                                unsigned long ulIntFlags);
+extern void USBIntDisableControl(unsigned long ulBase, unsigned long ulFlags);
+extern void USBIntEnableControl(unsigned long ulBase, unsigned long ulFlags);
 extern unsigned long USBIntStatusControl(unsigned long ulBase);
-extern void USBIntDisableEndpoint(unsigned long ulBase,
-                                  unsigned long ulIntFlags);
-extern void USBIntEnableEndpoint(unsigned long ulBase,
-                                 unsigned long ulIntFlags);
+extern void USBIntDisableEndpoint(unsigned long ulBase, unsigned long ulFlags);
+extern void USBIntEnableEndpoint(unsigned long ulBase, unsigned long ulFlags);
 extern unsigned long USBIntStatusEndpoint(unsigned long ulBase);
 extern void USBIntRegister(unsigned long ulBase, void(*pfnHandler)(void));
 extern void USBIntUnregister(unsigned long ulBase);
@@ -570,8 +568,8 @@ extern unsigned long USBNumEndpointsGet(unsigned long ulBase);
 #define USB_INT_EP0             0x00000001  // Endpoint 0 Interrupt
 
 #define USBDevEndpointConfig    USBDevEndpointConfigSet
-extern void USBIntDisable(unsigned long ulBase, unsigned long ulIntFlags);
-extern void USBIntEnable(unsigned long ulBase, unsigned long ulIntFlags);
+extern void USBIntDisable(unsigned long ulBase, unsigned long ulFlags);
+extern void USBIntEnable(unsigned long ulBase, unsigned long ulFlags);
 extern unsigned long USBIntStatus(unsigned long ulBase);
 #endif
 

@@ -822,7 +822,7 @@ unsigned long HibernateRTCTrimGet(void) {
 //! \return None.
 //
 //*****************************************************************************
-void HibernateDataSet(unsigned long *pulData, unsigned long ulCount) {
+void HibernateDataSet(const unsigned long *pulData, unsigned long ulCount) {
   unsigned long ulIdx;
 
   //
@@ -1096,9 +1096,8 @@ unsigned long HibernateIntStatus(tBoolean bMasked) {
   //
   if (bMasked == true) {
     return (HWREG(HIB_MIS) & 0x1f);
-  } else {
-    return (HWREG(HIB_RIS) & 0x1f);
   }
+    return (HWREG(HIB_RIS) & 0x1f);
 }
 
 //*****************************************************************************

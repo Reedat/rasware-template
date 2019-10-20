@@ -330,12 +330,11 @@ unsigned long PWMGenPeriodGet(unsigned long ulBase, unsigned long ulGen) {
     // The period is twice the reload register value.
     //
     return (HWREG(ulGen + PWM_O_X_LOAD) * 2);
-  } else {
+  }
     //
     // The period is the reload register value plus one.
     //
     return (HWREG(ulGen + PWM_O_X_LOAD) + 1);
-  }
 }
 
 //*****************************************************************************
@@ -413,7 +412,8 @@ void PWMGenDisable(unsigned long ulBase, unsigned long ulGen) {
 //*****************************************************************************
 void PWMPulseWidthSet(unsigned long ulBase, unsigned long ulPWMOut,
                       unsigned long ulWidth) {
-  unsigned long ulGenBase, ulReg;
+  unsigned long ulGenBase;
+  unsigned long ulReg;
 
   //
   // Check the arguments.
@@ -477,7 +477,9 @@ void PWMPulseWidthSet(unsigned long ulBase, unsigned long ulPWMOut,
 //
 //*****************************************************************************
 unsigned long PWMPulseWidthGet(unsigned long ulBase, unsigned long ulPWMOut) {
-  unsigned long ulGenBase, ulReg, ulLoad;
+  unsigned long ulGenBase;
+  unsigned long ulReg;
+  unsigned long ulLoad;
 
   //
   // Check the arguments.
@@ -1230,9 +1232,8 @@ unsigned long PWMGenIntStatus(unsigned long ulBase, unsigned long ulGen,
   //
   if (bMasked == true) {
     return (HWREG(ulGen + PWM_O_X_ISC));
-  } else {
-    return (HWREG(ulGen + PWM_O_X_RIS));
   }
+    return (HWREG(ulGen + PWM_O_X_RIS));
 }
 
 //*****************************************************************************
@@ -1409,9 +1410,8 @@ unsigned long PWMIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked == true) {
     return (HWREG(ulBase + PWM_O_ISC));
-  } else {
-    return (HWREG(ulBase + PWM_O_RIS));
   }
+    return (HWREG(ulBase + PWM_O_RIS));
 }
 
 //*****************************************************************************
@@ -1622,9 +1622,8 @@ unsigned long PWMGenFaultTriggerGet(unsigned long ulBase, unsigned long ulGen,
   //
   if (ulGroup == PWM_FAULT_GROUP_0) {
     return (HWREG(PWM_GEN_BADDR(ulBase, ulGen) + PWM_O_X_FLTSRC0));
-  } else {
-    return (HWREG(PWM_GEN_BADDR(ulBase, ulGen) + PWM_O_X_FLTSRC1));
   }
+    return (HWREG(PWM_GEN_BADDR(ulBase, ulGen) + PWM_O_X_FLTSRC1));
 }
 
 //*****************************************************************************
@@ -1675,9 +1674,8 @@ unsigned long PWMGenFaultStatus(unsigned long ulBase, unsigned long ulGen,
   //
   if (ulGroup == PWM_FAULT_GROUP_0) {
     return (HWREG(PWM_GEN_EXT_BADDR(ulBase, ulGen) + PWM_O_X_FLTSTAT0));
-  } else {
-    return (HWREG(PWM_GEN_EXT_BADDR(ulBase, ulGen) + PWM_O_X_FLTSTAT1));
   }
+    return (HWREG(PWM_GEN_EXT_BADDR(ulBase, ulGen) + PWM_O_X_FLTSTAT1));
 }
 
 //*****************************************************************************

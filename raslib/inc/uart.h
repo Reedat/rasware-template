@@ -93,8 +93,8 @@ int Puts(const char *buffer, int count);
  * @param pcString Format string
  * @param ... Additional parameters to be inserted into the format string
  */
-        void Printf(const char *pcString, ...);
-        void fPrintf(tUART * module, const char *pcString, ...);
+void Printf(const char *buffer, ...);
+void fPrintf(tUART *module, const char *buffer, ...);
 
 // These functions configure UART but aren't a part of standard use
 /**

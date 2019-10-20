@@ -546,9 +546,8 @@ unsigned long QEIIntStatus(unsigned long ulBase, tBoolean bMasked) {
   //
   if (bMasked) {
     return (HWREG(ulBase + QEI_O_ISC));
-  } else {
-    return (HWREG(ulBase + QEI_O_RIS));
   }
+    return (HWREG(ulBase + QEI_O_RIS));
 }
 
 //*****************************************************************************

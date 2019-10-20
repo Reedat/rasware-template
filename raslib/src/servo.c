@@ -29,7 +29,7 @@
 // The returned pointer can be used by the SetPWM function
 tServo *InitializeServo(tPin pin) {
   // Create the pwm signal at 50Hz
-  tServo *servo = InitializePWM(pin, 50.0f);
+  tServo *servo = InitializePWM(pin, 50.0F);
 
   // Set it to the center point
   SetServo(servo, 0.5);
@@ -42,8 +42,10 @@ tServo *InitializeServo(tPin pin) {
 // This function sets a servo value, with 0.0 being 3% and 1.0 being 12%
 void SetServo(tServo *servo, float value) {
   // Bind to the valid range of inputs
-  if (value > 1.0f || value < 0.0f) return;
+  if (value > 1.0F || value < 0.0F) {
+    return;
+  }
 
   // Set pwm to proper value
-  SetPWM(servo, 0.03f + (value * 0.09f), 0.0f);
+  SetPWM(servo, 0.03F + (value * 0.09F), 0.0F);
 }

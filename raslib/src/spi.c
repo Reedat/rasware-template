@@ -86,9 +86,15 @@ tSPI *InitializeSPI(tPin clk, tPin mosi, tPin miso, int frequency,
   int spiIndex = spiLookupByCLK[clk];
   tSPI *toRet;
   uint32_t crap;
-  if (spiIndex == -1) return NULL;
-  if (indexToMISO[spiIndex] != miso) return NULL;
-  if (indexToMOSI[spiIndex] != mosi) return NULL;
+  if (spiIndex == -1) {
+    return NULL;
+  }
+  if (indexToMISO[spiIndex] != miso) {
+    return NULL;
+  }
+  if (indexToMOSI[spiIndex] != mosi) {
+    return NULL;
+  }
 
   toRet = &spiBuffer[spiIndex];
   toRet->frame_mask = (1 << bits_per_frame) - 1;
@@ -104,8 +110,9 @@ tSPI *InitializeSPI(tPin clk, tPin mosi, tPin miso, int frequency,
                      SSI_MODE_MASTER, frequency, bits_per_frame);
   SSIEnable(toRet->base);
   /* clean up the recieve fifo */
-  while (SSIDataGetNonBlocking(toRet->base, &crap))
+  while (SSIDataGetNonBlocking(toRet->base, &crap)) {
     ;
+  }
   return toRet;
 }
 
@@ -113,17 +120,26 @@ tBoolean SPIRequestUS(tSPI *spi, tPin csl, const uint32_t *sendData,
                       unsigned int sendLen, uint32_t *recData,
                       unsigned int recLen, tTime wait) {
   int i;
-  if (sendLen < 1 && recLen < 1) return true;
-  if (csl > 0) SetPin(csl, !spi->invert_csl);
+  if (sendLen < 1 && recLen < 1) {
+    return true;
+  }
+  if (csl > 0) {
+    SetPin(csl, !spi->invert_csl);
+  }
   WaitUS(wait);
   for (i = 0; i < sendLen || i < recLen; ++i) {
     SSIDataPut(spi->base, sendData[i]);
-    if (recLen > i) SSIDataGet(spi->base, &recData[i]);
+    if (recLen > i) {
+      SSIDataGet(spi->base, &recData[i]);
+    }
     WaitUS(wait);
   }
-  while (SSIBusy(spi->base))
+  while (SSIBusy(spi->base)) {
     ;
-  if (csl > 0) SetPin(csl, spi->invert_csl);
+  }
+  if (csl > 0) {
+    SetPin(csl, spi->invert_csl);
+  }
   return true;
 }
 

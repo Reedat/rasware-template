@@ -91,7 +91,7 @@
 // control/status registers.
 //
 //*****************************************************************************
-#define EP_OFFSET(Endpoint) (Endpoint - 0x10)
+#define EP_OFFSET(Endpoint) ((Endpoint)-0x10)
 
 //*****************************************************************************
 //
@@ -2403,7 +2403,9 @@ unsigned long USBEndpointDataAvail(unsigned long ulBase,
 //*****************************************************************************
 long USBEndpointDataGet(unsigned long ulBase, unsigned long ulEndpoint,
                         unsigned char *pucData, unsigned long *pulSize) {
-  unsigned long ulRegister, ulByteCount, ulFIFO;
+  unsigned long ulRegister;
+  unsigned long ulByteCount;
+  unsigned long ulFIFO;
 
   //
   // Check the arguments.
@@ -3017,12 +3019,11 @@ unsigned long USBHostAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
     // Return this endpoint's transmit address.
     //
     return (HWREGB(ulBase + USB_O_TXFUNCADDR0 + (ulEndpoint >> 1)));
-  } else {
+  }
     //
     // Return this endpoint's receive address.
     //
     return (HWREGB(ulBase + USB_O_TXFUNCADDR0 + 4 + (ulEndpoint >> 1)));
-  }
 }
 
 //*****************************************************************************
@@ -3133,12 +3134,11 @@ unsigned long USBHostHubAddrGet(unsigned long ulBase, unsigned long ulEndpoint,
     // Return the hub transmit address for this endpoint.
     //
     return (HWREGB(ulBase + USB_O_TXHUBADDR0 + (ulEndpoint >> 1)));
-  } else {
+  }
     //
     // Return the hub receive address for this endpoint.
     //
     return (HWREGB(ulBase + USB_O_TXHUBADDR0 + 4 + (ulEndpoint >> 1)));
-  }
 }
 
 //*****************************************************************************
@@ -3689,7 +3689,8 @@ unsigned long USBNumEndpointsGet(unsigned long ulBase) {
     // These part families do not support USB.
     //
     return (0);
-  } else if (CLASS_IS_DUSTDEVIL) {
+  }
+  if (CLASS_IS_DUSTDEVIL) {
     //
     // DustDevil class devices support 3 endpoint pairs.
     //

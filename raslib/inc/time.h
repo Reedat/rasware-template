@@ -111,7 +111,7 @@ void CallStop(int id);
  * Busy waits for given time
  * @param ms Amount of time to wait, specified in milliseconds
  */
-void WaitUS(tTime ms);
+void WaitUS(tTime us);
 
 /**
  * Busy waits for given time

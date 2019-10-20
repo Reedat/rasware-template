@@ -130,7 +130,9 @@ void InitializeGPIO(void) {
   int i;
 
   // Just clear all handlers
-  for (i = 0; i < PIN_COUNT; i++) pinTaskBuffer[i].callback = Dummy;
+  for (i = 0; i < PIN_COUNT; i++) {
+    pinTaskBuffer[i].callback = Dummy;
+  }
 
   // Enable the peripherals
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);

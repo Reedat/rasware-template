@@ -185,7 +185,9 @@ static const signed long CHANNELS[PIN_COUNT] = {
 // actually start any sequences
 static void InitializeADCModule(tADCModule *mod) {
   // Check if we have already initialized
-  if (mod->initialized) return;
+  if (mod->initialized) {
+    return;
+  }
 
   // Reset the queues appropriately
   mod->contQueue = 0;
@@ -216,7 +218,9 @@ tADC *InitializeADC(tPin pin) {
   tADC *adc;
 
   // If the channel value is -1, that means the pin is not supported
-  if (CHANNELS[pin] < 0) return 0;
+  if (CHANNELS[pin] < 0) {
+    return 0;
+  }
 
   // Grab the next adc and
   // assign it to an adc module
@@ -247,8 +251,9 @@ static void SetupContinuous(tADCModule *mod, unsigned long trigger) {
   ADCSequenceConfigure(mod->BASE, 0, trigger, 2);
 
   // Create a sequence step for each pin
-  for (; adc->next != 0; adc = adc->next)
+  for (; adc->next != 0; adc = adc->next) {
     ADCSequenceStepConfigure(mod->BASE, 0, i++, CHANNELS[adc->pin]);
+  }
 
   // The last pin must also have the interrupt and end flags
   ADCSequenceStepConfigure(mod->BASE, 0, i,
@@ -337,7 +342,9 @@ void ADCBackgroundRead(tADC *adc, tCallback callback, void *data) {
   adc->data = data;
 
   // If we're already reading just return
-  if (adc->pending || adc->continous) return;
+  if (adc->pending || adc->continous) {
+    return;
+  }
 
   // Flag that we are pending
   adc->pending = true;
@@ -348,7 +355,9 @@ void ADCBackgroundRead(tADC *adc, tCallback callback, void *data) {
   adc->next = 0;
 
   // If nothing was being read, we need to trigger the module
-  if (mod->singleQueue == adc) TriggerSingle(mod);
+  if (mod->singleQueue == adc) {
+    TriggerSingle(mod);
+  }
 }
 
 // This function returns the value measured as a percentage
@@ -359,8 +368,9 @@ float ADCRead(tADC *adc) {
   if (!adc->in_callback && !adc->continous) {
     // Just call ADCBackgroundRead and busy wait
     ADCBackgroundRead(adc, 0, 0);
-    while (adc->pending)
+    while (adc->pending) {
       ;
+    }
   }
 
   // Calculate the ratio and return it
@@ -379,10 +389,14 @@ void ADCReadContinuouslyUS(tADC *adc, tTime us) {
     // If so, we need to stop it temporarily
     ADCSequenceDisable(mod->BASE, 0);
 
-    if (mod->id) CallStop(mod->id);
+    if (mod->id) {
+      CallStop(mod->id);
+    }
 
     // And set the period to be the smallest value
-    if (us < mod->period) mod->period = us;
+    if (us < mod->period) {
+      mod->period = us;
+    }
 
   } else {
     // Otherwise we just set the new period

@@ -173,14 +173,17 @@ static unsigned char GPIOLineSensorRead(tGPIOLineSensor *ls, float threshold) {
   if (!ls->in_callback && !ls->continous) {
     // Just call GPIOLineSensorBackgroundRead and busy wait
     GPIOLineSensorBackgroundRead(ls, 0, 0);
-    while (ls->pending)
+    while (ls->pending) {
       ;
+    }
   }
 
   // Special case for continuous readings
   if (ls->continous) {
     for (i = 0; i < 8; i++) {
-      if (ls->values[i] > threshold) output |= (1 << i);
+      if (ls->values[i] > threshold) {
+        output |= (1 << i);
+      }
     }
 
     return output;
@@ -193,7 +196,9 @@ static unsigned char GPIOLineSensorRead(tGPIOLineSensor *ls, float threshold) {
   for (i = 0; i < 8; i++) {
     tTime timing = ls->pins[i].timing;
 
-    if ((timing - ls->start_time) > thresh) output |= (1 << i);
+    if ((timing - ls->start_time) > thresh) {
+      output |= (1 << i);
+    }
   }
 
   return output;
@@ -210,8 +215,9 @@ static tBoolean GPIOLineSensorReadArray(tGPIOLineSensor *ls, float *array) {
   if (!ls->in_callback && !ls->continous) {
     // Just call LineSensorBackgroundRead and busy wait
     GPIOLineSensorBackgroundRead(ls, 0, 0);
-    while (ls->pending)
+    while (ls->pending) {
       ;
+    }
   }
 
   // Special case for continuous readings
@@ -227,10 +233,11 @@ static tBoolean GPIOLineSensorReadArray(tGPIOLineSensor *ls, float *array) {
   for (i = 0; i < 8; i++) {
     tTime timing = ls->pins[i].timing;
 
-    if (timing == GPIO_LINE_SENSOR_INF)
+    if (timing == GPIO_LINE_SENSOR_INF) {
       array[i] = INFINITY;
-    else
+    } else {
       array[i] = ((timing - ls->start_time) / (float)(GPIO_LINE_SENSOR_MAX));
+    }
   }
 
   return true;
@@ -244,11 +251,12 @@ static void CalculateSingleRead(tGPIOLineSensor *ls) {
   for (i = 0; i < 8; i++) {
     tTime timing = ls->pins[i].timing;
 
-    if (timing == GPIO_LINE_SENSOR_INF)
+    if (timing == GPIO_LINE_SENSOR_INF) {
       ls->values[i] = INFINITY;
-    else
+    } else {
       ls->values[i] =
           ((timing - ls->start_time) / (float)(GPIO_LINE_SENSOR_MAX));
+    }
   }
 }
 
@@ -273,12 +281,13 @@ static void GPIOLineSensorReadContinuouslyUS(tGPIOLineSensor *ls, tTime us) {
   ls->continous = true;
 
   // Check if there isn't enough time for the sensor to be read
-  if (us <= GPIO_LINE_SENSOR_MAX + GPIO_LINE_SENSOR_PULSE)
+  if (us <= GPIO_LINE_SENSOR_MAX + GPIO_LINE_SENSOR_PULSE) {
     // If there isn't, read as fast as possible
     GPIOLineSensorBackgroundRead(ls, ContinuousReadHandler, ls);
-  else
+  } else {
     // Otherwise just periodically call the single read handler
     CallEveryUS(SingleReadHandler, ls, us);
+  }
 }
 
 static void GPIOLineSensorReadContinuously(tGPIOLineSensor *ls, float s) {

@@ -17,7 +17,7 @@ int main(void) {
   char ch;
 
   InitializeMCU();
-  CallEvery(blink, 0, 0.25f);
+  CallEvery(blink, 0, 0.25F);
 
   while (1) {
     Printf(

@@ -243,7 +243,8 @@ tBoolean IntMasterDisable(void) {
 //
 //*****************************************************************************
 void IntRegister(unsigned long ulInterrupt, void (*pfnHandler)(void)) {
-  unsigned long ulIdx, ulValue;
+  unsigned long ulIdx;
+  unsigned long ulValue;
 
   //
   // Check the arguments.
@@ -347,7 +348,8 @@ void IntPriorityGroupingSet(unsigned long ulBits) {
 //
 //*****************************************************************************
 unsigned long IntPriorityGroupingGet(void) {
-  unsigned long ulLoop, ulValue;
+  unsigned long ulLoop;
+  unsigned long ulValue;
 
   //
   // Read the priority grouping.

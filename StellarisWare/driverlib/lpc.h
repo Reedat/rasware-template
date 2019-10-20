@@ -4,23 +4,23 @@
 //
 // Copyright (c) 2010-2012 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 //   Redistribution and use in source and binary forms, with or without
 //   modification, are permitted provided that the following conditions
 //   are met:
-// 
+//
 //   Redistributions of source code must retain the above copyright
 //   notice, this list of conditions and the following disclaimer.
-// 
+//
 //   Redistributions in binary form must reproduce the above copyright
 //   notice, this list of conditions and the following disclaimer in the
-//   documentation and/or other materials provided with the  
+//   documentation and/or other materials provided with the
 //   distribution.
-// 
+//
 //   Neither the name of Texas Instruments Incorporated nor the names of
 //   its contributors may be used to endorse or promote products derived
 //   from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -32,13 +32,15 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // This is part of revision 9453 of the Stellaris Peripheral Driver Library.
 //
 //*****************************************************************************
 
 #ifndef __LPC_H__
 #define __LPC_H__
+
+#include "inc/hw_types.h"
 
 //*****************************************************************************
 //
@@ -98,7 +100,7 @@ extern "C"
 #define LPC_IRQ2                0x00040000  // Serial IRQ2
 #define LPC_IRQ1                0x00020000  // Serial IRQ1
 #define LPC_IRQ0                0x00010000  // Serial IRQ0
-                                 
+
 //*****************************************************************************
 //
 // Addition values that can be returned from LPCIRQGet.
@@ -106,7 +108,7 @@ extern "C"
 //*****************************************************************************
 #define LPC_IRQ_BUSY            0x00000004  // SERIRQ frame in progress
 #define LPC_IRQ_CONT            0x00000001  // SERIRQ in Continuous Mode
-                                 
+
 //*****************************************************************************
 //
 // Values that can be passed as the ulChannel parameter in LPCChannel...
@@ -234,7 +236,7 @@ extern "C"
 //
 //*****************************************************************************
 #define LPC_COMx_ENABLED        0x00010000  // COMx mode enabled.
-    
+
 //*****************************************************************************
 //
 // Values that can be passed to LPCIntEnable, LPCIntDisable, and LPCIntClear
@@ -345,7 +347,7 @@ extern "C"
 #define LPC_COMx_MASK_CX        0x00200000  // Event Mask for COMx
 #define LPC_COMx_MASK_CXTX      0x00100000  // Event Mask for COMx TX
 #define LPC_COMx_MASK_CXRX      0x00080000  // Event Mask for COMx RX
-    
+
 //*****************************************************************************
 //
 // Values that can be passed to the LPCChannelDMAConfigSet function as part
@@ -381,7 +383,7 @@ extern "C"
 #define LPC_CH_ST_USER2         0x00000400  // User Status Bit 2
 #define LPC_CH_ST_USER3         0x00000800  // User Status Bit 3
 #define LPC_CH_ST_USER4         0x00001000  // User Status Bit 4
-    
+
 //*****************************************************************************
 //
 // Additinoal values that can be returned by the LPCChannelStatusGet function.

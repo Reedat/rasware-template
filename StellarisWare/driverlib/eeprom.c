@@ -215,9 +215,8 @@ unsigned long EEPROMInit(void) {
     ulStatus = HWREG(EEPROM_EESUPP);
     if (ulStatus & (EEPROM_EESUPP_PRETRY | EEPROM_EESUPP_ERETRY)) {
       return (EEPROM_INIT_ERROR);
-    } else {
-      return (EEPROM_INIT_RETRY);
     }
+      return (EEPROM_INIT_RETRY);
   }
 
   //
@@ -998,7 +997,7 @@ unsigned long EEPROMIntStatus(tBoolean bMasked) {
     //
     return ((HWREG(FLASH_FCMISC) & FLASH_FCMISC_EMISC) ? EEPROM_INT_PROGRAM
                                                        : 0);
-  } else {
+  }
     //
     // If asked for the unmasked interrupt status, infer that an interrupt
     // is pending if the WORKING bit of the EEDONE register is clear.  The
@@ -1010,7 +1009,6 @@ unsigned long EEPROMIntStatus(tBoolean bMasked) {
     return ((HWREG(EEPROM_EEDONE) & EEPROM_EEDONE_WORKING)
                 ? 0
                 : EEPROM_INT_PROGRAM);
-  }
 }
 
 //*****************************************************************************
