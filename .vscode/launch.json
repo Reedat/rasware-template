@@ -1,15 +1,8 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
             "preLaunchTask": "Flash Debug",
-            // "preRestartCommands": ["Flash Debug"],
-            // "linux": {
-
-            // },
             "runToMain": true,
             "cwd": "${workspaceRoot}",
             "executable": "${workspaceFolder}/target/debug/ras-template.out",
@@ -18,57 +11,10 @@
             "type": "cortex-debug",
             "svdFile": "/opt/TM4C123GH6PM.svd",
             "servertype": "openocd",
-            // "device": "TM4C123GXL",
+            "device": "TM4C123GXL",
             "configFiles": [
                 "board/ek-tm4c123gxl.cfg"
             ]
         },
-        // {
-        //     "name": "(gdb) Launch",
-        //     // "type": "cppdbg",
-        //     // "request": "launch",
-        //     "program": "enter program name, for example ${workspaceFolder}/a.out",
-        //     "args": [],
-        //     "stopAtEntry": false,
-        //     "cwd": "${workspaceFolder}",
-        //     "environment": [],
-        //     "externalConsole": false,
-        //     "MIMode": "gdb",
-        //     "setupCommands": [
-        //         {
-        //             "description": "Enable pretty-printing for gdb",
-        //             "text": "-enable-pretty-printing",
-        //             "ignoreFailures": true
-        //         }
-        //     ]
-        // },
-        // {
-        //     "name": "GDB",
-        //     // "executable": "",
-        //     // "debuggerArgs": ["gdb"],
-        //     // "type": "cortex-debug",
-        //     "type": "gdb",
-        //     // "gdbpath": "ninja",
-        //     // "debugger_args": ["gdb"],
-        //     // "gdbpath": "./debug.sh",
-        //     // "arguments": "gdb",
-        //     "gdbpath": "gdb-multiarch",
-        //     // "gdbpath": "arm-none-eabi-gdb",
-        //     "request": "launch",
-        //     "cwd": "${workspaceRoot}",
-        //     "target": "./target/debug/ras-template.out",
-        //     "showDevDebugOutput": true,
-        //     // "gdbpath": "C:/STM32Toolchain/gcc-arm/5.4 2016q3/bin/arm-none-eabi-gdb.exe",
-        //     "autorun": [
-        //             "symbol-file ./target/debug/ras-template.out",
-        //             // "target remote | openocd -c 'source [find board/ek-tm4c123gxl.cfg]' -c 'gdb_port pipe; │ log_output target/openocd.log'",
-        //                 "target remote localhost:3333",
-        //         "monitor reset init",
-        //         "monitor halt",
-        //         "break main",
-        //         // "continue",
-        //     //     "monitor reset"
-        //     ]
-        // }
     ]
 }
