@@ -1,4 +1,8 @@
-FROM rrbutani/arm-llvm-toolchain:latest
+ARG VER=0.3.0
+
+FROM rrbutani/arm-llvm-toolchain:${VER}
+
+ARG VER
 
 RUN : \
  && apt-get update -y \
@@ -11,7 +15,7 @@ RUN : \
       iproute2 sudo
 
 RUN : \
- && curl -L https://raw.githubusercontent.com/rrbutani/tm4c-llvm-toolchain/master/env/install.sh | bash \
+ && curl -L https://raw.githubusercontent.com/rrbutani/tm4c-llvm-toolchain/${VER}/env/install.sh | bash \
  && curl -L https://raw.githubusercontent.com/posborne/cmsis-svd/master/data/TexasInstruments/TM4C123GH6PM.svd > /opt/TM4C123GH6PM.svd \
  && update-alternatives --install /usr/bin/arm-none-eabi-gdb arm-none-eabi-gdb $(which gdb-multiarch) 2
 
