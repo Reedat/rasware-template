@@ -103,8 +103,8 @@ typedef struct {
 tPinTask pinTaskBuffer[PIN_COUNT];
 
 // Internally used macro for defining port interrupt handlers
-#define PORT_HANDLER(PORT)                                   \
-  void gpio_port##PORT##_Handler(void) {                     \
+#define PORT_HANDLER(PORT, PORT_LOWERCASE)                   \
+  void gpio_port##PORT##_handler(void) {                     \
     unsigned long i, status;                                 \
     status = GPIOPinIntStatus(GPIO_PORT##PORT##_BASE, true); \
                                                              \
@@ -118,12 +118,12 @@ tPinTask pinTaskBuffer[PIN_COUNT];
   }
 
 // Interrupt handlers for Ports A through F
-PORT_HANDLER(A);
-PORT_HANDLER(B);
-PORT_HANDLER(C);
-PORT_HANDLER(D);
-PORT_HANDLER(E);
-PORT_HANDLER(F);
+PORT_HANDLER(A, a);
+PORT_HANDLER(B, b);
+PORT_HANDLER(C, c);
+PORT_HANDLER(D, d);
+PORT_HANDLER(E, e);
+PORT_HANDLER(F, f);
 
 // Initialize GPIO
 void InitializeGPIO(void) {

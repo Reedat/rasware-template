@@ -251,8 +251,8 @@ tPWM *InitializePWM(tPin pin, float freq) {
 // In the handler, we need to move to the next event, set the state, and
 // setup the next timing value. We group any events together that have the
 // same time value, as that occurs often in synchronized pwm
-#define TIMER_HANDLER(BASE, TIM)                                             \
-  void WTimer##BASE##TIM##Handler(void) {                                    \
+#define TIMER_HANDLER(BASE, TIM, TIM_LOWERCASE)                              \
+  void timer##BASE##TIM_LOWERCASE##_64_handler(void) {                       \
     tPWMModule *mod = &modBuffer[2 * (BASE) + (TIMER_##TIM == TIMER_B)];     \
     tPWMEvent *event = mod->event;                                           \
                                                                              \
@@ -270,16 +270,16 @@ tPWM *InitializePWM(tPin pin, float freq) {
   }
 
 // Interrupt handlers for each timer
-TIMER_HANDLER(0, A);
-TIMER_HANDLER(0, B);
-TIMER_HANDLER(1, A);
-TIMER_HANDLER(1, B);
-TIMER_HANDLER(2, A);
-TIMER_HANDLER(2, B);
-TIMER_HANDLER(3, A);
-TIMER_HANDLER(3, B);
-TIMER_HANDLER(4, A);
-TIMER_HANDLER(4, B);
+TIMER_HANDLER(0, A, a);
+TIMER_HANDLER(0, B, b);
+TIMER_HANDLER(1, A, a);
+TIMER_HANDLER(1, B, b);
+TIMER_HANDLER(2, A, a);
+TIMER_HANDLER(2, B, b);
+TIMER_HANDLER(3, A, a);
+TIMER_HANDLER(3, B, b);
+TIMER_HANDLER(4, A, a);
+TIMER_HANDLER(4, B, b);
 
 // Used in timer.h
 // TIMER_HANDLER(5, A);
